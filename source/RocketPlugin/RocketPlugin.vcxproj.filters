@@ -34,6 +34,15 @@
     <Filter Include="External Modules">
       <UniqueIdentifier>{dc472eda-eece-4a76-b01a-f757bf1d82a9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External\kiero">
+      <UniqueIdentifier>{23df0e00-6be7-4c8c-b571-04aea1ec3491}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\libsm64">
+      <UniqueIdentifier>{9976d86d-cfca-46a2-ab07-53308d506517}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\RenderingTools">
+      <UniqueIdentifier>{1d8e2dcb-d15b-463b-9001-cb3869ac1f7e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RocketPlugin.h">
@@ -147,6 +156,90 @@
     <ClInclude Include="..\External\ImGui\imgui.h">
       <Filter>External\ImGui</Filter>
     </ClInclude>
+    <ClInclude Include="..\External\libsm64\dist\include\libsm64.h">
+      <Filter>External\libsm64</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Objects\Frustum.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Objects\Chevron.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Objects\Circle.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Objects\Circle2D.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Objects\Cone.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Objects\Cube.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Objects\Cylinder.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Objects\Grid.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Objects\Line.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Objects\Matrix3.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Objects\Plane.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Objects\Sphere.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Objects\Triangle.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Objects\VisualCamera.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\RenderingTools.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Extra\CanvasExtensions.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Extra\RenderingAssistant.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Extra\RenderingMath.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\RenderingTools\Extra\WrapperStructsExtensions.h">
+      <Filter>External\RenderingTools</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\kiero\minhook\include\MinHook.h">
+      <Filter>External\kiero</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\kiero\minhook\src\buffer.h">
+      <Filter>External\kiero</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\kiero\minhook\src\trampoline.h">
+      <Filter>External\kiero</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\kiero\minhook\src\hde\hde32.h">
+      <Filter>External\kiero</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\kiero\minhook\src\hde\hde64.h">
+      <Filter>External\kiero</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\kiero\minhook\src\hde\pstdint.h">
+      <Filter>External\kiero</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\kiero\minhook\src\hde\table32.h">
+      <Filter>External\kiero</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\kiero\minhook\src\hde\table64.h">
+      <Filter>External\kiero</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RocketPlugin.cpp">
@@ -259,6 +352,75 @@
     </ClCompile>
     <ClCompile Include="ExternalModules\RPTests.cpp">
       <Filter>External Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Objects\Frustum.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Objects\Chevron.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Objects\Circle.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Objects\Circle2D.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Objects\Cone.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Objects\Cube.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Objects\Cylinder.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Objects\Grid.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Objects\Line.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Objects\Matrix3.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Objects\Plane.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Objects\Sphere.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Objects\Triangle.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Objects\VisualCamera.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Extra\CanvasExtensions.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Extra\RenderingAssistant.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Extra\RenderingMath.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\RenderingTools\Extra\WrapperStructsExtensions.cpp">
+      <Filter>External\RenderingTools</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\kiero\minhook\src\buffer.cpp">
+      <Filter>External\kiero</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\kiero\minhook\src\hook.cpp">
+      <Filter>External\kiero</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\kiero\minhook\src\trampoline.cpp">
+      <Filter>External\kiero</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\kiero\minhook\src\hde\hde32.cpp">
+      <Filter>External\kiero</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\kiero\minhook\src\hde\hde64.cpp">
+      <Filter>External\kiero</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
