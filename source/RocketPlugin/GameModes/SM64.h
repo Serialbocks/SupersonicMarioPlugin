@@ -7,8 +7,8 @@
 
 #include "imgui/imgui.h"
 #include "imgui/imgui_additions.h"
-#include "../../External/RenderingTools/Objects/Triangle.h"
 #include "../../External/RenderingTools/Objects/Frustum.h"
+#include "GameModes/RocketGameMode.h"
 
 extern "C" {
     #include "libsm64.h"
@@ -16,37 +16,24 @@ extern "C" {
 
 #include "../Modules/level.h"
 
-#define _CRT_SECURE_NO_WARNINGS
-#define _SILENCE_CXX17_C_HEADER_DEPRECATION_WARNING
-
-class SM64Plugin final : public BakkesMod::Plugin::BakkesModPlugin, public BakkesMod::Plugin::PluginWindow
+class SM64 final : public RocketGameMode
 {
 public:
+    SM64() { typeIdx = std::make_unique<std::type_index>(typeid(*this)); }
+
+    void RenderOptions() override;
+    bool IsActive() override;
+    void Activate(bool active) override;
+    std::string GetGameModeName() override;
+
     virtual void onLoad();
     virtual void onUnload();
     void RenderMario(CanvasWrapper canvas);
-    void OnFreeplayLoad(std::string eventName);
-    void OnFreeplayDestroy(std::string eventName);
+    void InitSM64();
+    void DestroySM64();
 
 private:
-    void DebugRenderLevel(CanvasWrapper canvas, RT::Frustum frust);
     float Distance(Vector v1, Vector v2);
-
-public:
-    /* Window settings */
-    virtual void Render();
-    virtual std::string GetMenuName();
-    virtual std::string GetMenuTitle();
-    virtual void SetImGuiContext(uintptr_t ctx);
-    virtual bool ShouldBlockInput();
-    virtual bool IsActiveOverlay();
-    virtual void OnOpen();
-    virtual void OnClose();
-private:
-    bool isWindowOpen = false;
-    bool isMinimized = false;
-    std::string menuTitle = "SM64";
-    std::string statusText = "test status";
 
 private:
     /* SM64 Members */
@@ -57,19 +44,17 @@ private:
     struct SM64MarioGeometryBuffers marioGeometry;
     vec3 cameraPos;
     float cameraRot;
-    Vector v;
+    Vector carLocation;
     bool locationInit;
     float marioOffsetZ = 0;
     float carOffsetZ = 20.0f;
     int depthFactor = 20000;
-    bool drawOutline;
-    float lineThickness;
-    std::thread* marioThread;
     ControllerInput playerInputs;
     Vector cameraLoc;
     Rotator carRotation;
     Renderer* renderer = nullptr;
     Renderer::MeshVertex* projectedVertices = nullptr;
+    bool sm64Initialized = false;
 
     std::string GetCurrentDirectory()
     {

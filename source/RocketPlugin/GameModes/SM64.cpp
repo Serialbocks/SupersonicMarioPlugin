@@ -10,30 +10,67 @@
 std::shared_ptr<GameWrapper> gw;
 std::shared_ptr<CVarManagerWrapper> cm;
 
-void SM64Plugin::onLoad()
+void SM64::onLoad()
 {
-	gw = gameWrapper;
-	cm = cvarManager;
+	//gw = gameWrapper;
+	//cm = cvarManager;
 	
-	gw->HookEvent("Function TAGame.Mutator_Freeplay_TA.Init", bind(&SM64Plugin::OnFreeplayLoad, this, std::placeholders::_1));
-	gw->HookEvent("Function TAGame.GameEvent_Soccar_TA.Destroyed", bind(&SM64Plugin::OnFreeplayDestroy, this, std::placeholders::_1));
-	gw->HookEvent("Function TAGame.GameEvent_TrainingEditor_TA.StartPlayTest", bind(&SM64Plugin::OnFreeplayLoad, this, std::placeholders::_1));
-	gw->HookEvent("Function TAGame.GameEvent_TrainingEditor_TA.Destroyed", bind(&SM64Plugin::OnFreeplayDestroy, this, std::placeholders::_1));
-	gw->HookEvent("Function TAGame.GameInfo_Replay_TA.InitGame", bind(&SM64Plugin::OnFreeplayLoad, this, std::placeholders::_1));
-	gw->HookEvent("Function TAGame.Replay_TA.EventPostTimeSkip", bind(&SM64Plugin::OnFreeplayLoad, this, std::placeholders::_1));
-	gw->HookEvent("Function TAGame.GameInfo_Replay_TA.Destroyed", bind(&SM64Plugin::OnFreeplayDestroy, this, std::placeholders::_1));
+	//gw->HookEvent("Function TAGame.Mutator_Freeplay_TA.Init", bind(&SM64Plugin::OnFreeplayLoad, this, std::placeholders::_1));
+	//gw->HookEvent("Function TAGame.GameEvent_Soccar_TA.Destroyed", bind(&SM64Plugin::OnFreeplayDestroy, this, std::placeholders::_1));
+	//gw->HookEvent("Function TAGame.GameEvent_TrainingEditor_TA.StartPlayTest", bind(&SM64Plugin::OnFreeplayLoad, this, std::placeholders::_1));
+	//gw->HookEvent("Function TAGame.GameEvent_TrainingEditor_TA.Destroyed", bind(&SM64Plugin::OnFreeplayDestroy, this, std::placeholders::_1));
+	//gw->HookEvent("Function TAGame.GameInfo_Replay_TA.InitGame", bind(&SM64Plugin::OnFreeplayLoad, this, std::placeholders::_1));
+	//gw->HookEvent("Function TAGame.Replay_TA.EventPostTimeSkip", bind(&SM64Plugin::OnFreeplayLoad, this, std::placeholders::_1));
+	//gw->HookEvent("Function TAGame.GameInfo_Replay_TA.Destroyed", bind(&SM64Plugin::OnFreeplayDestroy, this, std::placeholders::_1));
 }
 
-void SM64Plugin::onUnload()
+void SM64::onUnload()
 {
 	
 }
 
-void SM64Plugin::OnFreeplayLoad(std::string eventName)
+/// <summary>Renders the available options for the game mode.</summary>
+void SM64::RenderOptions()
+{
+	//ImGui::Checkbox("Auto Deplete Boost", &autoDeplete);
+	//ImGui::SliderInt("Auto Deplete Boost Rate", &autoDepleteRate, 0, 100, "%d boost per second");
+}
+
+bool SM64::IsActive()
+{
+	return isActive;
+}
+
+/// <summary>Gets the game modes name.</summary>
+/// <returns>The game modes name</returns>
+std::string SM64::GetGameModeName()
+{
+	return "SM64";
+}
+
+/// <summary>Activates the game mode.</summary>
+void SM64::Activate(const bool active)
+{
+	if (active && !isActive) {
+		InitSM64();
+		HookEventWithCaller<ServerWrapper>(
+			"Function GameEvent_Soccar_TA.Active.Tick",
+			[this](const ServerWrapper& caller, void* params, const std::string&) {
+				//onTick(caller, params);
+			});
+	}
+	else if (!active && isActive) {
+		UnhookEvent("Function GameEvent_Soccar_TA.Active.Tick");
+		DestroySM64();
+	}
+
+	isActive = active;
+}
+
+void SM64::InitSM64()
 {
 	size_t romSize;
 	std::string path = GetCurrentDirectory() + "\\baserom.us.z64";
-	statusText = path;
 	uint8_t* rom = utilsReadFileAlloc(path, &romSize);
 	if (rom == NULL)
 	{
@@ -49,9 +86,14 @@ void SM64Plugin::OnFreeplayLoad(std::string eventName)
 	projectedVertices = (Renderer::MeshVertex*)malloc(sizeof(Renderer::MeshVertex) * 3 * SM64_GEO_MAX_TRIANGLES);
 	ZeroMemory(projectedVertices, sizeof(Renderer::MeshVertex) * 3 * SM64_GEO_MAX_TRIANGLES);
 	
-	sm64_global_terminate();
-	sm64_global_init(rom, texture, NULL);
-	sm64_static_surfaces_load(surfaces, surfaces_count);
+	//sm64_global_terminate();
+	if (!sm64Initialized)
+	{
+		sm64_global_init(rom, texture, NULL);
+		sm64_static_surfaces_load(surfaces, surfaces_count);
+		sm64Initialized = true;
+	}
+
 	
 	marioId = -1;
 	cameraPos[0] = 0.0f;
@@ -60,8 +102,6 @@ void SM64Plugin::OnFreeplayLoad(std::string eventName)
 	cameraRot = 0.0f;
 
 	locationInit = false;
-	drawOutline = false;
-	lineThickness = 10.0f;
 
 	renderer = new Renderer(SM64_GEO_MAX_TRIANGLES,
 		texture,
@@ -69,13 +109,17 @@ void SM64Plugin::OnFreeplayLoad(std::string eventName)
 		SM64_TEXTURE_WIDTH,
 		SM64_TEXTURE_HEIGHT);
 	
-	gw->RegisterDrawable(std::bind(&SM64Plugin::RenderMario, this, std::placeholders::_1));
+	//gw->RegisterDrawable(std::bind(&SM64::RenderMario, this, std::placeholders::_1));
 }
 
-void SM64Plugin::OnFreeplayDestroy(std::string eventName)
+void SM64::DestroySM64()
 {
+	if (marioId >= 0)
+	{
+		sm64_mario_delete(marioId);
+	}
 	marioId = -2;
-	sm64_global_terminate();
+	//sm64_global_terminate();
 	free(texture);
 	free(marioGeometry.position);
 	free(marioGeometry.color);
@@ -85,28 +129,12 @@ void SM64Plugin::OnFreeplayDestroy(std::string eventName)
 	delete renderer;
 }
 
-void SM64Plugin::DebugRenderLevel(CanvasWrapper canvas, RT::Frustum frust)
-{
-	canvas.SetColor((char)255, 0, 0, 1);
-	for (unsigned int i = 0; i < surfaces_count; i++)
-	{
-		auto surface = surfaces[i];
-		auto vertices = surface.vertices;
-		
-		auto v1 = Vector((float)vertices[0][0], (float)vertices[0][2], (float)vertices[0][1]);
-		auto v2 = Vector((float)vertices[1][0], (float)vertices[1][2], (float)vertices[1][1]);
-		auto v3 = Vector((float)vertices[2][0], (float)vertices[2][2], (float)vertices[2][1]);
-
-		RT::Triangle(v1, v2, v3).DrawOutline(canvas, frust, lineThickness, false);
-	}
-}
-
-float SM64Plugin::Distance(Vector v1, Vector v2)
+float SM64::Distance(Vector v1, Vector v2)
 {
 	return (float)sqrt(pow(v2.X - v1.X, 2.0) + pow(v2.Y - v1.Y, 2.0) + pow(v2.Z - v1.Z, 2.0));
 }
 
-void SM64Plugin::RenderMario(CanvasWrapper canvas)
+void SM64::RenderMario(CanvasWrapper canvas)
 {
 	int inGame = (gw->IsInGame()) ? 1 : (gw->IsInReplay()) ? 2 : 0;
 	if (!inGame || (gw->IsInOnlineGame() && inGame != 2))
@@ -145,10 +173,10 @@ void SM64Plugin::RenderMario(CanvasWrapper canvas)
 	
 		if (marioId < 0)
 		{
-			v = car.GetLocation();
-			auto x = (int16_t)(v.X);
-			auto y = (int16_t)(v.Y);
-			auto z = (int16_t)(v.Z);
+			carLocation = car.GetLocation();
+			auto x = (int16_t)(carLocation.X);
+			auto y = (int16_t)(carLocation.Y);
+			auto z = (int16_t)(carLocation.Z);
 
 			carRotation = car.GetRotation();
 
@@ -233,11 +261,6 @@ void SM64Plugin::RenderMario(CanvasWrapper canvas)
 
 				triangleCount++;
 			}
-
-
-
-			//auto triangle = RT::Triangle(tv1, tv2, tv3);
-			//triangle.Draw(canvas);
 		}
 
 		renderer->RenderMesh(
