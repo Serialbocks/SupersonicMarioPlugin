@@ -156,9 +156,6 @@
     <ClInclude Include="..\External\ImGui\imgui.h">
       <Filter>External\ImGui</Filter>
     </ClInclude>
-    <ClInclude Include="..\External\libsm64\dist\include\libsm64.h">
-      <Filter>External\libsm64</Filter>
-    </ClInclude>
     <ClInclude Include="..\External\RenderingTools\Objects\Frustum.h">
       <Filter>External\RenderingTools</Filter>
     </ClInclude>
@@ -239,6 +236,24 @@
     </ClInclude>
     <ClInclude Include="..\External\kiero\minhook\src\hde\table64.h">
       <Filter>External\kiero</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\level.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Renderer.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\shaders.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\surface_terrains.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\kiero\kiero.h">
+      <Filter>External\kiero</Filter>
+    </ClInclude>
+    <ClInclude Include="GameModes\SM64.h">
+      <Filter>GameModes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -421,6 +436,18 @@
     </ClCompile>
     <ClCompile Include="..\External\kiero\minhook\src\hde\hde64.cpp">
       <Filter>External\kiero</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\level.c">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Render.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\kiero\kiero.cpp">
+      <Filter>External\kiero</Filter>
+    </ClCompile>
+    <ClCompile Include="GameModes\SM64.cpp">
+      <Filter>GameModes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
