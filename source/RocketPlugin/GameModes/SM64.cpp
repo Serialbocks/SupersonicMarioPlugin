@@ -7,21 +7,25 @@
 // CONSTANTS
 #define RL_YAW_RANGE 64692
 
-std::shared_ptr<GameWrapper> gw;
-std::shared_ptr<CVarManagerWrapper> cm;
+SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, BakkesMod::Plugin::PluginInfo exports)
+{
+	using namespace std::placeholders;
+	gameWrapper = gw;
+	cvarManager = cm;
+	Netcode = std::make_shared<NetcodeManager>(cvarManager, gameWrapper, exports,
+		std::bind(&SM64::OnMessageReceived, this, _1, _2));
+
+	typeIdx = std::make_unique<std::type_index>(typeid(*this));
+}
+
+void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
+{
+
+}
 
 void SM64::onLoad()
 {
-	//gw = gameWrapper;
-	//cm = cvarManager;
 	
-	//gw->HookEvent("Function TAGame.Mutator_Freeplay_TA.Init", bind(&SM64Plugin::OnFreeplayLoad, this, std::placeholders::_1));
-	//gw->HookEvent("Function TAGame.GameEvent_Soccar_TA.Destroyed", bind(&SM64Plugin::OnFreeplayDestroy, this, std::placeholders::_1));
-	//gw->HookEvent("Function TAGame.GameEvent_TrainingEditor_TA.StartPlayTest", bind(&SM64Plugin::OnFreeplayLoad, this, std::placeholders::_1));
-	//gw->HookEvent("Function TAGame.GameEvent_TrainingEditor_TA.Destroyed", bind(&SM64Plugin::OnFreeplayDestroy, this, std::placeholders::_1));
-	//gw->HookEvent("Function TAGame.GameInfo_Replay_TA.InitGame", bind(&SM64Plugin::OnFreeplayLoad, this, std::placeholders::_1));
-	//gw->HookEvent("Function TAGame.Replay_TA.EventPostTimeSkip", bind(&SM64Plugin::OnFreeplayLoad, this, std::placeholders::_1));
-	//gw->HookEvent("Function TAGame.GameInfo_Replay_TA.Destroyed", bind(&SM64Plugin::OnFreeplayDestroy, this, std::placeholders::_1));
 }
 
 void SM64::onUnload()
@@ -56,7 +60,7 @@ void SM64::Activate(const bool active)
 		HookEventWithCaller<ServerWrapper>(
 			"Function GameEvent_Soccar_TA.Active.Tick",
 			[this](const ServerWrapper& caller, void* params, const std::string&) {
-				//onTick(caller, params);
+				onTick(caller);
 			});
 	}
 	else if (!active && isActive) {
@@ -93,7 +97,6 @@ void SM64::InitSM64()
 		sm64_static_surfaces_load(surfaces, surfaces_count);
 		sm64Initialized = true;
 	}
-
 	
 	marioId = -1;
 	cameraPos[0] = 0.0f;
@@ -108,8 +111,6 @@ void SM64::InitSM64()
 		textureSize,
 		SM64_TEXTURE_WIDTH,
 		SM64_TEXTURE_HEIGHT);
-	
-	//gw->RegisterDrawable(std::bind(&SM64::RenderMario, this, std::placeholders::_1));
 }
 
 void SM64::DestroySM64()
@@ -129,51 +130,26 @@ void SM64::DestroySM64()
 	delete renderer;
 }
 
-float SM64::Distance(Vector v1, Vector v2)
+std::string hexStr(unsigned char* data, unsigned int len)
 {
-	return (float)sqrt(pow(v2.X - v1.X, 2.0) + pow(v2.Y - v1.Y, 2.0) + pow(v2.Z - v1.Z, 2.0));
+	std::stringstream ss;
+	ss << std::hex << std::setfill('0');
+	for (unsigned int i = 0; i < len; ++i)
+		ss << std::setw(2) << static_cast<unsigned>(data[i]);
+
+	return ss.str();
 }
 
-void SM64::RenderMario(CanvasWrapper canvas)
+void SM64::onTick(ServerWrapper server)
 {
-	int inGame = (gw->IsInGame()) ? 1 : (gw->IsInReplay()) ? 2 : 0;
-	if (!inGame || (gw->IsInOnlineGame() && inGame != 2))
+	for (CarWrapper car : server.GetCars())
 	{
-		return;
-	}
-	
-	auto game = (inGame == 1) ? gw->GetGameEventAsServer() : gw->GetGameEventAsReplay();
-	if (game.IsNull())
-	{
-		return;
-	}
-	
-	auto cars = game.GetCars();
-	auto ball = game.GetBall();
-	auto camera = gw->GetCamera();
-	if (camera.IsNull()) return;
+		PriWrapper player = car.GetPRI();
+		if (!player.GetbMatchAdmin()) continue;
 
-	RT::Frustum frust{ canvas, camera };
-
-	auto playerController = gw->GetPlayerController();
-	if (!playerController.IsNull())
-	{
-		playerInputs = playerController.GetVehicleInput();
-	}
-	
-	int carIndex = 0;
-	for (auto car : cars)
-	{
-		if (car.IsNull())
-		{
-			continue;
-		}
-		car.SetHidden2(TRUE);
-		car.SetbHiddenSelf(TRUE);
-	
 		if (marioId < 0)
 		{
-			carLocation = car.GetLocation();
+			Vector carLocation = car.GetLocation();
 			auto x = (int16_t)(carLocation.X);
 			auto y = (int16_t)(carLocation.Y);
 			auto z = (int16_t)(carLocation.Z);
@@ -182,92 +158,55 @@ void SM64::RenderMario(CanvasWrapper canvas)
 
 			// Unreal swaps coords
 			marioId = sm64_mario_create(x, z, y);
+			if (marioId < 0) continue;
 		}
 
-		if (marioId >= 0)
+		auto marioYaw = (int)(-marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+		car.SetLocation(Vector(marioState.posX, marioState.posZ, marioState.posY + carOffsetZ));
+		car.SetVelocity(Vector(marioState.velX, marioState.velZ, marioState.velY + carOffsetZ));
+
+		auto carRot = car.GetRotation();
+		carRot.Yaw = marioYaw;
+		carRot.Roll = carRotation.Roll;
+		carRot.Pitch = carRotation.Pitch;
+		car.SetRotation(carRot);
+		
+		PlayerControllerWrapper playerController = car.GetPlayerController();
+		playerInputs = playerController.GetVehicleInput();
+		marioInputs.buttonA = playerInputs.Jump;
+		marioInputs.buttonB = playerInputs.Handbrake;
+		marioInputs.buttonZ = playerInputs.Throttle < 0;
+		marioInputs.stickX = playerInputs.Steer;
+		marioInputs.stickY = playerInputs.Pitch;
+		marioInputs.camLookX = marioState.posX;
+		marioInputs.camLookZ = marioState.posZ;
+		
+		sm64_mario_tick(marioId, &marioInputs, &marioState, &marioGeometry, &marioBodyState, 1);
+
+		if (marioGeometry.numTrianglesUsed > 0)
 		{
-			auto marioPos = marioState.position;
-			auto marioVel = marioState.velocity;
-			auto marioYaw = (int)(-marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-			// again, unreal swaps coords
-			car.SetLocation(Vector(marioPos[0], marioPos[2], marioPos[1] + carOffsetZ));
-			car.SetVelocity(Vector(marioVel[0], marioVel[2], marioVel[1] + carOffsetZ));
+			unsigned char* bodyStateBytes = (unsigned char*)&marioBodyState;
+			unsigned char* marioStateBytes = (unsigned char*)&marioBodyState.marioState;
+			std::string bodyStateStr = "B";
+			bodyStateStr += hexStr(bodyStateBytes, sizeof(struct SM64MarioBodyState) - sizeof(struct SM64MarioState));
+			std::string marioStateStr = "M";
+			marioStateStr += hexStr(marioStateBytes, sizeof(struct SM64MarioState));
 
-			auto carRot = car.GetRotation();
-			carRot.Yaw = marioYaw;
-			carRot.Roll = carRotation.Roll;
-			carRot.Pitch = carRotation.Pitch;
-			car.SetRotation(carRot);
-
-			marioInputs.buttonA = playerInputs.Jump;
-			marioInputs.buttonB = playerInputs.Handbrake;
-			marioInputs.buttonZ = playerInputs.Throttle < 0;
-			marioInputs.stickX = playerInputs.Steer;
-			marioInputs.stickY = playerInputs.Pitch;
-			marioInputs.camLookX = marioState.position[0] - cameraLoc.X;
-			marioInputs.camLookZ = marioState.position[2] - cameraLoc.Y;
-
-			sm64_mario_tick(marioId, &marioInputs, &marioState, &marioGeometry, 0);
-		}
-
-		cameraLoc = camera.GetLocation();
-
-		int triangleCount = 0;
-		for (auto i = 0; i < marioGeometry.numTrianglesUsed; i++)
-		{
-			auto position = &marioGeometry.position[i * 9];
-			auto color = &marioGeometry.color[i * 9];
-			auto uv = &marioGeometry.uv[i * 6];
-
-			// Unreal engine swaps x and y coords for 3d model
-			auto tv1 = Vector(position[0], position[2], position[1] + marioOffsetZ);
-			auto tv2 = Vector(position[3], position[5], position[4] + marioOffsetZ);
-			auto tv3 = Vector(position[6], position[8], position[7] + marioOffsetZ);
-
-			if (frust.IsInFrustum(tv1) || frust.IsInFrustum(tv2) || frust.IsInFrustum(tv3))
+			if (bodyStateStr.length() < 110)
 			{
-				auto projV1 = canvas.ProjectF(tv1);
-				auto projV2 = canvas.ProjectF(tv2);
-				auto projV3 = canvas.ProjectF(tv3);
-
-				auto distance1 = Distance(cameraLoc, tv1) / depthFactor;
-				auto distance2 = Distance(cameraLoc, tv2) / depthFactor;
-				auto distance3 = Distance(cameraLoc, tv3) / depthFactor;
-
-				auto baseVertexIndex = triangleCount * 3;
-				projectedVertices[baseVertexIndex].position = Vector(projV1.X, projV1.Y, distance1);
-				projectedVertices[baseVertexIndex].r = color[0];
-				projectedVertices[baseVertexIndex].g = color[1];
-				projectedVertices[baseVertexIndex].b = color[2];
-				projectedVertices[baseVertexIndex].a = 1.0f;
-				projectedVertices[baseVertexIndex].u = uv[0];
-				projectedVertices[baseVertexIndex].v = uv[1];
-
-				projectedVertices[baseVertexIndex + 1].position = Vector(projV2.X, projV2.Y, distance2);
-				projectedVertices[baseVertexIndex + 1].r = color[3];
-				projectedVertices[baseVertexIndex + 1].g = color[4];
-				projectedVertices[baseVertexIndex + 1].b = color[5];
-				projectedVertices[baseVertexIndex + 1].a = 1.0f;
-				projectedVertices[baseVertexIndex + 1].u = uv[2];
-				projectedVertices[baseVertexIndex + 1].v = uv[3];
-
-				projectedVertices[baseVertexIndex + 2].position = Vector(projV3.X, projV3.Y, distance3);
-				projectedVertices[baseVertexIndex + 2].r = color[6];
-				projectedVertices[baseVertexIndex + 2].g = color[7];
-				projectedVertices[baseVertexIndex + 2].b = color[8];
-				projectedVertices[baseVertexIndex + 2].a = 1.0f;
-				projectedVertices[baseVertexIndex + 2].u = uv[4];
-				projectedVertices[baseVertexIndex + 2].v = uv[5];
-
-				triangleCount++;
+				Netcode->SendNewMessage(bodyStateStr);
+			}
+			if (marioStateStr.length() < 110)
+			{
+				Netcode->SendNewMessage(marioStateStr);
 			}
 		}
-
-		renderer->RenderMesh(
-			projectedVertices,
-			triangleCount
-		);
-	
-		carIndex++;
 	}
 }
+
+
+float SM64::distance(Vector v1, Vector v2)
+{
+	return (float)sqrt(pow(v2.X - v1.X, 2.0) + pow(v2.Y - v1.Y, 2.0) + pow(v2.Z - v1.Z, 2.0));
+}
+

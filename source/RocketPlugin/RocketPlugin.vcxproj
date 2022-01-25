@@ -154,6 +154,7 @@
     <ClInclude Include="..\External\kiero\minhook\src\hde\table32.h" />
     <ClInclude Include="..\External\kiero\minhook\src\hde\table64.h" />
     <ClInclude Include="..\External\kiero\minhook\src\trampoline.h" />
+    <ClInclude Include="..\External\NetcodeManager\NetcodeManager.h" />
     <ClInclude Include="..\External\RenderingTools\Extra\CanvasExtensions.h" />
     <ClInclude Include="..\External\RenderingTools\Extra\RenderingAssistant.h" />
     <ClInclude Include="..\External\RenderingTools\Extra\RenderingMath.h" />
@@ -221,6 +222,7 @@
     <ClCompile Include="..\External\kiero\minhook\src\hde\hde64.cpp" />
     <ClCompile Include="..\External\kiero\minhook\src\hook.cpp" />
     <ClCompile Include="..\External\kiero\minhook\src\trampoline.cpp" />
+    <ClCompile Include="..\External\NetcodeManager\NetcodeManager.cpp" />
     <ClCompile Include="..\External\RenderingTools\Extra\CanvasExtensions.cpp" />
     <ClCompile Include="..\External\RenderingTools\Extra\RenderingAssistant.cpp" />
     <ClCompile Include="..\External\RenderingTools\Extra\RenderingMath.cpp" />

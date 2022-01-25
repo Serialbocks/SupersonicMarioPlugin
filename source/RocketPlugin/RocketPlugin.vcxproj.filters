@@ -43,6 +43,9 @@
     <Filter Include="External\RenderingTools">
       <UniqueIdentifier>{1d8e2dcb-d15b-463b-9001-cb3869ac1f7e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External\NetcodeManager">
+      <UniqueIdentifier>{d75eafe3-720a-4d5c-865d-127892348657}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RocketPlugin.h">
@@ -255,6 +258,9 @@
     <ClInclude Include="GameModes\SM64.h">
       <Filter>GameModes</Filter>
     </ClInclude>
+    <ClInclude Include="..\External\NetcodeManager\NetcodeManager.h">
+      <Filter>External\NetcodeManager</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RocketPlugin.cpp">
@@ -448,6 +454,9 @@
     </ClCompile>
     <ClCompile Include="GameModes\SM64.cpp">
       <Filter>GameModes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\NetcodeManager\NetcodeManager.cpp">
+      <Filter>External\NetcodeManager</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -21,6 +21,8 @@
 #include "GameModes/SmallCars.h"
 #include "GameModes/SM64.h"
 
+
+
 BAKKESMOD_PLUGIN(RocketPlugin, "Rocket Plugin", PLUGIN_VERSION, PLUGINTYPE_ALL)
 
 std::filesystem::path BakkesModConfigFolder;
@@ -1028,7 +1030,7 @@ void RocketPlugin::OnLoad()
     customGameModes.push_back(std::make_shared<BoostMod>());
     customGameModes.push_back(std::make_shared<BoostShare>());
     customGameModes.push_back(std::make_shared<SacredGround>());
-    customGameModes.push_back(std::make_shared<SM64>());
+    customGameModes.push_back(std::make_shared<SM64>(gameWrapper, cvarManager, exports));
 }
 
 

@@ -8,6 +8,7 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_additions.h"
 #include "../../External/RenderingTools/Objects/Frustum.h"
+#include "../../External/NetcodeManager/NetcodeManager.h"
 #include "GameModes/RocketGameMode.h"
 
 extern "C" {
@@ -20,6 +21,9 @@ class SM64 final : public RocketGameMode
 {
 public:
     SM64() { typeIdx = std::make_unique<std::type_index>(typeid(*this)); }
+    SM64(std::shared_ptr<GameWrapper> gw,
+        std::shared_ptr<CVarManagerWrapper> cm,
+        BakkesMod::Plugin::PluginInfo exports);
 
     void RenderOptions() override;
     bool IsActive() override;
@@ -28,12 +32,13 @@ public:
 
     virtual void onLoad();
     virtual void onUnload();
-    void RenderMario(CanvasWrapper canvas);
     void InitSM64();
     void DestroySM64();
+    void OnMessageReceived(const std::string& message, PriWrapper sender);
 
 private:
-    float Distance(Vector v1, Vector v2);
+    float distance(Vector v1, Vector v2);
+    void onTick(ServerWrapper server);
 
 private:
     /* SM64 Members */
@@ -55,6 +60,10 @@ private:
     Renderer* renderer = nullptr;
     Renderer::MeshVertex* projectedVertices = nullptr;
     bool sm64Initialized = false;
+    struct SM64MarioBodyState marioBodyState;
+    std::shared_ptr<NetcodeManager> Netcode;
+    std::shared_ptr<GameWrapper> gameWrapper;
+    std::shared_ptr<CVarManagerWrapper> cvarManager;
 
     std::string GetCurrentDirectory()
     {
