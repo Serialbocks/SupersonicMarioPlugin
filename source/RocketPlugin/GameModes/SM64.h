@@ -20,25 +20,27 @@ extern "C" {
 class SM64 final : public RocketGameMode
 {
 public:
-    SM64() { typeIdx = std::make_unique<std::type_index>(typeid(*this)); }
     SM64(std::shared_ptr<GameWrapper> gw,
         std::shared_ptr<CVarManagerWrapper> cm,
         BakkesMod::Plugin::PluginInfo exports);
+    ~SM64();
 
     void RenderOptions() override;
     bool IsActive() override;
     void Activate(bool active) override;
     std::string GetGameModeName() override;
+    void OnLeaveSession(std::string eventName);
 
-    virtual void onLoad();
-    virtual void onUnload();
     void InitSM64();
     void DestroySM64();
     void OnMessageReceived(const std::string& message, PriWrapper sender);
+    void RenderMario(CanvasWrapper canvas);
 
 private:
     float distance(Vector v1, Vector v2);
     void onTick(ServerWrapper server);
+    std::string bytesToHex(unsigned char* data, unsigned int len);
+    std::vector<char> hexToBytes(const std::string& hex);
 
 private:
     /* SM64 Members */
@@ -55,15 +57,21 @@ private:
     float carOffsetZ = 20.0f;
     int depthFactor = 20000;
     ControllerInput playerInputs;
-    Vector cameraLoc;
+    Vector cameraLoc = Vector(0, 0, 0);
     Rotator carRotation;
     Renderer* renderer = nullptr;
     Renderer::MeshVertex* projectedVertices = nullptr;
     bool sm64Initialized = false;
     struct SM64MarioBodyState marioBodyState;
+    struct SM64MarioBodyState marioBodyStateIn;
+    bool renderLocalMario = false;
+    bool renderRemoteMario = false;
     std::shared_ptr<NetcodeManager> Netcode;
     std::shared_ptr<GameWrapper> gameWrapper;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
+    int16_t defX = 0;
+    int16_t defY = 34;
+    int16_t defZ = -4608;
 
     std::string GetCurrentDirectory()
     {

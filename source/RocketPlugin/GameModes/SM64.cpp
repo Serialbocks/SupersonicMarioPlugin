@@ -15,22 +15,57 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	Netcode = std::make_shared<NetcodeManager>(cvarManager, gameWrapper, exports,
 		std::bind(&SM64::OnMessageReceived, this, _1, _2));
 
+	gameWrapper->HookEvent("Function TAGame.GameEvent_Soccar_TA.Destroyed", bind(&SM64::OnLeaveSession, this, _1));
+
+	InitSM64();
+	gameWrapper->RegisterDrawable(std::bind(&SM64::RenderMario, this, _1));
+
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
+}
+
+SM64::~SM64()
+{
+	gameWrapper->UnregisterDrawables();
+	DestroySM64();
+}
+
+void SM64::OnLeaveSession(std::string eventName)
+{
+	renderLocalMario = false;
+	renderRemoteMario = false;
 }
 
 void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
 {
+	if (sender.IsNull() || sender.IsLocalPlayerPRI())
+	{
+		return;
+	}
 
-}
+	char messageType = message[0];
 
-void SM64::onLoad()
-{
-	
-}
+	char* dest = nullptr;
+	if (messageType == 'M')
+	{
+		dest = (char*)&marioBodyStateIn.marioState;
+	}
+	else if (messageType == 'B')
+	{
+		dest = (char*)&marioBodyStateIn;
+	}
 
-void SM64::onUnload()
-{
-	
+	if (dest == nullptr)
+	{
+		return;
+	}
+
+	std::string bytesStr = message.substr(1, message.size() - 1);
+	auto bytes = hexToBytes(bytesStr);
+	for (unsigned int i = 0; i < bytes.size(); i++)
+	{
+		dest[i] = bytes[i];
+	}
+	renderRemoteMario = true;
 }
 
 /// <summary>Renders the available options for the game mode.</summary>
@@ -56,7 +91,6 @@ std::string SM64::GetGameModeName()
 void SM64::Activate(const bool active)
 {
 	if (active && !isActive) {
-		InitSM64();
 		HookEventWithCaller<ServerWrapper>(
 			"Function GameEvent_Soccar_TA.Active.Tick",
 			[this](const ServerWrapper& caller, void* params, const std::string&) {
@@ -65,7 +99,6 @@ void SM64::Activate(const bool active)
 	}
 	else if (!active && isActive) {
 		UnhookEvent("Function GameEvent_Soccar_TA.Active.Tick");
-		DestroySM64();
 	}
 
 	isActive = active;
@@ -130,16 +163,6 @@ void SM64::DestroySM64()
 	delete renderer;
 }
 
-std::string hexStr(unsigned char* data, unsigned int len)
-{
-	std::stringstream ss;
-	ss << std::hex << std::setfill('0');
-	for (unsigned int i = 0; i < len; ++i)
-		ss << std::setw(2) << static_cast<unsigned>(data[i]);
-
-	return ss.str();
-}
-
 void SM64::onTick(ServerWrapper server)
 {
 	for (CarWrapper car : server.GetCars())
@@ -171,26 +194,41 @@ void SM64::onTick(ServerWrapper server)
 		carRot.Pitch = carRotation.Pitch;
 		car.SetRotation(carRot);
 		
-		PlayerControllerWrapper playerController = car.GetPlayerController();
+		auto camera = gameWrapper->GetCamera();
+		if (!camera.IsNull())
+		{
+			cameraLoc = camera.GetLocation();
+		}
+
+		auto playerController = car.GetPlayerController();
 		playerInputs = playerController.GetVehicleInput();
 		marioInputs.buttonA = playerInputs.Jump;
 		marioInputs.buttonB = playerInputs.Handbrake;
 		marioInputs.buttonZ = playerInputs.Throttle < 0;
 		marioInputs.stickX = playerInputs.Steer;
 		marioInputs.stickY = playerInputs.Pitch;
-		marioInputs.camLookX = marioState.posX;
-		marioInputs.camLookZ = marioState.posZ;
+		marioInputs.camLookX = marioState.posX - cameraLoc.X;
+		marioInputs.camLookZ = marioState.posZ - cameraLoc.Y;
+
+		playerInputs.Jump = 0;
+		playerInputs.Handbrake = 0;
+		playerInputs.Throttle = 0;
+		playerInputs.Steer = 0;
+		playerInputs.Pitch = 0;
+		playerController.SetVehicleInput(playerInputs);
 		
-		sm64_mario_tick(marioId, &marioInputs, &marioState, &marioGeometry, &marioBodyState, 1);
+		sm64_mario_tick(marioId, &marioInputs, &marioState, &marioGeometry, &marioBodyState, true);
 
 		if (marioGeometry.numTrianglesUsed > 0)
 		{
+			renderLocalMario = true;
+
 			unsigned char* bodyStateBytes = (unsigned char*)&marioBodyState;
 			unsigned char* marioStateBytes = (unsigned char*)&marioBodyState.marioState;
 			std::string bodyStateStr = "B";
-			bodyStateStr += hexStr(bodyStateBytes, sizeof(struct SM64MarioBodyState) - sizeof(struct SM64MarioState));
+			bodyStateStr += bytesToHex(bodyStateBytes, sizeof(struct SM64MarioBodyState) - sizeof(struct SM64MarioState));
 			std::string marioStateStr = "M";
-			marioStateStr += hexStr(marioStateBytes, sizeof(struct SM64MarioState));
+			marioStateStr += bytesToHex(marioStateBytes, sizeof(struct SM64MarioState));
 
 			if (bodyStateStr.length() < 110)
 			{
@@ -204,9 +242,118 @@ void SM64::onTick(ServerWrapper server)
 	}
 }
 
+void SM64::RenderMario(CanvasWrapper canvas)
+{
+	if (!renderLocalMario && !renderRemoteMario) return;
+
+	int inGame = (gameWrapper->IsInGame()) ? 1 : (gameWrapper->IsInReplay()) ? 2 : 0;
+	if (!inGame) return;
+
+	auto camera = gameWrapper->GetCamera();
+	if (camera.IsNull()) return;
+
+	RT::Frustum frust{ canvas, camera };
+
+	if (marioId < 0)
+	{
+		marioId = sm64_mario_create(defX, defY, defZ);
+		if (marioId < 0) return;
+	}
+
+	struct SM64MarioBodyState* marioBodyStatePtr = nullptr;
+	if (renderLocalMario)
+	{
+		marioBodyStatePtr = &marioBodyState;
+	}
+	else if (renderRemoteMario)
+	{
+		marioBodyStatePtr = &marioBodyStateIn;
+		sm64_mario_tick(marioId, &marioInputs, &marioState, &marioGeometry, &marioBodyStateIn, false);
+	}
+
+	auto currentCameraLocation = camera.GetLocation();
+	int triangleCount = 0;
+	for (auto i = 0; i < marioGeometry.numTrianglesUsed; i++)
+	{
+		auto position = &marioGeometry.position[i * 9];
+		auto color = &marioGeometry.color[i * 9];
+		auto uv = &marioGeometry.uv[i * 6];
+
+		// Unreal engine swaps x and y coords for 3d model
+		auto tv1 = Vector(position[0], position[2], position[1] + marioOffsetZ);
+		auto tv2 = Vector(position[3], position[5], position[4] + marioOffsetZ);
+		auto tv3 = Vector(position[6], position[8], position[7] + marioOffsetZ);
+
+		if (frust.IsInFrustum(tv1) || frust.IsInFrustum(tv2) || frust.IsInFrustum(tv3))
+		{
+			auto projV1 = canvas.ProjectF(tv1);
+			auto projV2 = canvas.ProjectF(tv2);
+			auto projV3 = canvas.ProjectF(tv3);
+
+			auto distance1 = distance(currentCameraLocation, tv1) / depthFactor;
+			auto distance2 = distance(currentCameraLocation, tv2) / depthFactor;
+			auto distance3 = distance(currentCameraLocation, tv3) / depthFactor;
+
+			auto baseVertexIndex = triangleCount * 3;
+			projectedVertices[baseVertexIndex].position = Vector(projV1.X, projV1.Y, distance1);
+			projectedVertices[baseVertexIndex].r = color[0];
+			projectedVertices[baseVertexIndex].g = color[1];
+			projectedVertices[baseVertexIndex].b = color[2];
+			projectedVertices[baseVertexIndex].a = 1.0f;
+			projectedVertices[baseVertexIndex].u = uv[0];
+			projectedVertices[baseVertexIndex].v = uv[1];
+
+			projectedVertices[baseVertexIndex + 1].position = Vector(projV2.X, projV2.Y, distance2);
+			projectedVertices[baseVertexIndex + 1].r = color[3];
+			projectedVertices[baseVertexIndex + 1].g = color[4];
+			projectedVertices[baseVertexIndex + 1].b = color[5];
+			projectedVertices[baseVertexIndex + 1].a = 1.0f;
+			projectedVertices[baseVertexIndex + 1].u = uv[2];
+			projectedVertices[baseVertexIndex + 1].v = uv[3];
+
+			projectedVertices[baseVertexIndex + 2].position = Vector(projV3.X, projV3.Y, distance3);
+			projectedVertices[baseVertexIndex + 2].r = color[6];
+			projectedVertices[baseVertexIndex + 2].g = color[7];
+			projectedVertices[baseVertexIndex + 2].b = color[8];
+			projectedVertices[baseVertexIndex + 2].a = 1.0f;
+			projectedVertices[baseVertexIndex + 2].u = uv[4];
+			projectedVertices[baseVertexIndex + 2].v = uv[5];
+
+			triangleCount++;
+		}
+	}
+
+	renderer->RenderMesh(
+		projectedVertices,
+		triangleCount
+	);
+}
 
 float SM64::distance(Vector v1, Vector v2)
 {
 	return (float)sqrt(pow(v2.X - v1.X, 2.0) + pow(v2.Y - v1.Y, 2.0) + pow(v2.Z - v1.Z, 2.0));
+}
+
+std::string SM64::bytesToHex(unsigned char* data, unsigned int len)
+{
+	std::stringstream ss;
+	ss << std::hex << std::setfill('0');
+	for (unsigned int i = 0; i < len; ++i)
+		ss << std::setw(2) << static_cast<unsigned>(data[i]);
+
+	return ss.str();
+}
+
+
+std::vector<char> SM64::hexToBytes(const std::string& hex) {
+	std::vector<char> bytes;
+
+	for (unsigned int i = 0; i < hex.length(); i += 2) {
+		std::string byteString = hex.substr(i, 2);
+		char byte = (char)strtol(byteString.c_str(), NULL, 16);
+		bytes.push_back(byte);
+	}
+
+	return bytes;
 }
 
