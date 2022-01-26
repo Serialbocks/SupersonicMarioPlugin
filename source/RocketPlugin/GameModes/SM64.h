@@ -46,6 +46,7 @@ private:
     /* SM64 Members */
     uint8_t* texture;
     int32_t marioId;
+    int32_t remoteMarioId;
     struct SM64MarioInputs marioInputs;
     struct SM64MarioState marioState;
     struct SM64MarioGeometryBuffers marioGeometry;

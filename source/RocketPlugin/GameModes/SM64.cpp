@@ -132,6 +132,7 @@ void SM64::InitSM64()
 	}
 	
 	marioId = -1;
+	remoteMarioId = -1;
 	cameraPos[0] = 0.0f;
 	cameraPos[1] = 0.0f;
 	cameraPos[2] = 0.0f;
@@ -209,13 +210,6 @@ void SM64::onTick(ServerWrapper server)
 		marioInputs.stickY = playerInputs.Pitch;
 		marioInputs.camLookX = marioState.posX - cameraLoc.X;
 		marioInputs.camLookZ = marioState.posZ - cameraLoc.Y;
-
-		playerInputs.Jump = 0;
-		playerInputs.Handbrake = 0;
-		playerInputs.Throttle = 0;
-		playerInputs.Steer = 0;
-		playerInputs.Pitch = 0;
-		playerController.SetVehicleInput(playerInputs);
 		
 		sm64_mario_tick(marioId, &marioInputs, &marioState, &marioGeometry, &marioBodyState, true);
 
@@ -247,28 +241,24 @@ void SM64::RenderMario(CanvasWrapper canvas)
 	if (!renderLocalMario && !renderRemoteMario) return;
 
 	int inGame = (gameWrapper->IsInGame()) ? 1 : (gameWrapper->IsInReplay()) ? 2 : 0;
-	if (!inGame) return;
+	//if (!inGame) return;
 
 	auto camera = gameWrapper->GetCamera();
 	if (camera.IsNull()) return;
 
 	RT::Frustum frust{ canvas, camera };
 
-	if (marioId < 0)
+	if (renderRemoteMario && remoteMarioId < 0)
 	{
-		marioId = sm64_mario_create(defX, defY, defZ);
-		if (marioId < 0) return;
+		remoteMarioId = sm64_mario_create((int16_t)marioBodyStateIn.marioState.posX,
+			(int16_t)marioBodyStateIn.marioState.posY,
+			(int16_t)marioBodyStateIn.marioState.posZ);
+		if (remoteMarioId < 0) return;
 	}
 
-	struct SM64MarioBodyState* marioBodyStatePtr = nullptr;
-	if (renderLocalMario)
+	if (renderRemoteMario)
 	{
-		marioBodyStatePtr = &marioBodyState;
-	}
-	else if (renderRemoteMario)
-	{
-		marioBodyStatePtr = &marioBodyStateIn;
-		sm64_mario_tick(marioId, &marioInputs, &marioState, &marioGeometry, &marioBodyStateIn, false);
+		sm64_mario_tick(remoteMarioId, &marioInputs, &marioBodyStateIn.marioState, &marioGeometry, &marioBodyStateIn, 0);
 	}
 
 	auto currentCameraLocation = camera.GetLocation();
