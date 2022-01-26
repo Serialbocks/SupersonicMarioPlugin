@@ -185,6 +185,8 @@ void SM64::onTick(ServerWrapper server)
 			if (marioId < 0) continue;
 		}
 
+		car.SetHidden2(TRUE);
+		car.SetbHiddenSelf(TRUE);
 		auto marioYaw = (int)(-marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
 		car.SetLocation(Vector(marioState.posX, marioState.posZ, marioState.posY + carOffsetZ));
 		car.SetVelocity(Vector(marioState.velX, marioState.velZ, marioState.velY + carOffsetZ));

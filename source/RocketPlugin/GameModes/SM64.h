@@ -55,7 +55,7 @@ private:
     Vector carLocation;
     bool locationInit;
     float marioOffsetZ = 0;
-    float carOffsetZ = 20.0f;
+    float carOffsetZ = 35.0f;
     int depthFactor = 20000;
     ControllerInput playerInputs;
     Vector cameraLoc = Vector(0, 0, 0);
