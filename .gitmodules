@@ -19,3 +19,6 @@
 [submodule "source/External/kiero"]
     path = source/External/kiero
     url = https://github.com/johnrackcoach/kiero.git
+[submodule "source/External/NetcodeManager"]
+    path = source/External/NetcodeManager
+    url = https://github.com/CinderBlocc/NetcodeManager.git
