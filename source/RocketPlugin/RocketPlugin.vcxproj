@@ -217,11 +217,11 @@
     <ClCompile Include="..\External\ImGui\imgui_searchablecombo.cpp" />
     <ClCompile Include="..\External\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="..\External\kiero\kiero.cpp" />
-    <ClCompile Include="..\External\kiero\minhook\src\buffer.cpp" />
-    <ClCompile Include="..\External\kiero\minhook\src\hde\hde32.cpp" />
-    <ClCompile Include="..\External\kiero\minhook\src\hde\hde64.cpp" />
-    <ClCompile Include="..\External\kiero\minhook\src\hook.cpp" />
-    <ClCompile Include="..\External\kiero\minhook\src\trampoline.cpp" />
+    <ClCompile Include="..\External\kiero\minhook\src\buffer.c" />
+    <ClCompile Include="..\External\kiero\minhook\src\hde\hde32.c" />
+    <ClCompile Include="..\External\kiero\minhook\src\hde\hde64.c" />
+    <ClCompile Include="..\External\kiero\minhook\src\hook.c" />
+    <ClCompile Include="..\External\kiero\minhook\src\trampoline.c" />
     <ClCompile Include="..\External\NetcodeManager\NetcodeManager.cpp" />
     <ClCompile Include="..\External\RenderingTools\Extra\CanvasExtensions.cpp" />
     <ClCompile Include="..\External\RenderingTools\Extra\RenderingAssistant.cpp" />

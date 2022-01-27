@@ -428,35 +428,35 @@
     <ClCompile Include="..\External\RenderingTools\Extra\WrapperStructsExtensions.cpp">
       <Filter>External\RenderingTools</Filter>
     </ClCompile>
-    <ClCompile Include="..\External\kiero\minhook\src\buffer.cpp">
-      <Filter>External\kiero</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\kiero\minhook\src\hook.cpp">
-      <Filter>External\kiero</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\kiero\minhook\src\trampoline.cpp">
-      <Filter>External\kiero</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\kiero\minhook\src\hde\hde32.cpp">
-      <Filter>External\kiero</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\kiero\minhook\src\hde\hde64.cpp">
-      <Filter>External\kiero</Filter>
-    </ClCompile>
     <ClCompile Include="Modules\level.c">
       <Filter>Modules</Filter>
     </ClCompile>
     <ClCompile Include="Modules\Render.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="..\External\kiero\kiero.cpp">
-      <Filter>External\kiero</Filter>
-    </ClCompile>
     <ClCompile Include="GameModes\SM64.cpp">
       <Filter>GameModes</Filter>
     </ClCompile>
     <ClCompile Include="..\External\NetcodeManager\NetcodeManager.cpp">
       <Filter>External\NetcodeManager</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\kiero\kiero.cpp">
+      <Filter>External\kiero</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\kiero\minhook\src\buffer.c">
+      <Filter>External\kiero</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\kiero\minhook\src\hook.c">
+      <Filter>External\kiero</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\kiero\minhook\src\trampoline.c">
+      <Filter>External\kiero</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\kiero\minhook\src\hde\hde32.c">
+      <Filter>External\kiero</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\kiero\minhook\src\hde\hde64.c">
+      <Filter>External\kiero</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
