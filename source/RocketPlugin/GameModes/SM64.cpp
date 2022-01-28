@@ -17,7 +17,8 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	Netcode = std::make_shared<NetcodeManager>(cvarManager, gameWrapper, exports,
 		std::bind(&SM64::OnMessageReceived, this, _1, _2));
 
-	gameWrapper->HookEvent("Function TAGame.GameEvent_Soccar_TA.Destroyed", bind(&SM64::OnLeaveSession, this, _1));
+	gameWrapper->HookEvent("Function TAGame.Replay_TA.StartPlaybackAtTimeSeconds", bind(&SM64::StopRenderMario, this, _1));
+	gameWrapper->HookEvent("Function TAGame.GameEvent_TA.OnCarSpawned", bind(&SM64::OnCarSpawned, this, _1));
 
 	InitSM64();
 	gameWrapper->RegisterDrawable(std::bind(&SM64::RenderMario, this, _1));
@@ -31,10 +32,23 @@ SM64::~SM64()
 	DestroySM64();
 }
 
-void SM64::OnLeaveSession(std::string eventName)
+void SM64::StopRenderMario(std::string eventName)
 {
 	renderLocalMario = false;
 	renderRemoteMario = false;
+}
+
+void SM64::OnCarSpawned(std::string eventName)
+{
+	if (marioId >= 0 && renderLocalMario)
+	{
+		Vector marioLocation(marioState.posX, marioState.posZ, marioState.posY);
+		if (distance(marioLocation, carLocation) > 100.0f)
+		{
+			sm64_mario_delete(marioId);
+			marioId = -1;
+		}
+	}
 }
 
 void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
@@ -173,13 +187,12 @@ void SM64::onTick(ServerWrapper server)
 		PriWrapper player = car.GetPRI();
 		if (!player.GetbMatchAdmin()) continue;
 
+		carLocation = car.GetLocation();
+		auto x = (int16_t)(carLocation.X);
+		auto y = (int16_t)(carLocation.Y);
+		auto z = (int16_t)(carLocation.Z);
 		if (marioId < 0)
 		{
-			Vector carLocation = car.GetLocation();
-			auto x = (int16_t)(carLocation.X);
-			auto y = (int16_t)(carLocation.Y);
-			auto z = (int16_t)(carLocation.Z);
-
 			carRotation = car.GetRotation();
 
 			// Unreal swaps coords
@@ -187,13 +200,14 @@ void SM64::onTick(ServerWrapper server)
 			if (marioId < 0) continue;
 		}
 
+		auto carRot = car.GetRotation();
+
 		car.SetHidden2(TRUE);
 		car.SetbHiddenSelf(TRUE);
 		auto marioYaw = (int)(-marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
 		car.SetLocation(Vector(marioState.posX, marioState.posZ, marioState.posY + CAR_OFFSET_Z));
 		car.SetVelocity(Vector(marioState.velX, marioState.velZ, marioState.velY + CAR_OFFSET_Z));
 
-		auto carRot = car.GetRotation();
 		carRot.Yaw = marioYaw;
 		carRot.Roll = carRotation.Roll;
 		carRot.Pitch = carRotation.Pitch;
@@ -240,20 +254,14 @@ void SM64::onTick(ServerWrapper server)
 	}
 }
 
-static volatile bool inGame = 0;
-static volatile bool inReplay = 0;
-
 void SM64::RenderMario(CanvasWrapper canvas)
 {
-	inGame = gameWrapper->IsInGame();
-	inReplay = gameWrapper->IsInReplay();
+	auto inGame = gameWrapper->IsInGame();
 	if ((!renderLocalMario && !renderRemoteMario) || !inGame)
 	{
 		renderer->RenderMesh(projectedVertices, 0);
 		return;
 	}
-
-	//if (!inGame) return;
 
 	auto camera = gameWrapper->GetCamera();
 	if (camera.IsNull()) return;
