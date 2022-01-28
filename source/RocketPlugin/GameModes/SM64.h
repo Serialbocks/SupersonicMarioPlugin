@@ -3,8 +3,9 @@
 #pragma comment(lib, "sm64.lib")
 
 #include <fstream>
-#include "../Modules/Renderer.h"
+#include <semaphore>
 
+#include "../Modules/Renderer.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_additions.h"
 #include "../../External/RenderingTools/Objects/Frustum.h"
@@ -54,9 +55,6 @@ private:
     float cameraRot;
     Vector carLocation;
     bool locationInit;
-    float marioOffsetZ = 0;
-    float carOffsetZ = 35.0f;
-    int depthFactor = 20000;
     ControllerInput playerInputs;
     Vector cameraLoc = Vector(0, 0, 0);
     Rotator carRotation;
@@ -70,9 +68,6 @@ private:
     std::shared_ptr<NetcodeManager> Netcode;
     std::shared_ptr<GameWrapper> gameWrapper;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
-    int16_t defX = 0;
-    int16_t defY = 34;
-    int16_t defZ = -4608;
 
     std::string GetCurrentDirectory()
     {

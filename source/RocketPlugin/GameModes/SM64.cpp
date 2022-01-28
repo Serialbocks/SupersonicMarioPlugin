@@ -6,6 +6,8 @@
 
 // CONSTANTS
 #define RL_YAW_RANGE 64692
+#define CAR_OFFSET_Z 35.0f
+#define DEPTH_FACTOR 20000
 
 SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, BakkesMod::Plugin::PluginInfo exports)
 {
@@ -188,8 +190,8 @@ void SM64::onTick(ServerWrapper server)
 		car.SetHidden2(TRUE);
 		car.SetbHiddenSelf(TRUE);
 		auto marioYaw = (int)(-marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-		car.SetLocation(Vector(marioState.posX, marioState.posZ, marioState.posY + carOffsetZ));
-		car.SetVelocity(Vector(marioState.velX, marioState.velZ, marioState.velY + carOffsetZ));
+		car.SetLocation(Vector(marioState.posX, marioState.posZ, marioState.posY + CAR_OFFSET_Z));
+		car.SetVelocity(Vector(marioState.velX, marioState.velZ, marioState.velY + CAR_OFFSET_Z));
 
 		auto carRot = car.GetRotation();
 		carRot.Yaw = marioYaw;
@@ -272,9 +274,9 @@ void SM64::RenderMario(CanvasWrapper canvas)
 		auto uv = &marioGeometry.uv[i * 6];
 
 		// Unreal engine swaps x and y coords for 3d model
-		auto tv1 = Vector(position[0], position[2], position[1] + marioOffsetZ);
-		auto tv2 = Vector(position[3], position[5], position[4] + marioOffsetZ);
-		auto tv3 = Vector(position[6], position[8], position[7] + marioOffsetZ);
+		auto tv1 = Vector(position[0], position[2], position[1]);
+		auto tv2 = Vector(position[3], position[5], position[4]);
+		auto tv3 = Vector(position[6], position[8], position[7]);
 
 		if (frust.IsInFrustum(tv1) || frust.IsInFrustum(tv2) || frust.IsInFrustum(tv3))
 		{
@@ -282,9 +284,9 @@ void SM64::RenderMario(CanvasWrapper canvas)
 			auto projV2 = canvas.ProjectF(tv2);
 			auto projV3 = canvas.ProjectF(tv3);
 
-			auto distance1 = distance(currentCameraLocation, tv1) / depthFactor;
-			auto distance2 = distance(currentCameraLocation, tv2) / depthFactor;
-			auto distance3 = distance(currentCameraLocation, tv3) / depthFactor;
+			auto distance1 = distance(currentCameraLocation, tv1) / DEPTH_FACTOR;
+			auto distance2 = distance(currentCameraLocation, tv2) / DEPTH_FACTOR;
+			auto distance3 = distance(currentCameraLocation, tv3) / DEPTH_FACTOR;
 
 			auto baseVertexIndex = triangleCount * 3;
 			projectedVertices[baseVertexIndex].position = Vector(projV1.X, projV1.Y, distance1);
