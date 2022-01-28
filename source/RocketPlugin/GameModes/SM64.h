@@ -11,7 +11,6 @@
 #include "../../External/NetcodeManager/NetcodeManager.h"
 #include "GameModes/RocketGameMode.h"
 #include <semaphore>
-#include <thread>
 
 extern "C" {
     #include "libsm64.h"
@@ -78,9 +77,6 @@ public:
     std::binary_semaphore netcodeRenderSemaphore{ 1 };
     std::binary_semaphore netcodeTickSemaphore{ 1 };
     std::atomic_bool CancelToken;
-    std::thread* tickMarioThread = nullptr;
-    std::string bodyStateStr = "";
-    std::string marioStateStr = "";
 
 private:
     std::string GetCurrentDirectory()
