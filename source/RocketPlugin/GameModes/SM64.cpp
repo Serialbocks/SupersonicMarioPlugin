@@ -12,7 +12,6 @@ SM64* sm64Instance = nullptr;
 SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, BakkesMod::Plugin::PluginInfo exports)
 {
 	sm64Instance = this;
-
 	using namespace std::placeholders;
 	gameWrapper = gw;
 	cvarManager = cm;
@@ -76,8 +75,6 @@ void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
 	{
 		netcodeRenderSemaphore.release();
 	}
-
-	//netcodeRenderSemaphore.release();
 }
 
 /// <summary>Renders the available options for the game mode.</summary>
@@ -99,52 +96,50 @@ std::string SM64::GetGameModeName()
 	return "SM64";
 }
 
+#define TICK_MARIO_PERIOD 33
 void tickMario()
 {
-	if (sm64Instance == nullptr)
+	sm64Instance->CancelToken.store(true);
+	while (sm64Instance->CancelToken.load())
 	{
-		return;
+		if (sm64Instance == nullptr)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(TICK_MARIO_PERIOD));
+			continue;
+		}
+
+		if (sm64Instance->marioId < 0)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(TICK_MARIO_PERIOD));
+			continue;
+		}
+
+		sm64Instance->netcodeTickSemaphore.acquire();
+		sm64Instance->netcodeRenderSemaphore.acquire();
+		sm64_mario_tick(sm64Instance->marioId,
+			&sm64Instance->marioInputs,
+			&sm64Instance->marioState,
+			&sm64Instance->marioGeometry,
+			&sm64Instance->marioBodyState,
+			true);
+		sm64Instance->netcodeRenderSemaphore.release();
+		
+
+		if (sm64Instance->marioGeometry.numTrianglesUsed > 0)
+		{
+			sm64Instance->renderLocalMario = true;
+
+			unsigned char* bodyStateBytes = (unsigned char*)&sm64Instance->marioBodyState;
+			unsigned char* marioStateBytes = (unsigned char*)&sm64Instance->marioBodyState.marioState;
+			sm64Instance->bodyStateStr = "B";
+			sm64Instance->bodyStateStr += sm64Instance->BytesToHex(bodyStateBytes, sizeof(struct SM64MarioBodyState) - sizeof(struct SM64MarioState));
+			sm64Instance->marioStateStr = "M";
+			sm64Instance->marioStateStr += sm64Instance->BytesToHex(marioStateBytes, sizeof(struct SM64MarioState));
+		}
+		sm64Instance->netcodeTickSemaphore.release();
+		std::this_thread::sleep_for(std::chrono::milliseconds(TICK_MARIO_PERIOD));
 	}
 
-	sm64Instance->netcodeTickSemaphore.acquire();
-	sm64_mario_tick(sm64Instance->marioId, &sm64Instance->marioInputs, &sm64Instance->marioState, &sm64Instance->marioGeometry, &sm64Instance->marioBodyState, true);
-	sm64Instance->netcodeTickSemaphore.release();
-
-	if (sm64Instance->marioGeometry.numTrianglesUsed > 0)
-	{
-		sm64Instance->renderLocalMario = true;
-
-		unsigned char* bodyStateBytes = (unsigned char*)&sm64Instance->marioBodyState;
-		unsigned char* marioStateBytes = (unsigned char*)&sm64Instance->marioBodyState.marioState;
-		std::string bodyStateStr = "B";
-		bodyStateStr += sm64Instance->BytesToHex(bodyStateBytes, sizeof(struct SM64MarioBodyState) - sizeof(struct SM64MarioState));
-		std::string marioStateStr = "M";
-		marioStateStr += sm64Instance->BytesToHex(marioStateBytes, sizeof(struct SM64MarioState));
-
-		if (bodyStateStr.length() < 110)
-		{
-			sm64Instance->Netcode->SendNewMessage(bodyStateStr);
-		}
-		if (marioStateStr.length() < 110)
-		{
-			sm64Instance->Netcode->SendNewMessage(marioStateStr);
-		}
-	}
-}
-
-template <class F, class... Args>
-void setInterval(std::atomic_bool& cancelToken, size_t interval, F&& f, Args&&... args)
-{
-	cancelToken.store(true);
-	auto cb = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
-	std::async(std::launch::async, [=, &cancelToken]()mutable
-		{
-			while (cancelToken.load())
-			{
-				cb();
-				std::this_thread::sleep_for(std::chrono::milliseconds(interval));
-			}
-		});
 }
 
 
@@ -157,10 +152,16 @@ void SM64::Activate(const bool active)
 			[this](const ServerWrapper& caller, void* params, const std::string&) {
 				onTick(caller);
 			});
-		setInterval(CancelToken, 33, tickMario);
+		tickMarioThread = new std::thread(tickMario);
 	}
 	else if (!active && isActive) {
-		CancelToken.store(true);
+		CancelToken.store(false);
+		if (tickMarioThread != nullptr)
+		{
+			tickMarioThread->join();
+			delete tickMarioThread;
+			tickMarioThread = nullptr;
+		}
 		UnhookEvent("Function GameEvent_Soccar_TA.Active.Tick");
 	}
 
@@ -184,6 +185,7 @@ void SM64::InitSM64()
 	marioGeometry.normal = (float*)malloc(sizeof(float) * 9 * SM64_GEO_MAX_TRIANGLES);
 	marioGeometry.uv = (float*)malloc(sizeof(float) * 6 * SM64_GEO_MAX_TRIANGLES);
 	projectedVertices = (Renderer::MeshVertex*)malloc(sizeof(Renderer::MeshVertex) * 3 * SM64_GEO_MAX_TRIANGLES);
+	marioGeometry.numTrianglesUsed = 0;
 	ZeroMemory(projectedVertices, sizeof(Renderer::MeshVertex) * 3 * SM64_GEO_MAX_TRIANGLES);
 	
 	//sm64_global_terminate();
@@ -234,9 +236,19 @@ void SM64::onTick(ServerWrapper server)
 		PriWrapper player = car.GetPRI();
 		if (!player.GetbMatchAdmin()) continue;
 
-		if (!netcodeTickSemaphore.try_acquire()) {
-			continue;
+		netcodeTickSemaphore.acquire();
+
+		if (bodyStateStr.length() > 0)
+		{
+			sm64Instance->Netcode->SendNewMessage(bodyStateStr);
+			bodyStateStr = "";
 		}
+		if (marioStateStr.length() > 0)
+		{
+			sm64Instance->Netcode->SendNewMessage(marioStateStr);
+			marioStateStr = "";
+		}
+
 		if (marioId < 0)
 		{
 			Vector carLocation = car.GetLocation();
@@ -250,6 +262,7 @@ void SM64::onTick(ServerWrapper server)
 			marioId = sm64_mario_create(x, z, y);
 			if (marioId < 0) continue;
 		}
+		
 
 		car.SetHidden2(TRUE);
 		car.SetbHiddenSelf(TRUE);
@@ -303,10 +316,10 @@ void SM64::RenderMario(CanvasWrapper canvas)
 		if (remoteMarioId < 0) return;
 	}
 
-	if (renderRemoteMario && netcodeRenderSemaphore.try_acquire())
+	netcodeRenderSemaphore.acquire();
+	if (renderRemoteMario)
 	{
 		sm64_mario_tick(remoteMarioId, &marioInputs, &marioBodyStateIn.marioState, &marioGeometry, &marioBodyStateIn, 0);
-		netcodeRenderSemaphore.release();
 	}
 
 	auto currentCameraLocation = camera.GetLocation();
@@ -365,7 +378,7 @@ void SM64::RenderMario(CanvasWrapper canvas)
 		projectedVertices,
 		triangleCount
 	);
-
+	netcodeRenderSemaphore.release();
 	
 }
 
