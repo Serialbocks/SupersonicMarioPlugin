@@ -240,11 +240,19 @@ void SM64::onTick(ServerWrapper server)
 	}
 }
 
+static volatile bool inGame = 0;
+static volatile bool inReplay = 0;
+
 void SM64::RenderMario(CanvasWrapper canvas)
 {
-	if (!renderLocalMario && !renderRemoteMario) return;
+	inGame = gameWrapper->IsInGame();
+	inReplay = gameWrapper->IsInReplay();
+	if ((!renderLocalMario && !renderRemoteMario) || !inGame)
+	{
+		renderer->RenderMesh(projectedVertices, 0);
+		return;
+	}
 
-	int inGame = (gameWrapper->IsInGame()) ? 1 : (gameWrapper->IsInReplay()) ? 2 : 0;
 	//if (!inGame) return;
 
 	auto camera = gameWrapper->GetCamera();
