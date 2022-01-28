@@ -10,6 +10,7 @@
 #include "../../External/RenderingTools/Objects/Frustum.h"
 #include "../../External/NetcodeManager/NetcodeManager.h"
 #include "GameModes/RocketGameMode.h"
+#include <semaphore>
 
 extern "C" {
     #include "libsm64.h"
@@ -35,14 +36,14 @@ public:
     void DestroySM64();
     void OnMessageReceived(const std::string& message, PriWrapper sender);
     void RenderMario(CanvasWrapper canvas);
+    std::string BytesToHex(unsigned char* data, unsigned int len);
 
 private:
     float distance(Vector v1, Vector v2);
     void onTick(ServerWrapper server);
-    std::string bytesToHex(unsigned char* data, unsigned int len);
     std::vector<char> hexToBytes(const std::string& hex);
 
-private:
+public:
     /* SM64 Members */
     uint8_t* texture;
     int32_t marioId;
@@ -73,7 +74,11 @@ private:
     int16_t defX = 0;
     int16_t defY = 34;
     int16_t defZ = -4608;
+    std::binary_semaphore netcodeRenderSemaphore{ 1 };
+    std::binary_semaphore netcodeTickSemaphore{ 1 };
+    std::atomic_bool CancelToken;
 
+private:
     std::string GetCurrentDirectory()
     {
         char buffer[MAX_PATH];
