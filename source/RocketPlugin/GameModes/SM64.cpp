@@ -35,21 +35,18 @@ SM64::~SM64()
 
 void SM64::StopRenderMario(std::string eventName)
 {
+	if (marioId >= 0 && renderLocalMario)
+	{
+		sm64_mario_delete(marioId);
+		marioId = -1;
+	}
 	renderLocalMario = false;
 	renderRemoteMario = false;
 }
 
 void SM64::OnCarSpawned(std::string eventName)
 {
-	if (marioId >= 0 && renderLocalMario)
-	{
-		Vector marioLocation(marioState.posX, marioState.posZ, marioState.posY);
-		if (distance(marioLocation, carLocation) > 100.0f)
-		{
-			sm64_mario_delete(marioId);
-			marioId = -1;
-		}
-	}
+
 }
 
 void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
