@@ -18,6 +18,7 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 		std::bind(&SM64::OnMessageReceived, this, _1, _2));
 
 	gameWrapper->HookEvent("Function TAGame.Replay_TA.StartPlaybackAtTimeSeconds", bind(&SM64::StopRenderMario, this, _1));
+	gameWrapper->HookEvent("Function TAGame.GameEvent_Soccer_TA.ReplayPlayback.BeginState", bind(&SM64::StopRenderMario, this, _1));
 	gameWrapper->HookEvent("Function TAGame.GameEvent_TA.OnCarSpawned", bind(&SM64::OnCarSpawned, this, _1));
 
 	InitSM64();
@@ -256,8 +257,8 @@ void SM64::onTick(ServerWrapper server)
 
 void SM64::RenderMario(CanvasWrapper canvas)
 {
-	auto inGame = gameWrapper->IsInGame();
-	if ((!renderLocalMario && !renderRemoteMario) || !inGame)
+	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay();
+	if ((!renderLocalMario && !renderRemoteMario) || (!inGame && isActive))
 	{
 		renderer->RenderMesh(projectedVertices, 0);
 		return;
