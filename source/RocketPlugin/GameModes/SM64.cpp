@@ -22,7 +22,7 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	gameWrapper->HookEvent("Function TAGame.GameEvent_TA.OnCarSpawned", bind(&SM64::OnCarSpawned, this, _1));
 
 	InitSM64();
-	gameWrapper->RegisterDrawable(std::bind(&SM64::RenderMario, this, _1));
+	gameWrapper->RegisterDrawable(std::bind(&SM64::OnRender, this, _1));
 
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
 }
@@ -121,8 +121,9 @@ void SM64::Activate(const bool active)
 void SM64::InitSM64()
 {
 	size_t romSize;
-	std::string path = getBakkesmodFolderPath() + "data\\assets\\baserom.us.z64";
-	uint8_t* rom = utilsReadFileAlloc(path, &romSize);
+	std::string bakkesmodFolderPath = getBakkesmodFolderPath();
+	std::string romPath = bakkesmodFolderPath + "data\\assets\\baserom.us.z64";
+	uint8_t* rom = utilsReadFileAlloc(romPath, &romSize);
 	if (rom == NULL)
 	{
 		return;
@@ -134,8 +135,7 @@ void SM64::InitSM64()
 	marioGeometry.color = (float*)malloc(sizeof(float) * 9 * SM64_GEO_MAX_TRIANGLES);
 	marioGeometry.normal = (float*)malloc(sizeof(float) * 9 * SM64_GEO_MAX_TRIANGLES);
 	marioGeometry.uv = (float*)malloc(sizeof(float) * 6 * SM64_GEO_MAX_TRIANGLES);
-	projectedVertices = (Renderer::MeshVertex*)malloc(sizeof(Renderer::MeshVertex) * 3 * SM64_GEO_MAX_TRIANGLES);
-	ZeroMemory(projectedVertices, sizeof(Renderer::MeshVertex) * 3 * SM64_GEO_MAX_TRIANGLES);
+	projectedVertices.resize(3 * SM64_GEO_MAX_TRIANGLES, { 0 });
 	
 	//sm64_global_terminate();
 	if (!sm64Initialized)
@@ -154,11 +154,7 @@ void SM64::InitSM64()
 
 	locationInit = false;
 
-	renderer = new Renderer(SM64_GEO_MAX_TRIANGLES,
-		texture,
-		textureSize,
-		SM64_TEXTURE_WIDTH,
-		SM64_TEXTURE_HEIGHT);
+	renderer = new Renderer();
 }
 
 void SM64::DestroySM64()
@@ -174,7 +170,6 @@ void SM64::DestroySM64()
 	free(marioGeometry.color);
 	free(marioGeometry.normal);
 	free(marioGeometry.uv);
-	free(projectedVertices);
 	delete renderer;
 }
 
@@ -252,12 +247,29 @@ void SM64::onTick(ServerWrapper server)
 	}
 }
 
-void SM64::RenderMario(CanvasWrapper canvas)
+void SM64::OnRender(CanvasWrapper canvas)
 {
+	if (renderer == nullptr) return;
+	if (!meshesInitialized)
+	{
+		if (!renderer->Initialized) return;
+
+		marioMesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
+			texture,
+			4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
+			SM64_TEXTURE_WIDTH,
+			SM64_TEXTURE_HEIGHT);
+
+		if (marioMesh == nullptr) return;
+
+		meshesInitialized = true;
+		return;
+	}
+
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay();
 	if ((!renderLocalMario && !renderRemoteMario) || (!inGame && isActive))
 	{
-		renderer->RenderMesh(projectedVertices, 0);
+		marioMesh->Render(projectedVertices, 0);
 		return;
 	}
 
@@ -331,10 +343,11 @@ void SM64::RenderMario(CanvasWrapper canvas)
 		}
 	}
 
-	renderer->RenderMesh(
+	marioMesh->Render(
 		projectedVertices,
 		triangleCount
 	);
+
 }
 
 float SM64::distance(Vector v1, Vector v2)
@@ -365,6 +378,48 @@ std::vector<char> SM64::hexToBytes(const std::string& hex) {
 	return bytes;
 }
 
+void SM64::parseObjFile(std::string path, std::vector<Mesh::MeshVertex>* meshVertices)
+{
+	std::ifstream file(path);
+	std::string line;
+
+	std::vector<Vector> vertices;
+	while (std::getline(file, line))
+	{
+		if (line.size() == 0) continue;
+		auto split = splitStr(line, ' ');
+		auto type = split[0];
+		auto lastIndex = split.size() - 1;
+		if (type == "v")
+		{
+			Vector vertex;
+			vertex.X = std::stof(split[lastIndex - 2], nullptr);
+			vertex.Y = std::stof(split[lastIndex - 1], nullptr);
+			vertex.Z = std::stof(split[lastIndex], nullptr);
+			vertices.push_back(vertex);
+		}
+		else if (type == "f")
+		{
+			auto vertIndex1 = std::stoul(splitStr(split[lastIndex - 2], '/')[0], nullptr);
+			auto vertIndex2 = std::stoul(splitStr(split[lastIndex - 1], '/')[0], nullptr);
+			auto vertIndex3 = std::stoul(splitStr(split[lastIndex], '/')[0], nullptr);
+			meshVertices->push_back({ vertices[vertIndex1], 1.0f, 0, 0, 1.0f, 1.0f, 1.0f });
+		}
+	}
+	
+}
+
+std::vector<std::string> SM64::splitStr(std::string str, char delimiter)
+{
+	std::stringstream stringStream(str);
+	std::vector<std::string> seglist;
+	std::string segment;
+	while (std::getline(stringStream, segment, delimiter))
+	{
+		seglist.push_back(segment);
+	}
+	return seglist;
+}
 
 std::string SM64::getBakkesmodFolderPath()
 {

@@ -18,29 +18,10 @@ HRESULT __stdcall hkPresent(IDXGISwapChain* pThis, UINT SyncInterval, UINT Flags
 }
 
 
-Renderer::Renderer(uint16_t maxTriangles,
-	uint8_t* inTexture,
-	size_t inTexSize, uint16_t inTexWidth, uint16_t inTexHeight)
+Renderer::Renderer()
 {
 	instance = this;
-	MaxTriangles = maxTriangles;
-	numIndices = maxTriangles * 3;
-
-	vertices = (Vertex*)malloc(sizeof(Vertex) * numIndices);
-	ZeroMemory(vertices, sizeof(Vertex) * numIndices);
-
-	indices = (unsigned int*)malloc(sizeof(unsigned int) * numIndices);
-	ZeroMemory(indices, sizeof(unsigned int) * numIndices);
-
-	texData = inTexture;
-	texSize = inTexSize;
-	texWidth = inTexWidth;
-	texHeight = inTexHeight;
-
-	for (unsigned int i = 0; i < numIndices; i++)
-	{
-		indices[i] = i;
-	}
+	
 	if (kiero::init(kiero::RenderType::D3D11) == kiero::Status::Success)
 	{
 		kiero::bind(PRESENT_INDEX, (void**)&oPresent, hkPresent);
@@ -51,16 +32,33 @@ Renderer::~Renderer()
 {
 	kiero::shutdown();
 	instance = nullptr;
-	free(vertices);
-	free(indices);
+	for (auto i = 0; i < meshes.size(); i++)
+	{
+		delete meshes[i];
+	}
+}
+
+Mesh* Renderer::CreateMesh(size_t maxTriangles,
+	uint8_t* inTexture,
+	size_t inTexSize,
+	uint16_t inTexWidth,
+	uint16_t inTexHeight)
+{
+	if (!device)
+	{
+		return nullptr;
+	}
+	Mesh* newMesh = new Mesh(device, windowWidth, windowHeight, maxTriangles, inTexture, inTexSize, inTexWidth, inTexHeight);
+	meshes.push_back(newMesh);
+	return newMesh;
 }
 
 void Renderer::OnPresent(IDXGISwapChain* pThis, UINT SyncInterval, UINT Flags)
 {
-	if (!initialized)
+	if (!Initialized)
 	{
 		if (!Init(pThis, SyncInterval, Flags)) return;
-		drawExamples = true;
+		drawMeshes = true;
 	}
 
 	Render();
@@ -107,71 +105,13 @@ bool Renderer::Init(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags)
 
 	//overlay.SetWindowHandle(desc.OutputWindow);
 
-	initialized = true;
+	Initialized = true;
 	firstInit = false;
 	return true;
 }
 
 void Renderer::InitMeshBuffers()
 {
-	D3D11_BUFFER_DESC vbDesc = { 0 };
-	ZeroMemory(&vbDesc, sizeof(D3D11_BUFFER_DESC));
-	vbDesc.ByteWidth = sizeof(Vertex) * MaxTriangles * 3;
-	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-	vbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	vbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	vbDesc.StructureByteStride = sizeof(Vertex);
-
-	D3D11_SUBRESOURCE_DATA vbData = { vertices, 0, 0 };
-
-	device->CreateBuffer(&vbDesc, &vbData, vertexBuffer.GetAddressOf());
-
-	D3D11_BUFFER_DESC ibDesc;
-	ZeroMemory(&ibDesc, sizeof(ibDesc));
-	ibDesc.ByteWidth = sizeof(unsigned int) * numIndices;
-	ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	ibDesc.Usage = D3D11_USAGE_DEFAULT;
-	ibDesc.CPUAccessFlags = 0;
-	ibDesc.MiscFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA ibData = { indices, 0, 0 };
-
-	device->CreateBuffer(&ibDesc, &ibData, indexBuffer.GetAddressOf());
-
-	// If there's texture data, create a shader resource view for it
-	if (texData != nullptr)
-	{
-		D3D11_SUBRESOURCE_DATA subresourceData;
-		subresourceData.pSysMem = texData;
-		subresourceData.SysMemPitch = 4 * texWidth;
-		subresourceData.SysMemSlicePitch = (UINT)texSize;
-
-		D3D11_TEXTURE2D_DESC texture2dDesc;
-		texture2dDesc.Width = texWidth;
-		texture2dDesc.Height = texHeight;
-		texture2dDesc.MipLevels = 1;
-		texture2dDesc.ArraySize = 1;
-		texture2dDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		texture2dDesc.SampleDesc.Count = 1;
-		texture2dDesc.SampleDesc.Quality = 0;
-		texture2dDesc.Usage = D3D11_USAGE_DEFAULT;
-		texture2dDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-		texture2dDesc.CPUAccessFlags = 0;
-		texture2dDesc.MiscFlags = 0;
-
-		ID3D11Texture2D* texture;
-		device->CreateTexture2D(&texture2dDesc, &subresourceData, &texture);
-		
-		D3D11_SHADER_RESOURCE_VIEW_DESC shaderResourceViewDesc;
-		memset(&shaderResourceViewDesc, 0, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-		shaderResourceViewDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-		shaderResourceViewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-		shaderResourceViewDesc.Texture2D.MipLevels = 1;
-		shaderResourceViewDesc.Texture2D.MostDetailedMip = 0;
-
-		device->CreateShaderResourceView(texture, &shaderResourceViewDesc, textureResourceView.GetAddressOf());
-	}
-
 	// Create constant buffer
 	// We need to send the world view projection (WVP) matrix to the shader
 	D3D11_BUFFER_DESC cbDesc = { 0 };
@@ -270,14 +210,13 @@ void Renderer::Render()
 	context->OMSetRenderTargets(1, mainRenderTargetView.GetAddressOf(), 0);
 	context->RSSetViewports(1, &viewport);
 
-	if (drawExamples)
+	if (drawMeshes)
 	{
-
-		if (!examplesLoaded)
+		if (!pipelineInitialized)
 		{
 			CreatePipeline();
 			InitMeshBuffers();
-			examplesLoaded = true;
+			pipelineInitialized = true;
 		}
 
 		DrawRenderedMesh();
@@ -312,14 +251,6 @@ void Renderer::DrawRenderedMesh()
 	memcpy(mappedResource.pData, &constantBufferData, sizeof(ConstantBufferData));
 	context->Unmap(constantBuffer.Get(), 0);
 
-	if (renderFrame)
-	{
-		context->Map(vertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		memcpy(mappedResource.pData, (void*)vertices, sizeof(Vertex) * NumTrianglesUsed * 3);
-		context->Unmap(vertexBuffer.Get(), 0);
-		renderFrame = false;
-	}
-
 	context->VSSetShader(vertexShader.Get(), nullptr, 0);
 	context->PSSetShader(pixelShader.Get(), nullptr, 0);
 
@@ -332,44 +263,34 @@ void Renderer::DrawRenderedMesh()
 	context->UpdateSubresource(constantBuffer.Get(), 0, 0, &constantBufferData, 0, 0);
 	context->VSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
 
-	UINT stride = sizeof(Vertex);
+	UINT stride = sizeof(Mesh::Vertex);
 	UINT offset = 0;
 
-	context->IASetVertexBuffers(0, 1, vertexBuffer.GetAddressOf(), &stride, &offset);
-	context->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-
-	if (textureResourceView != nullptr)
+	for (auto i = 0; i < meshes.size(); i++)
 	{
-		context->PSSetShader(pixelShaderTextures.Get(), nullptr, 0);
-		context->PSSetSamplers(0, 1, samplerState.GetAddressOf());
-		context->PSSetShaderResources(0, 1, textureResourceView.GetAddressOf());
-		context->DrawIndexed(NumTrianglesUsed * 3, 0, 0);
-	}
-	else
-	{
-		context->DrawIndexed(NumTrianglesUsed * 3, 0, 0);
-	}
-}
+		auto mesh = meshes[i];
+		if (mesh->RenderFrame)
+		{
+			context->Map(mesh->VertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+			memcpy(mappedResource.pData, (void*)mesh->Vertices.data(), sizeof(Mesh::Vertex) * mesh->NumTrianglesUsed * 3);
+			context->Unmap(mesh->VertexBuffer.Get(), 0);
+			mesh->RenderFrame = false;
+		}
 
-void Renderer::RenderMesh(
-	MeshVertex* inVertices,
-	uint16_t numTrianglesUsed)
-{
-	if (renderFrame) return;
-	for (int i = 0; i < numTrianglesUsed * 3; i++)
-	{
-		auto curVertex = inVertices[i];
-		vertices[i].pos.x = (2 * curVertex.position.X / windowWidth) - 1.0f;
-		vertices[i].pos.y = (-2 * curVertex.position.Y / windowHeight) + 1.0f;
-		vertices[i].pos.z = curVertex.position.Z;
-		vertices[i].color.x = curVertex.r;
-		vertices[i].color.y = curVertex.g;
-		vertices[i].color.z = curVertex.b;
-		vertices[i].color.w = curVertex.a;
-		vertices[i].texCoord.x = curVertex.u;
-		vertices[i].texCoord.y = curVertex.v;
-	}
+		context->IASetVertexBuffers(0, 1, mesh->VertexBuffer.GetAddressOf(), &stride, &offset);
+		context->IASetIndexBuffer(mesh->IndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
-	NumTrianglesUsed = numTrianglesUsed;
-	renderFrame = true;
+		if (mesh->TextureResourceView != nullptr)
+		{
+			context->PSSetShader(pixelShaderTextures.Get(), nullptr, 0);
+			context->PSSetSamplers(0, 1, samplerState.GetAddressOf());
+			context->PSSetShaderResources(0, 1, mesh->TextureResourceView.GetAddressOf());
+			context->DrawIndexed((UINT)mesh->NumTrianglesUsed * 3, 0, 0);
+		}
+		else
+		{
+			context->PSSetShader(pixelShader.Get(), nullptr, 0);
+			context->DrawIndexed((UINT)mesh->NumTrianglesUsed * 3, 0, 0);
+		}
+	}
 }

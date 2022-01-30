@@ -261,6 +261,9 @@
     <ClInclude Include="..\External\NetcodeManager\NetcodeManager.h">
       <Filter>External\NetcodeManager</Filter>
     </ClInclude>
+    <ClInclude Include="Modules\Mesh.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RocketPlugin.cpp">
@@ -457,6 +460,9 @@
     </ClCompile>
     <ClCompile Include="..\External\kiero\minhook\src\hde\hde64.c">
       <Filter>External\kiero</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Mesh.cpp">
+      <Filter>Modules</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

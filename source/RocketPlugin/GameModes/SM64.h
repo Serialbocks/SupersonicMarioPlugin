@@ -11,6 +11,7 @@
 #include "shlobj.h"
 
 #include "../Modules/Renderer.h"
+#include "../Modules/Mesh.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_additions.h"
 #include "../../External/RenderingTools/Objects/Frustum.h"
@@ -41,7 +42,7 @@ public:
     void InitSM64();
     void DestroySM64();
     void OnMessageReceived(const std::string& message, PriWrapper sender);
-    void RenderMario(CanvasWrapper canvas);
+    void OnRender(CanvasWrapper canvas);
 
 private:
     float distance(Vector v1, Vector v2);
@@ -50,6 +51,8 @@ private:
     std::vector<char> hexToBytes(const std::string& hex);
     std::string getBakkesmodFolderPath();
     uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
+    void parseObjFile(std::string path, std::vector<Mesh::MeshVertex>* meshVertices);
+    std::vector<std::string> splitStr(std::string str, char delimiter);
 
 private:
     /* SM64 Members */
@@ -67,8 +70,13 @@ private:
     Vector cameraLoc = Vector(0, 0, 0);
     Rotator carRotation;
     Renderer* renderer = nullptr;
-    Renderer::MeshVertex* projectedVertices = nullptr;
+    std::vector<Mesh::MeshVertex> projectedVertices;
+    std::vector<Mesh::MeshVertex> ballVertices;
+    std::vector<Mesh::MeshVertex> ballVerticesProjected;
+    Mesh* marioMesh = nullptr;
+    Mesh* ballMesh = nullptr;
     bool sm64Initialized = false;
+    bool meshesInitialized = false;
     struct SM64MarioBodyState marioBodyState;
     struct SM64MarioBodyState marioBodyStateIn;
     bool renderLocalMario = false;
