@@ -4,6 +4,11 @@
 
 #include <fstream>
 #include <semaphore>
+#include <iostream>
+#include <tchar.h>
+#include <shlwapi.h>
+#pragma comment(lib,"shlwapi.lib")
+#include "shlobj.h"
 
 #include "../Modules/Renderer.h"
 #include "imgui/imgui.h"
@@ -43,6 +48,8 @@ private:
     void onTick(ServerWrapper server);
     std::string bytesToHex(unsigned char* data, unsigned int len);
     std::vector<char> hexToBytes(const std::string& hex);
+    std::string getBakkesmodFolderPath();
+    uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
 
 private:
     /* SM64 Members */
@@ -69,38 +76,5 @@ private:
     std::shared_ptr<NetcodeManager> Netcode;
     std::shared_ptr<GameWrapper> gameWrapper;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
-
-    std::string GetCurrentDirectory()
-    {
-        char buffer[MAX_PATH];
-        GetModuleFileNameA(NULL, buffer, MAX_PATH);
-        std::string::size_type pos = std::string(buffer).find_last_of("\\/");
-
-        return std::string(buffer).substr(0, pos);
-    }
-
-    uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength)
-    {
-        FILE* f;
-        fopen_s(&f, path.c_str(), "rb");
-
-        if (!f) return NULL;
-
-        fseek(f, 0, SEEK_END);
-        size_t length = (size_t)ftell(f);
-        rewind(f);
-        uint8_t* buffer = (uint8_t*)malloc(length + 1);
-        if (buffer != NULL)
-        {
-            fread(buffer, 1, length, f);
-            buffer[length] = 0;
-        }
-
-        fclose(f);
-
-        if (fileLength) *fileLength = length;
-
-        return (uint8_t*)buffer;
-    }
 
 };

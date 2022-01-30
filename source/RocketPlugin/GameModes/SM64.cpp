@@ -121,7 +121,7 @@ void SM64::Activate(const bool active)
 void SM64::InitSM64()
 {
 	size_t romSize;
-	std::string path = GetCurrentDirectory() + "\\baserom.us.z64";
+	std::string path = getBakkesmodFolderPath() + "data\\assets\\baserom.us.z64";
 	uint8_t* rom = utilsReadFileAlloc(path, &romSize);
 	if (rom == NULL)
 	{
@@ -363,5 +363,48 @@ std::vector<char> SM64::hexToBytes(const std::string& hex) {
 	}
 
 	return bytes;
+}
+
+
+std::string SM64::getBakkesmodFolderPath()
+{
+	wchar_t szPath[MAX_PATH];
+	wchar_t* s = szPath;
+	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, (LPWSTR)szPath)))
+	{
+		PathAppend((LPWSTR)szPath, _T("\\bakkesmod\\bakkesmod\\"));
+
+		std::ostringstream stm;
+
+		while (*s != L'\0') {
+			stm << std::use_facet< std::ctype<wchar_t> >(std::locale()).narrow(*s++, '?');
+		}
+		return stm.str();
+	}
+	return "";
+}
+
+uint8_t* SM64::utilsReadFileAlloc(std::string path, size_t* fileLength)
+{
+	FILE* f;
+	fopen_s(&f, path.c_str(), "rb");
+
+	if (!f) return NULL;
+
+	fseek(f, 0, SEEK_END);
+	size_t length = (size_t)ftell(f);
+	rewind(f);
+	uint8_t* buffer = (uint8_t*)malloc(length + 1);
+	if (buffer != NULL)
+	{
+		fread(buffer, 1, length, f);
+		buffer[length] = 0;
+	}
+
+	fclose(f);
+
+	if (fileLength) *fileLength = length;
+
+	return (uint8_t*)buffer;
 }
 
