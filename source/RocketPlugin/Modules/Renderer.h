@@ -38,12 +38,6 @@ private:
 	void InitMeshBuffers();
 	void DrawRenderedMesh();
 
-	struct ConstantBufferData
-	{
-		DirectX::XMMATRIX wvp = DirectX::XMMatrixIdentity();
-	}
-	constantBufferData;
-
 	
 	bool drawMeshes = false;
 	bool pipelineInitialized = false;
@@ -61,7 +55,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState = nullptr;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerState = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> depthStencilState = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencilBuffer = nullptr;

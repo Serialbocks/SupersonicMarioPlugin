@@ -70,9 +70,6 @@ private:
     Vector cameraLoc = Vector(0, 0, 0);
     Rotator carRotation;
     Renderer* renderer = nullptr;
-    std::vector<Mesh::MeshVertex> projectedVertices;
-    std::vector<Mesh::MeshVertex> ballVertices;
-    std::vector<Mesh::MeshVertex> ballVerticesProjected;
     Mesh* marioMesh = nullptr;
     Mesh* ballMesh = nullptr;
     bool sm64Initialized = false;

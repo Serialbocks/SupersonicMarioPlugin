@@ -1,5 +1,8 @@
 #include "Mesh.h"
 
+#define NEAR_Z 0.1f
+#define FAR_Z 3000.0f
+
 Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	int inWindowWidth,
 	int inWindowHeight,
@@ -52,6 +55,21 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 
 	device->CreateBuffer(&ibDesc, &ibData, IndexBuffer.GetAddressOf());
 
+	// Create constant buffer
+	// We need to send the world view projection (WVP) matrix to the shader
+	D3D11_BUFFER_DESC cbDesc = { 0 };
+	ZeroMemory(&cbDesc, sizeof(D3D11_BUFFER_DESC));
+	cbDesc.ByteWidth = sizeof(ConstantBufferData);
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cbDesc.MiscFlags = 0;
+	cbDesc.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA cbData = { &ConstBufferData, 0, 0 };
+
+	device->CreateBuffer(&cbDesc, &cbData, ConstantBuffer.GetAddressOf());
+
 	// If there's texture data, create a shader resource view for it
 	if (texData != nullptr)
 	{
@@ -91,25 +109,27 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	}
 }
 
-
 void Mesh::Render(
-	std::vector<MeshVertex> verticesIn,
-	size_t numTrianglesUsed)
+	size_t numTrianglesUsed,
+	CameraWrapper camera,
+	Vector carLoc)
 {
 	if (RenderFrame) return;
-	for (int i = 0; i < numTrianglesUsed * 3; i++)
-	{
-		auto curVertex = verticesIn[i];
-		Vertices[i].pos.x = (2 * curVertex.position.X / windowWidth) - 1.0f;
-		Vertices[i].pos.y = (-2 * curVertex.position.Y / windowHeight) + 1.0f;
-		Vertices[i].pos.z = curVertex.position.Z;
-		Vertices[i].color.x = curVertex.r;
-		Vertices[i].color.y = curVertex.g;
-		Vertices[i].color.z = curVertex.b;
-		Vertices[i].color.w = curVertex.a;
-		Vertices[i].texCoord.x = curVertex.u;
-		Vertices[i].texCoord.y = curVertex.v;
-	}
+
+	auto cameraLoc = camera.GetLocation();
+	float fov = camera.GetFOV();
+	float fovRadians = (fov / 360.0f) * DirectX::XM_2PI;
+	float aspectRatio = static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight);
+
+	DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
+	DirectX::XMVECTOR eyePos = DirectX::XMVectorSet(cameraLoc.X, cameraLoc.Z, cameraLoc.Y, 0.0f);
+	DirectX::XMVECTOR lookAtPos = DirectX::XMVectorSet(carLoc.X, carLoc.Y, carLoc.Z, 0.0f);
+	DirectX::XMVECTOR upVector = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(eyePos, lookAtPos, upVector);
+	DirectX::XMMATRIX projection = DirectX::XMMatrixPerspectiveFovLH(fovRadians, aspectRatio, NEAR_Z, FAR_Z);
+
+	ConstBufferData.wvp = world * view * projection;
+	ConstBufferData.wvp = DirectX::XMMatrixTranspose(ConstBufferData.wvp);
 
 	NumTrianglesUsed = numTrianglesUsed;
 	RenderFrame = true;

@@ -135,7 +135,6 @@ void SM64::InitSM64()
 	marioGeometry.color = (float*)malloc(sizeof(float) * 9 * SM64_GEO_MAX_TRIANGLES);
 	marioGeometry.normal = (float*)malloc(sizeof(float) * 9 * SM64_GEO_MAX_TRIANGLES);
 	marioGeometry.uv = (float*)malloc(sizeof(float) * 6 * SM64_GEO_MAX_TRIANGLES);
-	projectedVertices.resize(3 * SM64_GEO_MAX_TRIANGLES, { 0 });
 	
 	//sm64_global_terminate();
 	if (!sm64Initialized)
@@ -195,16 +194,16 @@ void SM64::onTick(ServerWrapper server)
 
 		auto carRot = car.GetRotation();
 
-		car.SetHidden2(TRUE);
-		car.SetbHiddenSelf(TRUE);
+		//car.SetHidden2(TRUE);
+		//car.SetbHiddenSelf(TRUE);
 		auto marioYaw = (int)(-marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-		car.SetLocation(Vector(marioState.posX, marioState.posZ, marioState.posY + CAR_OFFSET_Z));
-		car.SetVelocity(Vector(marioState.velX, marioState.velZ, marioState.velY + CAR_OFFSET_Z));
+		//car.SetLocation(Vector(marioState.posX, marioState.posZ, marioState.posY + CAR_OFFSET_Z));
+		//car.SetVelocity(Vector(marioState.velX, marioState.velZ, marioState.velY + CAR_OFFSET_Z));
 
 		carRot.Yaw = marioYaw;
 		carRot.Roll = carRotation.Roll;
 		carRot.Pitch = carRotation.Pitch;
-		car.SetRotation(carRot);
+		//car.SetRotation(carRot);
 		
 		auto camera = gameWrapper->GetCamera();
 		if (!camera.IsNull())
@@ -269,7 +268,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay();
 	if ((!renderLocalMario && !renderRemoteMario) || (!inGame && isActive))
 	{
-		marioMesh->Render(projectedVertices, 0);
+		//marioMesh->Render(projectedVertices, 0);
 		return;
 	}
 
@@ -286,66 +285,46 @@ void SM64::OnRender(CanvasWrapper canvas)
 		if (remoteMarioId < 0) return;
 	}
 
+	Vector marioLocation;
 	if (renderRemoteMario)
 	{
 		sm64_mario_tick(remoteMarioId, &marioInputs, &marioBodyStateIn.marioState, &marioGeometry, &marioBodyStateIn, 0);
+		marioLocation.X = marioBodyStateIn.marioState.posX;
+		marioLocation.Y = marioBodyStateIn.marioState.posY;
+		marioLocation.Z = marioBodyStateIn.marioState.posZ;
+	}
+	else if (renderLocalMario)
+	{
+		marioLocation.X = marioBodyState.marioState.posX;
+		marioLocation.Y = marioBodyState.marioState.posY;
+		marioLocation.Z = marioBodyState.marioState.posZ;
 	}
 
 	auto currentCameraLocation = camera.GetLocation();
-	int triangleCount = 0;
-	for (auto i = 0; i < marioGeometry.numTrianglesUsed; i++)
+	for (auto i = 0; i < marioGeometry.numTrianglesUsed * 3; i++)
 	{
-		auto position = &marioGeometry.position[i * 9];
-		auto color = &marioGeometry.color[i * 9];
-		auto uv = &marioGeometry.uv[i * 6];
+		auto position = &marioGeometry.position[i * 3];
+		auto color = &marioGeometry.color[i * 3];
+		auto uv = &marioGeometry.uv[i * 2];
 
+		auto currentVertex = &marioMesh->Vertices[i];
 		// Unreal engine swaps x and y coords for 3d model
-		auto tv1 = Vector(position[0], position[2], position[1]);
-		auto tv2 = Vector(position[3], position[5], position[4]);
-		auto tv3 = Vector(position[6], position[8], position[7]);
-
-		if (frust.IsInFrustum(tv1) || frust.IsInFrustum(tv2) || frust.IsInFrustum(tv3))
-		{
-			auto projV1 = canvas.ProjectF(tv1);
-			auto projV2 = canvas.ProjectF(tv2);
-			auto projV3 = canvas.ProjectF(tv3);
-
-			auto distance1 = distance(currentCameraLocation, tv1) / DEPTH_FACTOR;
-			auto distance2 = distance(currentCameraLocation, tv2) / DEPTH_FACTOR;
-			auto distance3 = distance(currentCameraLocation, tv3) / DEPTH_FACTOR;
-
-			auto baseVertexIndex = triangleCount * 3;
-			projectedVertices[baseVertexIndex].position = Vector(projV1.X, projV1.Y, distance1);
-			projectedVertices[baseVertexIndex].r = color[0];
-			projectedVertices[baseVertexIndex].g = color[1];
-			projectedVertices[baseVertexIndex].b = color[2];
-			projectedVertices[baseVertexIndex].a = 1.0f;
-			projectedVertices[baseVertexIndex].u = uv[0];
-			projectedVertices[baseVertexIndex].v = uv[1];
-
-			projectedVertices[baseVertexIndex + 1].position = Vector(projV2.X, projV2.Y, distance2);
-			projectedVertices[baseVertexIndex + 1].r = color[3];
-			projectedVertices[baseVertexIndex + 1].g = color[4];
-			projectedVertices[baseVertexIndex + 1].b = color[5];
-			projectedVertices[baseVertexIndex + 1].a = 1.0f;
-			projectedVertices[baseVertexIndex + 1].u = uv[2];
-			projectedVertices[baseVertexIndex + 1].v = uv[3];
-
-			projectedVertices[baseVertexIndex + 2].position = Vector(projV3.X, projV3.Y, distance3);
-			projectedVertices[baseVertexIndex + 2].r = color[6];
-			projectedVertices[baseVertexIndex + 2].g = color[7];
-			projectedVertices[baseVertexIndex + 2].b = color[8];
-			projectedVertices[baseVertexIndex + 2].a = 1.0f;
-			projectedVertices[baseVertexIndex + 2].u = uv[4];
-			projectedVertices[baseVertexIndex + 2].v = uv[5];
-
-			triangleCount++;
-		}
+		currentVertex->pos.x = position[0];
+		currentVertex->pos.y = position[1];
+		currentVertex->pos.z = position[2];
+		currentVertex->color.x = color[0];
+		currentVertex->color.y = color[1];
+		currentVertex->color.z = color[2];
+		currentVertex->color.w = 1.0f;
+		currentVertex->texCoord.x = uv[0];
+		currentVertex->texCoord.y = uv[1];
+		
 	}
-
+	
 	marioMesh->Render(
-		projectedVertices,
-		triangleCount
+		marioGeometry.numTrianglesUsed,
+		camera,
+		marioLocation
 	);
 
 }

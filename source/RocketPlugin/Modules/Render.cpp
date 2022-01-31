@@ -112,21 +112,6 @@ bool Renderer::Init(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags)
 
 void Renderer::InitMeshBuffers()
 {
-	// Create constant buffer
-	// We need to send the world view projection (WVP) matrix to the shader
-	D3D11_BUFFER_DESC cbDesc = { 0 };
-	ZeroMemory(&cbDesc, sizeof(D3D11_BUFFER_DESC));
-	cbDesc.ByteWidth = sizeof(ConstantBufferData);
-	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	cbDesc.MiscFlags = 0;
-	cbDesc.StructureByteStride = 0;
-
-	D3D11_SUBRESOURCE_DATA cbData = { &constantBufferData, 0, 0 };
-
-	device->CreateBuffer(&cbDesc, &cbData, constantBuffer.GetAddressOf());
-
 	// Create rasterizer state
 	// We need to control which face of a shape is culled
 	// And we need to know which order to set our indices
@@ -245,12 +230,6 @@ void Renderer::DrawRenderedMesh()
 	context->OMSetRenderTargets(1, mainRenderTargetView.GetAddressOf(), depthStencilView.Get());
 	context->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-	// Map the constant buffer on the GPU
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	context->Map(constantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	memcpy(mappedResource.pData, &constantBufferData, sizeof(ConstantBufferData));
-	context->Unmap(constantBuffer.Get(), 0);
-
 	context->VSSetShader(vertexShader.Get(), nullptr, 0);
 	context->PSSetShader(pixelShader.Get(), nullptr, 0);
 
@@ -260,15 +239,22 @@ void Renderer::DrawRenderedMesh()
 	context->RSSetState(rasterizerState.Get());
 	context->OMSetDepthStencilState(depthStencilState.Get(), 0);
 
-	context->UpdateSubresource(constantBuffer.Get(), 0, 0, &constantBufferData, 0, 0);
-	context->VSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
-
 	UINT stride = sizeof(Mesh::Vertex);
 	UINT offset = 0;
 
 	for (auto i = 0; i < meshes.size(); i++)
 	{
 		auto mesh = meshes[i];
+
+		// Map the constant buffer on the GPU
+		D3D11_MAPPED_SUBRESOURCE mappedResource;
+		context->Map(mesh->ConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		memcpy(mappedResource.pData, &mesh->ConstBufferData, sizeof(Mesh::ConstantBufferData));
+		context->Unmap(mesh->ConstantBuffer.Get(), 0);
+
+		context->UpdateSubresource(mesh->ConstantBuffer.Get(), 0, 0, &mesh->ConstBufferData, 0, 0);
+		context->VSSetConstantBuffers(0, 1, mesh->ConstantBuffer.GetAddressOf());
+
 		if (mesh->RenderFrame)
 		{
 			context->Map(mesh->VertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);

@@ -2,6 +2,7 @@
 
 #include "Renderer.h"
 
+
 class Renderer;
 
 class Mesh
@@ -22,8 +23,9 @@ public:
 		uint16_t inTexWidth = 0,
 		uint16_t inTexHeight = 0);
 	void Render(
-		std::vector<MeshVertex> vertices,
-		size_t numTrianglesUsed);
+		size_t numTrianglesUsed,
+		CameraWrapper camera,
+		Vector carLoc);
 
 public:
 	struct Vertex
@@ -32,6 +34,12 @@ public:
 		DirectX::XMFLOAT4 color;
 		DirectX::XMFLOAT2 texCoord;
 	};
+	typedef struct ConstantBufferData_t
+	{
+		DirectX::XMMATRIX wvp = DirectX::XMMatrixIdentity();
+	} ConstantBufferData;
+	ConstantBufferData ConstBufferData;
+
 	size_t MaxTriangles = 0;
 	size_t NumTrianglesUsed = 0;
 	bool RenderFrame = false;
@@ -40,6 +48,7 @@ public:
 	size_t NumIndices = 0;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> TextureResourceView = nullptr;
 
 private:
