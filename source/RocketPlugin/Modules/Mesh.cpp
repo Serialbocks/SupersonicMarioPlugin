@@ -1,7 +1,7 @@
 #include "Mesh.h"
 
-#define NEAR_Z 0.1f
-#define FAR_Z 3000.0f
+#define NEAR_Z 50.0f
+#define FAR_Z 20000.0f
 
 Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	int inWindowWidth,
