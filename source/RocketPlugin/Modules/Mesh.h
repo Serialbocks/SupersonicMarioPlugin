@@ -56,6 +56,8 @@ private:
 	size_t texSize;
 	uint16_t texWidth, texHeight;
 	int windowWidth, windowHeight;
+	const DirectX::XMVECTOR DEFAULT_FORWARD_VECTOR = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	const DirectX::XMVECTOR DEFAULT_UP_VECTOR = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 
 	Microsoft::WRL::ComPtr<ID3D11Device> device = nullptr;
 

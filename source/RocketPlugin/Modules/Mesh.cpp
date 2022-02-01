@@ -116,16 +116,20 @@ void Mesh::Render(
 {
 	if (RenderFrame) return;
 
-	auto cameraLoc = camera.GetLocation();
+	auto camLocation = camera.GetLocation();
+	auto camRotation = camera.GetRotation();
 	float fov = camera.GetFOV();
-	float fovRadians = (fov / 360.0f) * DirectX::XM_2PI;
+	//float fovRadians = (fov / 360.0f) * DirectX::XM_2PI;
+	float fovRadians = DirectX::XMConvertToRadians(fov);
 	float aspectRatio = static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight);
 
 	DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
-	DirectX::XMVECTOR eyePos = DirectX::XMVectorSet(cameraLoc.X, cameraLoc.Z, cameraLoc.Y, 0.0f);
+
+	DirectX::XMVECTOR eyePos = DirectX::XMVectorSet(camLocation.X, camLocation.Y, camLocation.Z, 0.0f);
 	DirectX::XMVECTOR lookAtPos = DirectX::XMVectorSet(carLoc.X, carLoc.Y, carLoc.Z, 0.0f);
-	DirectX::XMVECTOR upVector = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+	DirectX::XMVECTOR upVector = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(eyePos, lookAtPos, upVector);
+
 	DirectX::XMMATRIX projection = DirectX::XMMatrixPerspectiveFovLH(fovRadians, aspectRatio, NEAR_Z, FAR_Z);
 
 	ConstBufferData.wvp = world * view * projection;

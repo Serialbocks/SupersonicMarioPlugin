@@ -310,8 +310,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 		auto currentVertex = &marioMesh->Vertices[i];
 		// Unreal engine swaps x and y coords for 3d model
 		currentVertex->pos.x = position[0];
-		currentVertex->pos.y = position[1];
-		currentVertex->pos.z = position[2];
+		currentVertex->pos.y = position[2];
+		currentVertex->pos.z = position[1];
 		currentVertex->color.x = color[0];
 		currentVertex->color.y = color[1];
 		currentVertex->color.z = color[2];
@@ -321,11 +321,17 @@ void SM64::OnRender(CanvasWrapper canvas)
 		
 	}
 	
-	marioMesh->Render(
-		marioGeometry.numTrianglesUsed,
-		camera,
-		marioLocation
-	);
+	auto localCar = gameWrapper->GetLocalCar();
+	if (!localCar.IsNull())
+	{
+		auto carLocation = localCar.GetLocation();
+		marioMesh->Render(
+			marioGeometry.numTrianglesUsed,
+			camera,
+			carLocation
+		);
+	}
+
 
 }
 
