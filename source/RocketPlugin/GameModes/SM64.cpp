@@ -318,9 +318,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 		currentVertex->color.w = 1.0f;
 		currentVertex->texCoord.x = uv[0];
 		currentVertex->texCoord.y = uv[1];
-		
 	}
-	
+
 	auto localCar = gameWrapper->GetLocalCar();
 	if (!localCar.IsNull())
 	{
