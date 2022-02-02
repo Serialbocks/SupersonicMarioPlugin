@@ -275,7 +275,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 	auto camera = gameWrapper->GetCamera();
 	if (camera.IsNull()) return;
 
-	RT::Frustum frust{ canvas, camera };
 
 	if (renderRemoteMario && remoteMarioId < 0)
 	{

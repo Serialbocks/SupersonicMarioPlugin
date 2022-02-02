@@ -13,9 +13,6 @@
 [submodule "source/External/libsm64"]
     path = source/External/libsm64
     url = https://github.com/johnrackcoach/libsm64.git
-[submodule "source/External/RenderingTools"]
-    path = source/External/RenderingTools
-    url = https://github.com/CinderBlocc/RenderingTools.git
 [submodule "source/External/kiero"]
     path = source/External/kiero
     url = https://github.com/johnrackcoach/kiero.git

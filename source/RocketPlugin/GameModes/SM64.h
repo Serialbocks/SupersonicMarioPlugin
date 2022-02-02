@@ -14,9 +14,8 @@
 #include "../Modules/Mesh.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_additions.h"
-#include "../../External/RenderingTools/Objects/Frustum.h"
-#include "../../External/NetcodeManager/NetcodeManager.h"
 #include "GameModes/RocketGameMode.h"
+#include "../../External/NetcodeManager/NetcodeManager.h"
 
 extern "C" {
     #include "libsm64.h"
