@@ -10,8 +10,8 @@
 #pragma comment(lib,"shlwapi.lib")
 #include "shlobj.h"
 
-#include "../Modules/Renderer.h"
-#include "../Modules/Mesh.h"
+#include "../Graphics/Renderer.h"
+#include "../Graphics/Mesh.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_additions.h"
 #include "GameModes/RocketGameMode.h"

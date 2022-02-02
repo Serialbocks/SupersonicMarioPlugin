@@ -43,6 +43,9 @@
     <Filter Include="External\NetcodeManager">
       <UniqueIdentifier>{d75eafe3-720a-4d5c-865d-127892348657}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Graphics">
+      <UniqueIdentifier>{012c66c4-24c3-4aac-816f-4c4bca16f996}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RocketPlugin.h">
@@ -183,12 +186,6 @@
     <ClInclude Include="Modules\level.h">
       <Filter>Modules</Filter>
     </ClInclude>
-    <ClInclude Include="Modules\Renderer.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Modules\shaders.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
     <ClInclude Include="Modules\surface_terrains.h">
       <Filter>Modules</Filter>
     </ClInclude>
@@ -201,8 +198,14 @@
     <ClInclude Include="..\External\NetcodeManager\NetcodeManager.h">
       <Filter>External\NetcodeManager</Filter>
     </ClInclude>
-    <ClInclude Include="Modules\Mesh.h">
-      <Filter>Modules</Filter>
+    <ClInclude Include="Graphics\Mesh.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\Renderer.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\shaders.h">
+      <Filter>Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -320,9 +323,6 @@
     <ClCompile Include="Modules\level.c">
       <Filter>Modules</Filter>
     </ClCompile>
-    <ClCompile Include="Modules\Render.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
     <ClCompile Include="GameModes\SM64.cpp">
       <Filter>GameModes</Filter>
     </ClCompile>
@@ -347,8 +347,11 @@
     <ClCompile Include="..\External\kiero\minhook\src\hde\hde64.c">
       <Filter>External\kiero</Filter>
     </ClCompile>
-    <ClCompile Include="Modules\Mesh.cpp">
-      <Filter>Modules</Filter>
+    <ClCompile Include="Graphics\Mesh.cpp">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Render.cpp">
+      <Filter>Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -158,10 +158,10 @@
     <ClInclude Include="..\External\simdjson\singleheader\simdjson.h" />
     <ClInclude Include="ExternalModules\ExternalModules.h" />
     <ClInclude Include="GameModes\SM64.h" />
+    <ClInclude Include="Graphics\Mesh.h" />
+    <ClInclude Include="Graphics\Renderer.h" />
+    <ClInclude Include="Graphics\shaders.h" />
     <ClInclude Include="Modules\level.h" />
-    <ClInclude Include="Modules\Mesh.h" />
-    <ClInclude Include="Modules\Renderer.h" />
-    <ClInclude Include="Modules\shaders.h" />
     <ClInclude Include="Modules\surface_terrains.h" />
     <ClInclude Include="RPConfig.h" />
     <ClInclude Include="GameModes\BoostShare.h" />
@@ -210,9 +210,9 @@
     <ClCompile Include="ExternalModules\ExternalModules.cpp" />
     <ClCompile Include="ExternalModules\RPTests.cpp" />
     <ClCompile Include="GameModes\SM64.cpp" />
+    <ClCompile Include="Graphics\Mesh.cpp" />
+    <ClCompile Include="Graphics\Render.cpp" />
     <ClCompile Include="Modules\level.c" />
-    <ClCompile Include="Modules\Mesh.cpp" />
-    <ClCompile Include="Modules\Render.cpp" />
     <ClCompile Include="RPConfig.cpp" />
     <ClCompile Include="GameModes\BoostShare.cpp" />
     <ClCompile Include="GameModes\RumbleItems\RumbleItems.cpp" />
