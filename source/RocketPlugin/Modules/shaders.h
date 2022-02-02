@@ -35,12 +35,12 @@ VS_Output VS(VS_Input input)
 
 float4 PSTex(VS_Output input) : SV_Target
 {
-    if(input.texcoord.x == 1.0f && input.texcoord.y == 1.0f)
+    float4 textureColor;
+    textureColor = tex.Sample(sampleType, input.texcoord);
+    if(textureColor.w < 0.5f)
     {
         return input.color;
     }
-    float4 textureColor;
-    textureColor = tex.Sample(sampleType, input.texcoord);
     float4 mixedColor = lerp(input.color, textureColor, textureColor.w);
     return mixedColor;
 }
