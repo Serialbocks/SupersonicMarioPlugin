@@ -194,16 +194,16 @@ void SM64::onTick(ServerWrapper server)
 
 		auto carRot = car.GetRotation();
 
-		//car.SetHidden2(TRUE);
-		//car.SetbHiddenSelf(TRUE);
+		car.SetHidden2(TRUE);
+		car.SetbHiddenSelf(TRUE);
 		auto marioYaw = (int)(-marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-		//car.SetLocation(Vector(marioState.posX, marioState.posZ, marioState.posY + CAR_OFFSET_Z));
-		//car.SetVelocity(Vector(marioState.velX, marioState.velZ, marioState.velY + CAR_OFFSET_Z));
+		car.SetLocation(Vector(marioState.posX, marioState.posZ, marioState.posY + CAR_OFFSET_Z));
+		car.SetVelocity(Vector(marioState.velX, marioState.velZ, marioState.velY + CAR_OFFSET_Z));
 
 		carRot.Yaw = marioYaw;
 		carRot.Roll = carRotation.Roll;
 		carRot.Pitch = carRotation.Pitch;
-		//car.SetRotation(carRot);
+		car.SetRotation(carRot);
 		
 		auto camera = gameWrapper->GetCamera();
 		if (!camera.IsNull())
