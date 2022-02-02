@@ -24,8 +24,7 @@ public:
 		uint16_t inTexHeight = 0);
 	void Render(
 		size_t numTrianglesUsed,
-		CameraWrapper camera,
-		Vector carLoc);
+		CameraWrapper camera);
 
 public:
 	struct Vertex

@@ -325,8 +325,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		auto carLocation = localCar.GetLocation();
 		marioMesh->Render(
 			marioGeometry.numTrianglesUsed,
-			camera,
-			carLocation
+			camera
 		);
 	}
 

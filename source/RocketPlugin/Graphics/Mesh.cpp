@@ -111,8 +111,7 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 
 void Mesh::Render(
 	size_t numTrianglesUsed,
-	CameraWrapper camera,
-	Vector carLoc)
+	CameraWrapper camera)
 {
 	if (RenderFrame) return;
 
