@@ -12,6 +12,141 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	uint16_t inTexWidth,
 	uint16_t inTexHeight)
 {
+	init(deviceIn, inWindowWidth, inWindowHeight, maxTriangles, inTexture, inTexSize, inTexWidth, inTexHeight);
+}
+
+Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
+	int inWindowWidth,
+	int inWindowHeight,
+	std::string objFileName,
+	uint8_t* inTexture,
+	size_t inTexSize,
+	uint16_t inTexWidth,
+	uint16_t inTexHeight)
+{
+	IsTransparent = true;
+	parseObjFile(objFileName);
+	init(deviceIn, inWindowWidth, inWindowHeight, Vertices.size(), inTexture, inTexSize, inTexWidth, inTexHeight);
+	NumTrianglesUsed = Vertices.size();
+}
+
+void Mesh::RenderUpdateVertices(size_t numTrianglesUsed, CameraWrapper* camera)
+{
+	if (UpdateVertices) return;
+
+	Render(camera);
+
+	NumTrianglesUsed = numTrianglesUsed;
+	UpdateVertices = true;
+}
+	
+void Mesh::Render(CameraWrapper *camera)
+{
+	if (camera == nullptr)
+	{
+		return;
+	}
+
+	auto camLocation = camera->GetLocation();
+	auto camRotationVector = RotatorToVector(camera->GetRotation());
+
+	float aspectRatio = static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight);
+
+	float fov = camera->GetFOV();
+	float fovRadians = DirectX::XMConvertToRadians(fov);
+	float verticalFovRadians = 2 * atan(tan(fovRadians / 2) / aspectRatio);
+
+	DirectX::XMMATRIX identity = DirectX::XMMatrixIdentity();
+
+	DirectX::XMMATRIX scale = DirectX::XMMatrixScaling(scaleVector.X, scaleVector.Y, scaleVector.Z);
+
+	DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(translationVector.X, translationVector.Y, translationVector.Z);
+
+	auto camLocationVector = DirectX::XMVectorSet(camLocation.X, camLocation.Y, camLocation.Z, 0.0f);
+	auto camTarget = DirectX::XMVectorSet(camRotationVector.X, camRotationVector.Y, camRotationVector.Z, 0.0f);
+	camTarget = DirectX::XMVectorAdd(camTarget, camLocationVector);
+	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(camLocationVector, camTarget, this->DEFAULT_UP_VECTOR);
+
+	DirectX::XMMATRIX projection = DirectX::XMMatrixPerspectiveFovLH(verticalFovRadians, aspectRatio, NEAR_Z, FAR_Z);
+
+	ConstBufferData.wvp = identity * scale * translation * view * projection;
+	ConstBufferData.wvp = DirectX::XMMatrixTranspose(ConstBufferData.wvp);
+}
+
+void Mesh::SetTranslation(float x, float y, float z)
+{
+	translationVector.X = x;
+	translationVector.Y = y;
+	translationVector.Z = z;
+}
+
+void Mesh::SetScale(float x, float y, float z)
+{
+	scaleVector.X = x;
+	scaleVector.Y = y;
+	scaleVector.Z = z;
+}
+
+void Mesh::parseObjFile(std::string path)
+{
+	std::ifstream file(path);
+	std::string line;
+
+	std::vector<Vertex> vertices;
+	while (std::getline(file, line))
+	{
+		if (line.size() == 0) continue;
+		auto split = splitStr(line, ' ');
+		auto type = split[0];
+		auto lastIndex = split.size() - 1;
+		if (type == "v")
+		{
+			Vertex vertex;
+			vertex.pos.x = std::stof(split[lastIndex - 2], nullptr);
+			vertex.pos.y = std::stof(split[lastIndex - 1], nullptr);
+			vertex.pos.z = std::stof(split[lastIndex], nullptr);
+			vertex.color.x = 1.0f;
+			vertex.color.y = 1.0f;
+			vertex.color.z = 1.0f;
+			vertex.color.w = 0.0f;
+			vertex.texCoord.x = 1.0f;
+			vertex.texCoord.y = 0.0f;
+			vertices.push_back(vertex);
+		}
+		else if (type == "f")
+		{
+			auto vertIndex1 = std::stoul(splitStr(split[lastIndex - 2], '/')[0], nullptr);
+			auto vertIndex2 = std::stoul(splitStr(split[lastIndex - 1], '/')[0], nullptr);
+			auto vertIndex3 = std::stoul(splitStr(split[lastIndex], '/')[0], nullptr);
+			Vertices.push_back(vertices[vertIndex1]);
+			Vertices.push_back(vertices[vertIndex2]);
+			Vertices.push_back(vertices[vertIndex3]);
+		}
+	}
+
+}
+
+std::vector<std::string> Mesh::splitStr(std::string str, char delimiter)
+{
+	std::stringstream stringStream(str);
+	std::vector<std::string> seglist;
+	std::string segment;
+	while (std::getline(stringStream, segment, delimiter))
+	{
+		seglist.push_back(segment);
+	}
+	return seglist;
+}
+
+void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
+	int inWindowWidth,
+	int inWindowHeight,
+	size_t maxTriangles,
+	uint8_t* inTexture,
+	size_t inTexSize,
+	uint16_t inTexWidth,
+	uint16_t inTexHeight)
+{
 	device = deviceIn;
 	windowWidth = inWindowWidth;
 	windowHeight = inWindowHeight;
@@ -107,35 +242,10 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 		}
 
 	}
-}
-
-void Mesh::Render(
-	size_t numTrianglesUsed,
-	CameraWrapper camera)
-{
-	if (RenderFrame) return;
-
-	auto camLocation = camera.GetLocation();
-	auto camRotationVector = RotatorToVector(camera.GetRotation());
-
-	float aspectRatio = static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight);
-
-	float fov = camera.GetFOV();
-	float fovRadians = DirectX::XMConvertToRadians(fov);
-	float verticalFovRadians = 2 * atan(tan(fovRadians / 2) / aspectRatio);
-
-	DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
-
-	auto camLocationVector = DirectX::XMVectorSet(camLocation.X, camLocation.Y, camLocation.Z, 0.0f);
-	auto camTarget = DirectX::XMVectorSet(camRotationVector.X, camRotationVector.Y, camRotationVector.Z, 0.0f);
-	camTarget = DirectX::XMVectorAdd(camTarget, camLocationVector);
-	auto view = DirectX::XMMatrixLookAtLH(camLocationVector, camTarget, this->DEFAULT_UP_VECTOR);
-
-	DirectX::XMMATRIX projection = DirectX::XMMatrixPerspectiveFovLH(verticalFovRadians, aspectRatio, NEAR_Z, FAR_Z);
-
-	ConstBufferData.wvp = world * view * projection;
-	ConstBufferData.wvp = DirectX::XMMatrixTranspose(ConstBufferData.wvp);
-
-	NumTrianglesUsed = numTrianglesUsed;
-	RenderFrame = true;
+	else if (IsTransparent)
+	{
+		std::string texturePath = utils.GetBakkesmodFolderPath() + "data\\assets\\transparent.png";
+		std::wstring texturePathWide(texturePath.begin(), texturePath.end());
+		DirectX::CreateWICTextureFromFile(this->device.Get(), texturePathWide.c_str(), nullptr, TextureResourceView.GetAddressOf());
+	}
 }

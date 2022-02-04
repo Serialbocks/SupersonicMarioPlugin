@@ -1,7 +1,8 @@
 #pragma once
 
 #include "Renderer.h"
-
+#include "../Modules/Utils.h"
+#include <WICTextureLoader.h>
 
 class Renderer;
 
@@ -22,9 +23,31 @@ public:
 		size_t inTexSize = 0,
 		uint16_t inTexWidth = 0,
 		uint16_t inTexHeight = 0);
-	void Render(
-		size_t numTrianglesUsed,
-		CameraWrapper camera);
+	Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
+		int inWindowWidth,
+		int inWindowHeight,
+		std::string objFileName,
+		uint8_t* inTexture,
+		size_t inTexSize,
+		uint16_t inTexWidth,
+		uint16_t inTexHeight);
+	void Render(CameraWrapper *camera);
+	void RenderUpdateVertices(size_t numTrianglesUsed, CameraWrapper *camera);
+	void SetTranslation(float x, float y, float z);
+	void SetScale(float x, float y, float z);
+
+private:
+	void init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
+		int inWindowWidth,
+		int inWindowHeight,
+		size_t maxTriangles,
+		uint8_t* inTexture = nullptr,
+		size_t inTexSize = 0,
+		uint16_t inTexWidth = 0,
+		uint16_t inTexHeight = 0);
+	void parseObjFile(std::string path);
+	std::vector<std::string> splitStr(std::string str, char delimiter);
+	Utils utils;
 
 public:
 	struct Vertex
@@ -41,10 +64,11 @@ public:
 
 	size_t MaxTriangles = 0;
 	size_t NumTrianglesUsed = 0;
-	bool RenderFrame = false;
+	bool UpdateVertices = false;
 	std::vector<Vertex> Vertices;
 	std::vector<unsigned int> Indices;
 	size_t NumIndices = 0;
+	bool IsTransparent = false;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer = nullptr;
@@ -56,6 +80,8 @@ private:
 	uint16_t texWidth, texHeight;
 	int windowWidth, windowHeight;
 	const DirectX::XMVECTOR DEFAULT_UP_VECTOR = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
+	Vector translationVector = Vector(0.0f, 0.0f, 0.0f);
+	Vector scaleVector = Vector(1.0f, 1.0f, 1.0f);
 
 	Microsoft::WRL::ComPtr<ID3D11Device> device = nullptr;
 

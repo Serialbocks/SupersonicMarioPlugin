@@ -183,12 +183,6 @@
     <ClInclude Include="..\External\kiero\minhook\src\hde\table64.h">
       <Filter>External\kiero</Filter>
     </ClInclude>
-    <ClInclude Include="Modules\level.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Modules\surface_terrains.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
     <ClInclude Include="..\External\kiero\kiero.h">
       <Filter>External\kiero</Filter>
     </ClInclude>
@@ -206,6 +200,15 @@
     </ClInclude>
     <ClInclude Include="Graphics\shaders.h">
       <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\level.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\surface_terrains.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Utils.h">
+      <Filter>Modules</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -320,9 +323,6 @@
     <ClCompile Include="ExternalModules\RPTests.cpp">
       <Filter>External Modules</Filter>
     </ClCompile>
-    <ClCompile Include="Modules\level.c">
-      <Filter>Modules</Filter>
-    </ClCompile>
     <ClCompile Include="GameModes\SM64.cpp">
       <Filter>GameModes</Filter>
     </ClCompile>
@@ -353,6 +353,12 @@
     <ClCompile Include="Graphics\Render.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\level.c">
+      <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Utils.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="RLConstants.inc">
@@ -361,6 +367,7 @@
     <None Include="GameModes\RumbleItems\RumbleConstants.inc">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="RocketPlugin.rc">

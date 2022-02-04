@@ -12,6 +12,7 @@
 
 #include "../Graphics/Renderer.h"
 #include "../Graphics/Mesh.h"
+#include "../Modules/Utils.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_additions.h"
 #include "GameModes/RocketGameMode.h"
@@ -21,7 +22,7 @@ extern "C" {
     #include "libsm64.h"
 }
 
-#include "../Modules/level.h"
+#include "../Graphics/level.h"
 
 class SM64 final : public RocketGameMode
 {
@@ -48,10 +49,8 @@ private:
     void onTick(ServerWrapper server);
     std::string bytesToHex(unsigned char* data, unsigned int len);
     std::vector<char> hexToBytes(const std::string& hex);
-    std::string getBakkesmodFolderPath();
     uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
-    void parseObjFile(std::string path, std::vector<Mesh::MeshVertex>* meshVertices);
-    std::vector<std::string> splitStr(std::string str, char delimiter);
+    Utils utils;
 
 private:
     /* SM64 Members */

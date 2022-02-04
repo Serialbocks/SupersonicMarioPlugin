@@ -53,6 +53,21 @@ Mesh* Renderer::CreateMesh(size_t maxTriangles,
 	return newMesh;
 }
 
+Mesh* Renderer::CreateMesh(std::string objFilePath,
+	uint8_t* inTexture,
+	size_t inTexSize,
+	uint16_t inTexWidth,
+	uint16_t inTexHeight)
+{
+	if (!device)
+	{
+		return nullptr;
+	}
+	Mesh* newMesh = new Mesh(device, windowWidth, windowHeight, objFilePath, inTexture, inTexSize, inTexWidth, inTexHeight);
+	meshes.push_back(newMesh);
+	return newMesh;
+}
+
 void Renderer::OnPresent(IDXGISwapChain* pThis, UINT SyncInterval, UINT Flags)
 {
 	if (!Initialized)
@@ -131,6 +146,16 @@ void Renderer::InitMeshBuffers()
 	dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
 	dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
 
+	D3D11_DEPTH_STENCILOP_DESC stencilopDesc;
+	ZeroMemory(&stencilopDesc, sizeof(D3D11_DEPTH_STENCILOP_DESC));
+	stencilopDesc.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	stencilopDesc.StencilDepthFailOp = D3D11_STENCIL_OP_INCR;
+	stencilopDesc.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	stencilopDesc.StencilFunc = D3D11_COMPARISON_ALWAYS;
+	
+	dsDesc.FrontFace = stencilopDesc;
+	dsDesc.BackFace = stencilopDesc;
+
 	device->CreateDepthStencilState(&dsDesc, depthStencilState.GetAddressOf());
 }
 
@@ -139,6 +164,7 @@ void Renderer::CreatePipeline()
 {
 	ComPtr<ID3DBlob> vertexShaderBlob = LoadShader(shaderData, "vs_5_0", "VS").Get();
 	ComPtr<ID3DBlob> pixelShaderTexturesBlob = LoadShader(shaderData, "ps_5_0", "PSTex").Get();
+	ComPtr<ID3DBlob> pixelShaderTransparentTextureBlox = LoadShader(shaderData, "ps_5_0", "PSTexTransparent").Get();
 	ComPtr<ID3DBlob> pixelShaderBlob = LoadShader(shaderData, "ps_5_0", "PS").Get();
 
 	device->CreateVertexShader(vertexShaderBlob->GetBufferPointer(),
@@ -146,6 +172,9 @@ void Renderer::CreatePipeline()
 
 	device->CreatePixelShader(pixelShaderTexturesBlob->GetBufferPointer(),
 		pixelShaderTexturesBlob->GetBufferSize(), nullptr, pixelShaderTextures.GetAddressOf());
+
+	device->CreatePixelShader(pixelShaderTransparentTextureBlox->GetBufferPointer(),
+		pixelShaderTransparentTextureBlox->GetBufferSize(), nullptr, pixelShaderTexturesTransparent.GetAddressOf());
 
 	device->CreatePixelShader(pixelShaderBlob->GetBufferPointer(),
 		pixelShaderBlob->GetBufferSize(), nullptr, pixelShader.GetAddressOf());
@@ -188,6 +217,22 @@ void Renderer::CreatePipeline()
 
 	device->CreateTexture2D(&dsDesc, 0, depthStencilBuffer.GetAddressOf());
 	device->CreateDepthStencilView(depthStencilBuffer.Get(), 0, depthStencilView.GetAddressOf());
+
+	D3D11_BLEND_DESC blendDesc;
+	ZeroMemory(&blendDesc, sizeof(D3D11_BLEND_DESC));
+	blendDesc.AlphaToCoverageEnable = false;
+	blendDesc.IndependentBlendEnable = false;
+	blendDesc.RenderTarget[0].BlendEnable = true;
+	blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+
+	blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+
+	device->CreateBlendState(&blendDesc, blendState.GetAddressOf());
 }
 
 void Renderer::Render()
@@ -239,6 +284,8 @@ void Renderer::DrawRenderedMesh()
 	context->RSSetState(rasterizerState.Get());
 	context->OMSetDepthStencilState(depthStencilState.Get(), 0);
 
+	context->OMSetBlendState(blendState.Get(), NULL, 0xFFFFFFFF);
+
 	UINT stride = sizeof(Mesh::Vertex);
 	UINT offset = 0;
 
@@ -255,12 +302,12 @@ void Renderer::DrawRenderedMesh()
 		context->UpdateSubresource(mesh->ConstantBuffer.Get(), 0, 0, &mesh->ConstBufferData, 0, 0);
 		context->VSSetConstantBuffers(0, 1, mesh->ConstantBuffer.GetAddressOf());
 
-		if (mesh->RenderFrame)
+		if (mesh->UpdateVertices)
 		{
 			context->Map(mesh->VertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 			memcpy(mappedResource.pData, (void*)mesh->Vertices.data(), sizeof(Mesh::Vertex) * mesh->NumTrianglesUsed * 3);
 			context->Unmap(mesh->VertexBuffer.Get(), 0);
-			mesh->RenderFrame = false;
+			mesh->UpdateVertices = false;
 		}
 
 		context->IASetVertexBuffers(0, 1, mesh->VertexBuffer.GetAddressOf(), &stride, &offset);
@@ -268,15 +315,21 @@ void Renderer::DrawRenderedMesh()
 
 		if (mesh->TextureResourceView != nullptr)
 		{
-			context->PSSetShader(pixelShaderTextures.Get(), nullptr, 0);
+			if (mesh->IsTransparent)
+			{
+				context->PSSetShader(pixelShaderTexturesTransparent.Get(), nullptr, 0);
+			}
+			else
+			{
+				context->PSSetShader(pixelShaderTextures.Get(), nullptr, 0);
+			}
 			context->PSSetSamplers(0, 1, samplerState.GetAddressOf());
 			context->PSSetShaderResources(0, 1, mesh->TextureResourceView.GetAddressOf());
-			context->DrawIndexed((UINT)mesh->NumTrianglesUsed * 3, 0, 0);
 		}
 		else
 		{
 			context->PSSetShader(pixelShader.Get(), nullptr, 0);
-			context->DrawIndexed((UINT)mesh->NumTrianglesUsed * 3, 0, 0);
 		}
+		context->DrawIndexed((UINT)mesh->NumTrianglesUsed * 3, 0, 0);
 	}
 }

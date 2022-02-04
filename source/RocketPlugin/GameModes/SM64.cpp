@@ -8,6 +8,10 @@
 #define RL_YAW_RANGE 64692
 #define CAR_OFFSET_Z 35.0f
 #define DEPTH_FACTOR 20000
+#define BALL_MODEL_SCALE 5.35f
+#define BLANK_TEXTURE_WIDTH 4
+#define BLANK_TEXTURE_HEIGHT 4
+#define BLANK_TEXTURE_SIZE (4 * BLANK_TEXTURE_WIDTH * BLANK_TEXTURE_HEIGHT)
 
 SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, BakkesMod::Plugin::PluginInfo exports)
 {
@@ -121,7 +125,7 @@ void SM64::Activate(const bool active)
 void SM64::InitSM64()
 {
 	size_t romSize;
-	std::string bakkesmodFolderPath = getBakkesmodFolderPath();
+	std::string bakkesmodFolderPath = utils.GetBakkesmodFolderPath();
 	std::string romPath = bakkesmodFolderPath + "data\\assets\\baserom.us.z64";
 	uint8_t* rom = utilsReadFileAlloc(romPath, &romSize);
 	if (rom == NULL)
@@ -221,7 +225,7 @@ void SM64::onTick(ServerWrapper server)
 		marioInputs.camLookX = marioState.posX - cameraLoc.X;
 		marioInputs.camLookZ = marioState.posZ - cameraLoc.Y;
 		
-		sm64_mario_tick(marioId, &marioInputs, &marioState, &marioGeometry, &marioBodyState, true);
+		sm64_mario_tick(marioId, &marioInputs, &marioState, &marioGeometry, &marioBodyState, true, true);
 
 		if (marioGeometry.numTrianglesUsed > 0)
 		{
@@ -246,6 +250,7 @@ void SM64::onTick(ServerWrapper server)
 	}
 }
 
+#define WINGCAP_VERTEX_INDEX 750
 void SM64::OnRender(CanvasWrapper canvas)
 {
 	if (renderer == nullptr) return;
@@ -261,6 +266,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		if (marioMesh == nullptr) return;
 
+		ballMesh = renderer->CreateMesh(utils.GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj");
+
 		meshesInitialized = true;
 		return;
 	}
@@ -268,7 +275,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay();
 	if ((!renderLocalMario && !renderRemoteMario) || (!inGame && isActive))
 	{
-		//marioMesh->Render(projectedVertices, 0);
+		marioMesh->RenderUpdateVertices(0, nullptr);
 		return;
 	}
 
@@ -284,22 +291,13 @@ void SM64::OnRender(CanvasWrapper canvas)
 		if (remoteMarioId < 0) return;
 	}
 
-	Vector marioLocation;
 	if (renderRemoteMario)
 	{
-		sm64_mario_tick(remoteMarioId, &marioInputs, &marioBodyStateIn.marioState, &marioGeometry, &marioBodyStateIn, 0);
-		marioLocation.X = marioBodyStateIn.marioState.posX;
-		marioLocation.Y = marioBodyStateIn.marioState.posY;
-		marioLocation.Z = marioBodyStateIn.marioState.posZ;
-	}
-	else if (renderLocalMario)
-	{
-		marioLocation.X = marioBodyState.marioState.posX;
-		marioLocation.Y = marioBodyState.marioState.posY;
-		marioLocation.Z = marioBodyState.marioState.posZ;
+		sm64_mario_tick(remoteMarioId, &marioInputs, &marioBodyStateIn.marioState, &marioGeometry, &marioBodyStateIn, false, false);
 	}
 
 	auto currentCameraLocation = camera.GetLocation();
+
 	for (auto i = 0; i < marioGeometry.numTrianglesUsed * 3; i++)
 	{
 		auto position = &marioGeometry.position[i * 3];
@@ -314,20 +312,28 @@ void SM64::OnRender(CanvasWrapper canvas)
 		currentVertex->color.x = color[0];
 		currentVertex->color.y = color[1];
 		currentVertex->color.z = color[2];
-		currentVertex->color.w = 1.0f;
+		currentVertex->color.w = i >= (WINGCAP_VERTEX_INDEX * 3) ? 0.0f : 1.0f;
 		currentVertex->texCoord.x = uv[0];
 		currentVertex->texCoord.y = uv[1];
 	}
 
-	auto localCar = gameWrapper->GetLocalCar();
-	if (!localCar.IsNull())
+	if (ballMesh != nullptr)
 	{
-		auto carLocation = localCar.GetLocation();
-		marioMesh->Render(
-			marioGeometry.numTrianglesUsed,
-			camera
-		);
+		auto server = gameWrapper->GetCurrentGameState();
+		if (!server.IsNull())
+		{
+			auto ball = server.GetBall();
+			if (!ball.IsNull())
+			{
+				auto ballLocation = ball.GetLocation();
+				ballMesh->SetTranslation(ballLocation.X, ballLocation.Y, ballLocation.Z);
+				ballMesh->SetScale(BALL_MODEL_SCALE, BALL_MODEL_SCALE, BALL_MODEL_SCALE);
+				ballMesh->Render(&camera);
+			}
+
+		}
 	}
+	marioMesh->RenderUpdateVertices(marioGeometry.numTrianglesUsed, &camera);
 
 
 }
@@ -358,67 +364,6 @@ std::vector<char> SM64::hexToBytes(const std::string& hex) {
 	}
 
 	return bytes;
-}
-
-void SM64::parseObjFile(std::string path, std::vector<Mesh::MeshVertex>* meshVertices)
-{
-	std::ifstream file(path);
-	std::string line;
-
-	std::vector<Vector> vertices;
-	while (std::getline(file, line))
-	{
-		if (line.size() == 0) continue;
-		auto split = splitStr(line, ' ');
-		auto type = split[0];
-		auto lastIndex = split.size() - 1;
-		if (type == "v")
-		{
-			Vector vertex;
-			vertex.X = std::stof(split[lastIndex - 2], nullptr);
-			vertex.Y = std::stof(split[lastIndex - 1], nullptr);
-			vertex.Z = std::stof(split[lastIndex], nullptr);
-			vertices.push_back(vertex);
-		}
-		else if (type == "f")
-		{
-			auto vertIndex1 = std::stoul(splitStr(split[lastIndex - 2], '/')[0], nullptr);
-			auto vertIndex2 = std::stoul(splitStr(split[lastIndex - 1], '/')[0], nullptr);
-			auto vertIndex3 = std::stoul(splitStr(split[lastIndex], '/')[0], nullptr);
-			meshVertices->push_back({ vertices[vertIndex1], 1.0f, 0, 0, 1.0f, 1.0f, 1.0f });
-		}
-	}
-	
-}
-
-std::vector<std::string> SM64::splitStr(std::string str, char delimiter)
-{
-	std::stringstream stringStream(str);
-	std::vector<std::string> seglist;
-	std::string segment;
-	while (std::getline(stringStream, segment, delimiter))
-	{
-		seglist.push_back(segment);
-	}
-	return seglist;
-}
-
-std::string SM64::getBakkesmodFolderPath()
-{
-	wchar_t szPath[MAX_PATH];
-	wchar_t* s = szPath;
-	if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, (LPWSTR)szPath)))
-	{
-		PathAppend((LPWSTR)szPath, _T("\\bakkesmod\\bakkesmod\\"));
-
-		std::ostringstream stm;
-
-		while (*s != L'\0') {
-			stm << std::use_facet< std::ctype<wchar_t> >(std::locale()).narrow(*s++, '?');
-		}
-		return stm.str();
-	}
-	return "";
 }
 
 uint8_t* SM64::utilsReadFileAlloc(std::string path, size_t* fileLength)

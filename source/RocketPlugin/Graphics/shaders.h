@@ -37,12 +37,22 @@ float4 PSTex(VS_Output input) : SV_Target
 {
     float4 textureColor;
     textureColor = tex.Sample(sampleType, input.texcoord);
-    if(textureColor.w < 0.5f)
+    
+    float4 mixedColor = lerp(input.color, textureColor, textureColor.w < 0.3f ? 0.0f : textureColor.w);
+    if(input.color.w == 0.0f && textureColor.w == 0.0f)
     {
-        return input.color;
+        discard;
     }
-    float4 mixedColor = lerp(input.color, textureColor, textureColor.w);
+    else
+    {
+        mixedColor.w = 1.0f;
+    }
     return mixedColor;
+}
+
+float4 PSTexTransparent(VS_Output input) : SV_Target
+{
+    return tex.Sample(sampleType, input.texcoord);
 }
 
 float4 PS(VS_Output input) : SV_Target

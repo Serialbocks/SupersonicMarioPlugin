@@ -27,6 +27,11 @@ public:
 		size_t inTexSize = 0,
 		uint16_t inTexWidth = 0,
 		uint16_t inTexHeight = 0);
+	Mesh* CreateMesh(std::string objFilePath,
+		uint8_t* inTexture = nullptr,
+		size_t inTexSize = 0,
+		uint16_t inTexWidth = 0,
+		uint16_t inTexHeight = 0);
 	bool Init(IDXGISwapChain* pThis, UINT SyncInterval, UINT Flags);
 	void OnPresent(IDXGISwapChain* pThis, UINT SyncInterval, UINT Flags);
 	bool Initialized = false;
@@ -52,6 +57,7 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShaderTextures = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShaderTexturesTransparent = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState = nullptr;
@@ -59,4 +65,5 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> depthStencilState = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencilBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthStencilView = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11BlendState> blendState = nullptr;
 };

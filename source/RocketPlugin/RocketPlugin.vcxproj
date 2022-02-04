@@ -134,6 +134,12 @@
       <LinkLibraryDependencies>true</LinkLibraryDependencies>
       <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
     </ProjectReference>
+    <FxCompile>
+      <ShaderType>Vertex</ShaderType>
+    </FxCompile>
+    <FxCompile>
+      <ShaderModel>5.1</ShaderModel>
+    </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\External\ImGui\imconfig.h" />
@@ -158,11 +164,12 @@
     <ClInclude Include="..\External\simdjson\singleheader\simdjson.h" />
     <ClInclude Include="ExternalModules\ExternalModules.h" />
     <ClInclude Include="GameModes\SM64.h" />
+    <ClInclude Include="Graphics\level.h" />
     <ClInclude Include="Graphics\Mesh.h" />
     <ClInclude Include="Graphics\Renderer.h" />
     <ClInclude Include="Graphics\shaders.h" />
-    <ClInclude Include="Modules\level.h" />
-    <ClInclude Include="Modules\surface_terrains.h" />
+    <ClInclude Include="Graphics\surface_terrains.h" />
+    <ClInclude Include="Modules\Utils.h" />
     <ClInclude Include="RPConfig.h" />
     <ClInclude Include="GameModes\BoostShare.h" />
     <ClInclude Include="GameModes\RocketGameMode.h" />
@@ -210,9 +217,10 @@
     <ClCompile Include="ExternalModules\ExternalModules.cpp" />
     <ClCompile Include="ExternalModules\RPTests.cpp" />
     <ClCompile Include="GameModes\SM64.cpp" />
+    <ClCompile Include="Graphics\level.c" />
     <ClCompile Include="Graphics\Mesh.cpp" />
     <ClCompile Include="Graphics\Render.cpp" />
-    <ClCompile Include="Modules\level.c" />
+    <ClCompile Include="Modules\Utils.cpp" />
     <ClCompile Include="RPConfig.cpp" />
     <ClCompile Include="GameModes\BoostShare.cpp" />
     <ClCompile Include="GameModes\RumbleItems\RumbleItems.cpp" />
@@ -245,6 +253,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="GameModes\RumbleItems\RumbleConstants.inc" />
+    <None Include="packages.config" />
     <None Include="RLConstants.inc" />
   </ItemGroup>
   <ItemGroup>
@@ -252,5 +261,12 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\directxtk_uwp.2021.11.8.1\build\native\directxtk_uwp.targets" Condition="Exists('..\packages\directxtk_uwp.2021.11.8.1\build\native\directxtk_uwp.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\directxtk_uwp.2021.11.8.1\build\native\directxtk_uwp.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\directxtk_uwp.2021.11.8.1\build\native\directxtk_uwp.targets'))" />
+  </Target>
 </Project>
