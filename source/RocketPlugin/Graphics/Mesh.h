@@ -35,6 +35,7 @@ public:
 	void RenderUpdateVertices(size_t numTrianglesUsed, CameraWrapper *camera);
 	void SetTranslation(float x, float y, float z);
 	void SetScale(float x, float y, float z);
+	void SetRotation(float roll, float pitch, float yaw);
 
 private:
 	void init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
@@ -48,6 +49,7 @@ private:
 	void parseObjFile(std::string path);
 	std::vector<std::string> splitStr(std::string str, char delimiter);
 	Utils utils;
+	float rotRoll, rotPitch, rotYaw = 0.0f;
 
 public:
 	struct Vertex
@@ -82,6 +84,7 @@ private:
 	const DirectX::XMVECTOR DEFAULT_UP_VECTOR = DirectX::XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
 	Vector translationVector = Vector(0.0f, 0.0f, 0.0f);
 	Vector scaleVector = Vector(1.0f, 1.0f, 1.0f);
+	Vector rotationVector = Vector(0.0f, 0.0f, 0.0f);
 
 	Microsoft::WRL::ComPtr<ID3D11Device> device = nullptr;
 

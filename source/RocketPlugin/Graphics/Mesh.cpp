@@ -62,6 +62,8 @@ void Mesh::Render(CameraWrapper *camera)
 
 	DirectX::XMMATRIX translation = DirectX::XMMatrixTranslation(translationVector.X, translationVector.Y, translationVector.Z);
 
+	DirectX::XMMATRIX rotation = DirectX::XMMatrixRotationRollPitchYaw(rotPitch, rotYaw, rotRoll);
+
 	auto camLocationVector = DirectX::XMVectorSet(camLocation.X, camLocation.Y, camLocation.Z, 0.0f);
 	auto camTarget = DirectX::XMVectorSet(camRotationVector.X, camRotationVector.Y, camRotationVector.Z, 0.0f);
 	camTarget = DirectX::XMVectorAdd(camTarget, camLocationVector);
@@ -69,7 +71,7 @@ void Mesh::Render(CameraWrapper *camera)
 
 	DirectX::XMMATRIX projection = DirectX::XMMatrixPerspectiveFovLH(verticalFovRadians, aspectRatio, NEAR_Z, FAR_Z);
 
-	ConstBufferData.wvp = identity * scale * translation * view * projection;
+	ConstBufferData.wvp = identity * rotation * scale * translation * view * projection;
 	ConstBufferData.wvp = DirectX::XMMatrixTranspose(ConstBufferData.wvp);
 }
 
@@ -85,6 +87,13 @@ void Mesh::SetScale(float x, float y, float z)
 	scaleVector.X = x;
 	scaleVector.Y = y;
 	scaleVector.Z = z;
+}
+
+void Mesh::SetRotation(float roll, float pitch, float yaw)
+{
+	rotRoll = roll;
+	rotPitch = pitch;
+	rotYaw = yaw;
 }
 
 void Mesh::parseObjFile(std::string path)

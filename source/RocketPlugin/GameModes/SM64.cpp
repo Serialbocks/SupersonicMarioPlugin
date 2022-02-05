@@ -251,6 +251,10 @@ void SM64::onTick(ServerWrapper server)
 }
 
 #define WINGCAP_VERTEX_INDEX 750
+static volatile bool useBallRotator = true;
+static volatile float rotatorRoll = 0.0f;
+static volatile float rotatorPitch = 0.0f;
+static volatile float rotatorYaw = 0.0f;
 void SM64::OnRender(CanvasWrapper canvas)
 {
 	if (renderer == nullptr) return;
@@ -328,6 +332,13 @@ void SM64::OnRender(CanvasWrapper canvas)
 			if (!ball.IsNull())
 			{
 				auto ballLocation = ball.GetLocation();
+				auto ballRotation = ball.GetRotation();
+				if (useBallRotator) {
+					rotatorRoll = ballRotation.Roll * CONST_UnrRotToRad;
+					rotatorPitch = ballRotation.Pitch * CONST_UnrRotToRad;
+					rotatorYaw = ballRotation.Yaw * CONST_UnrRotToRad;
+				}
+				ballMesh->SetRotation(rotatorRoll, rotatorPitch, rotatorYaw);
 				ballMesh->SetTranslation(ballLocation.X, ballLocation.Y, ballLocation.Z);
 				ballMesh->SetScale(BALL_MODEL_SCALE, BALL_MODEL_SCALE, BALL_MODEL_SCALE);
 				ballMesh->Render(&camera);
