@@ -258,15 +258,17 @@ void SM64::OnRender(CanvasWrapper canvas)
 	{
 		if (!renderer->Initialized) return;
 
+		ballMesh = renderer->CreateMesh(utils.GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj");
+
+		if (ballMesh == nullptr) return;
+
 		marioMesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
 			texture,
 			4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
 			SM64_TEXTURE_WIDTH,
 			SM64_TEXTURE_HEIGHT);
 
-		if (marioMesh == nullptr) return;
 
-		ballMesh = renderer->CreateMesh(utils.GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj");
 
 		meshesInitialized = true;
 		return;
