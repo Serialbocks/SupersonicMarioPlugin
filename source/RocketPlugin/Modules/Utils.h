@@ -8,4 +8,5 @@ class Utils
 {
 public:
 	std::string GetBakkesmodFolderPath();
+
 };

@@ -64,6 +64,9 @@ void Mesh::Render(CameraWrapper *camera)
 
 	DirectX::XMMATRIX rotation = DirectX::XMMatrixRotationRollPitchYaw(rotPitch, rotYaw, rotRoll);
 
+	DirectX::FXMVECTOR quat = DirectX::XMVectorSet(quatX, quatY, quatZ, quatW);
+	DirectX::XMMATRIX quatRotation = DirectX::XMMatrixRotationQuaternion(quat);
+
 	auto camLocationVector = DirectX::XMVectorSet(camLocation.X, camLocation.Y, camLocation.Z, 0.0f);
 	auto camTarget = DirectX::XMVectorSet(camRotationVector.X, camRotationVector.Y, camRotationVector.Z, 0.0f);
 	camTarget = DirectX::XMVectorAdd(camTarget, camLocationVector);
@@ -71,8 +74,8 @@ void Mesh::Render(CameraWrapper *camera)
 
 	DirectX::XMMATRIX projection = DirectX::XMMatrixPerspectiveFovLH(verticalFovRadians, aspectRatio, NEAR_Z, FAR_Z);
 
-	ConstBufferData.wvp = identity * rotation * scale * translation * view * projection;
-	ConstBufferData.wvp = DirectX::XMMatrixTranspose(ConstBufferData.wvp);
+	ConstBufferData.world = identity * rotation * quatRotation * scale * translation;
+	ConstBufferData.wvp = ConstBufferData.world * view * projection;
 }
 
 void Mesh::SetTranslation(float x, float y, float z)
@@ -96,12 +99,21 @@ void Mesh::SetRotation(float roll, float pitch, float yaw)
 	rotYaw = yaw;
 }
 
+void Mesh::SetRotationQuat(float x, float y, float z, float w)
+{
+	quatX = x;
+	quatY = y;
+	quatZ = z;
+	quatW = w;
+}
+
 void Mesh::parseObjFile(std::string path)
 {
 	std::ifstream file(path);
 	std::string line;
 
 	std::vector<Vertex> vertices;
+	std::vector<Vertex> normals;
 	while (std::getline(file, line))
 	{
 		if (line.size() == 0) continue;
@@ -122,11 +134,31 @@ void Mesh::parseObjFile(std::string path)
 			vertex.texCoord.y = 0.0f;
 			vertices.push_back(vertex);
 		}
+		else if (type == "vn")
+		{
+			Vertex vertex;
+			vertex.normal.x = std::stof(split[lastIndex - 2], nullptr);
+			vertex.normal.y = std::stof(split[lastIndex - 1], nullptr);
+			vertex.normal.z = std::stof(split[lastIndex], nullptr);
+			normals.push_back(vertex);
+		}
 		else if (type == "f")
 		{
 			auto vertIndex1 = std::stoul(splitStr(split[lastIndex - 2], '/')[0], nullptr);
 			auto vertIndex2 = std::stoul(splitStr(split[lastIndex - 1], '/')[0], nullptr);
 			auto vertIndex3 = std::stoul(splitStr(split[lastIndex], '/')[0], nullptr);
+			auto normalIndex1 = std::stoul(splitStr(split[lastIndex - 2], '/')[2], nullptr);
+			auto normalIndex2 = std::stoul(splitStr(split[lastIndex - 1], '/')[2], nullptr);
+			auto normalIndex3 = std::stoul(splitStr(split[lastIndex], '/')[2], nullptr);
+			vertices[vertIndex1].normal.x = normals[normalIndex1].normal.x;
+			vertices[vertIndex1].normal.y = normals[normalIndex1].normal.y;
+			vertices[vertIndex1].normal.z = normals[normalIndex1].normal.z;
+			vertices[vertIndex2].normal.x = normals[normalIndex2].normal.x;
+			vertices[vertIndex2].normal.y = normals[normalIndex2].normal.y;
+			vertices[vertIndex2].normal.z = normals[normalIndex2].normal.z;
+			vertices[vertIndex3].normal.x = normals[normalIndex3].normal.x;
+			vertices[vertIndex3].normal.y = normals[normalIndex3].normal.y;
+			vertices[vertIndex3].normal.z = normals[normalIndex3].normal.z;
 			Vertices.push_back(vertices[vertIndex1]);
 			Vertices.push_back(vertices[vertIndex2]);
 			Vertices.push_back(vertices[vertIndex3]);

@@ -36,6 +36,7 @@ public:
 	void SetTranslation(float x, float y, float z);
 	void SetScale(float x, float y, float z);
 	void SetRotation(float roll, float pitch, float yaw);
+	void SetRotationQuat(float x, float y, float z, float w);
 
 private:
 	void init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
@@ -50,6 +51,7 @@ private:
 	std::vector<std::string> splitStr(std::string str, char delimiter);
 	Utils utils;
 	float rotRoll, rotPitch, rotYaw = 0.0f;
+	float quatX, quatY, quatZ, quatW = 0.0f;
 
 public:
 	struct Vertex
@@ -57,10 +59,12 @@ public:
 		DirectX::XMFLOAT3 pos;
 		DirectX::XMFLOAT4 color;
 		DirectX::XMFLOAT2 texCoord;
+		DirectX::XMFLOAT3 normal;
 	};
 	typedef struct ConstantBufferData_t
 	{
 		DirectX::XMMATRIX wvp = DirectX::XMMatrixIdentity();
+		DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
 	} ConstantBufferData;
 	ConstantBufferData ConstBufferData;
 

@@ -251,10 +251,6 @@ void SM64::onTick(ServerWrapper server)
 }
 
 #define WINGCAP_VERTEX_INDEX 750
-static volatile bool useBallRotator = true;
-static volatile float rotatorRoll = 0.0f;
-static volatile float rotatorPitch = 0.0f;
-static volatile float rotatorYaw = 0.0f;
 void SM64::OnRender(CanvasWrapper canvas)
 {
 	if (renderer == nullptr) return;
@@ -309,6 +305,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		auto position = &marioGeometry.position[i * 3];
 		auto color = &marioGeometry.color[i * 3];
 		auto uv = &marioGeometry.uv[i * 2];
+		auto normal = &marioGeometry.normal[i * 3];
 
 		auto currentVertex = &marioMesh->Vertices[i];
 		// Unreal engine swaps x and y coords for 3d model
@@ -321,6 +318,9 @@ void SM64::OnRender(CanvasWrapper canvas)
 		currentVertex->color.w = i >= (WINGCAP_VERTEX_INDEX * 3) ? 0.0f : 1.0f;
 		currentVertex->texCoord.x = uv[0];
 		currentVertex->texCoord.y = uv[1];
+		currentVertex->normal.x = normal[0];
+		currentVertex->normal.y = normal[2];
+		currentVertex->normal.z = normal[1];
 	}
 
 	if (ballMesh != nullptr)
@@ -333,12 +333,9 @@ void SM64::OnRender(CanvasWrapper canvas)
 			{
 				auto ballLocation = ball.GetLocation();
 				auto ballRotation = ball.GetRotation();
-				if (useBallRotator) {
-					rotatorRoll = ballRotation.Roll * CONST_UnrRotToRad;
-					rotatorPitch = ballRotation.Pitch * CONST_UnrRotToRad;
-					rotatorYaw = ballRotation.Yaw * CONST_UnrRotToRad;
-				}
-				ballMesh->SetRotation(rotatorRoll, rotatorPitch, rotatorYaw);
+				auto quat = RotatorToQuat(ballRotation);
+
+				ballMesh->SetRotationQuat(quat.X, quat.Y, quat.Z, quat.W);
 				ballMesh->SetTranslation(ballLocation.X, ballLocation.Y, ballLocation.Z);
 				ballMesh->SetScale(BALL_MODEL_SCALE, BALL_MODEL_SCALE, BALL_MODEL_SCALE);
 				ballMesh->Render(&camera);
