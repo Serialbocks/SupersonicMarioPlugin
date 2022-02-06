@@ -26,6 +26,7 @@ struct VS_Output
     float4 color : COLOR;
     float2 texcoord : TEXCOORD;
     float3 normal : NORMAL;
+    float3 worldPos : WORLD_POSITION;
 };
 
 VS_Output VS(VS_Input input)
@@ -35,6 +36,7 @@ VS_Output VS(VS_Input input)
     vsout.color = input.color;
     vsout.texcoord = input.texcoord;
     vsout.normal = (float3)normalize(mul(float4(input.normal, 0.0f), world));
+    vsout.worldPos = (float3)mul(input.pos, world);
     return vsout;
 }
 
@@ -42,6 +44,10 @@ cbuffer PS_constantBuffer
 {
     float3 ambientLightColor;
     float ambientLightIntensity;
+
+    float3 dynamicLightColor;
+    float dynamicLightStrength;
+    float3 dynamicLightPosition;
 };
 
 float4 PSTex(VS_Output input) : SV_Target
@@ -56,7 +62,13 @@ float4 PSTex(VS_Output input) : SV_Target
     float4 mixedColor = lerp(input.color, textureColor, textureColor.w < 0.3f ? 0.0f : textureColor.w);
 
     float3 ambientLight = ambientLightColor * ambientLightIntensity;
-    mixedColor.rgb = mixedColor.rgb * ambientLight;
+
+    float3 vectorToLight = normalize(dynamicLightPosition - input.worldPos);
+    float3 diffuseLightIntensity = max(dot(vectorToLight, input.normal), 0);
+    float3 diffuseLight = diffuseLightIntensity * dynamicLightStrength * dynamicLightColor;
+    float3 appliedLight = ambientLight + diffuseLight;
+
+    mixedColor.rgb = mixedColor.rgb * appliedLight;
     mixedColor.w = 1.0f;
 
     return mixedColor;

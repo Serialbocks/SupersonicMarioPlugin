@@ -339,6 +339,9 @@ void SM64::OnRender(CanvasWrapper canvas)
 				ballMesh->SetTranslation(ballLocation.X, ballLocation.Y, ballLocation.Z);
 				ballMesh->SetScale(BALL_MODEL_SCALE, BALL_MODEL_SCALE, BALL_MODEL_SCALE);
 				ballMesh->Render(&camera);
+				marioMesh->PixelConstBufferData.dynamicLightPosition.x = ballLocation.X;
+				marioMesh->PixelConstBufferData.dynamicLightPosition.y = ballLocation.Y;
+				marioMesh->PixelConstBufferData.dynamicLightPosition.z = ballLocation.Z;
 			}
 
 		}

@@ -235,7 +235,7 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	// We need to send the world view projection (WVP) matrix to the shader
 	D3D11_BUFFER_DESC cbDesc = { 0 };
 	ZeroMemory(&cbDesc, sizeof(D3D11_BUFFER_DESC));
-	cbDesc.ByteWidth = sizeof(VS_ConstantBufferData);
+	cbDesc.ByteWidth = static_cast<UINT>(sizeof(VS_ConstantBufferData) + (16 - (sizeof(VS_ConstantBufferData) % 16)));
 	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
 	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -247,7 +247,7 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	device->CreateBuffer(&cbDesc, &cbData, VertexConstantBuffer.GetAddressOf());
 
 	ZeroMemory(&cbDesc, sizeof(D3D11_BUFFER_DESC));
-	cbDesc.ByteWidth = sizeof(PS_ConstantBufferData);
+	cbDesc.ByteWidth = static_cast<UINT>(sizeof(PS_ConstantBufferData) + (16 - (sizeof(PS_ConstantBufferData) % 16)));
 	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
 	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -261,7 +261,11 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	PixelConstBufferData.ambientLightColor.x = 1.0f;
 	PixelConstBufferData.ambientLightColor.y = 1.0f;
 	PixelConstBufferData.ambientLightColor.z = 1.0f;
-	PixelConstBufferData.ambientLightStrength = 1.0f;
+	PixelConstBufferData.ambientLightStrength = 0.7f;
+	PixelConstBufferData.dynamicLightColor.x = 1.0f;
+	PixelConstBufferData.dynamicLightColor.y = 1.0f;
+	PixelConstBufferData.dynamicLightColor.z = 1.0f;
+	PixelConstBufferData.dynamicLightStrength = 1.0f;
 
 
 	// If there's texture data, create a shader resource view for it

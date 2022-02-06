@@ -71,7 +71,11 @@ public:
 	typedef struct PS_ConstantBufferData_t
 	{
 		DirectX::XMFLOAT3 ambientLightColor;
-		float ambientLightStrength = 1.0f;
+		float ambientLightStrength = 0.7f;
+
+		DirectX::XMFLOAT3 dynamicLightColor;
+		float dynamicLightStrength = 1.0f;
+		DirectX::XMFLOAT3 dynamicLightPosition;
 	} PS_ConstantBufferData;
 	PS_ConstantBufferData PixelConstBufferData;
 
