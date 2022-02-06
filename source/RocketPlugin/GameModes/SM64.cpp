@@ -89,6 +89,26 @@ void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
 /// <summary>Renders the available options for the game mode.</summary>
 void SM64::RenderOptions()
 {
+	if (marioMesh != nullptr)
+	{
+		ImGui::Text("Ambient Light");
+		ImGui::SliderFloat("R", &marioMesh->PixelConstBufferData.ambientLightColor.x, 0.0f, 1.0f);
+		ImGui::SliderFloat("G", &marioMesh->PixelConstBufferData.ambientLightColor.y, 0.0f, 1.0f);
+		ImGui::SliderFloat("B", &marioMesh->PixelConstBufferData.ambientLightColor.z, 0.0f, 1.0f);
+		ImGui::SliderFloat("Ambient Strength", &marioMesh->PixelConstBufferData.ambientLightStrength, 0.0f, 1.0f);
+
+		ImGui::NewLine();
+
+		ImGui::Text("Dynamic Light");
+		ImGui::SliderFloat("X", &marioMesh->PixelConstBufferData.dynamicLightPosition.x, -3000.0f, 3000.0f);
+		ImGui::SliderFloat("Y", &marioMesh->PixelConstBufferData.dynamicLightPosition.y, -3000.0f, 3000.0f);
+		ImGui::SliderFloat("Z", &marioMesh->PixelConstBufferData.dynamicLightPosition.z, -3000.0f, 3000.0f);
+		ImGui::SliderFloat("Dynamic Strength", &marioMesh->PixelConstBufferData.dynamicLightStrength, 0.0f, 1.0f);
+
+
+
+	}
+	
 	//ImGui::Checkbox("Auto Deplete Boost", &autoDeplete);
 	//ImGui::SliderInt("Auto Deplete Boost Rate", &autoDepleteRate, 0, 100, "%d boost per second");
 }
@@ -339,13 +359,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 				ballMesh->SetTranslation(ballLocation.X, ballLocation.Y, ballLocation.Z);
 				ballMesh->SetScale(BALL_MODEL_SCALE, BALL_MODEL_SCALE, BALL_MODEL_SCALE);
 				ballMesh->Render(&camera);
-				if (!dynamicLightInitialized)
-				{
-					marioMesh->PixelConstBufferData.dynamicLightPosition.x = ballLocation.X;
-					marioMesh->PixelConstBufferData.dynamicLightPosition.y = ballLocation.Y;
-					marioMesh->PixelConstBufferData.dynamicLightPosition.z = ballLocation.Z + 1000.0f;
-					dynamicLightInitialized = true;
-				}
 
 			}
 

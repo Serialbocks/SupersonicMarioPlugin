@@ -72,7 +72,6 @@ private:
     Mesh* ballMesh = nullptr;
     bool sm64Initialized = false;
     bool meshesInitialized = false;
-    bool dynamicLightInitialized = false;
     struct SM64MarioBodyState marioBodyState;
     struct SM64MarioBodyState marioBodyStateIn;
     bool renderLocalMario = false;

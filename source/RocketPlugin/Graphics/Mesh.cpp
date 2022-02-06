@@ -266,6 +266,9 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	PixelConstBufferData.dynamicLightColor.y = 1.0f;
 	PixelConstBufferData.dynamicLightColor.z = 1.0f;
 	PixelConstBufferData.dynamicLightStrength = 1.0f;
+	PixelConstBufferData.dynamicLightPosition.x = 0.0f;
+	PixelConstBufferData.dynamicLightPosition.x = 83.0f;
+	PixelConstBufferData.dynamicLightPosition.x = 2000.0f;
 
 
 	// If there's texture data, create a shader resource view for it
