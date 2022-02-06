@@ -61,14 +61,18 @@ float4 PSTex(VS_Output input) : SV_Target
     }
     float4 mixedColor = lerp(input.color, textureColor, textureColor.w < 0.3f ? 0.0f : textureColor.w);
 
-    float3 ambientLight = ambientLightColor * ambientLightIntensity;
+    if(input.color.w > 0.0f)
+    {
+        float3 ambientLight = ambientLightColor * ambientLightIntensity;
 
-    float3 vectorToLight = normalize(dynamicLightPosition - input.worldPos);
-    float3 diffuseLightIntensity = max(dot(vectorToLight, input.normal), 0);
-    float3 diffuseLight = diffuseLightIntensity * dynamicLightStrength * dynamicLightColor;
-    float3 appliedLight = ambientLight + diffuseLight;
+        float3 vectorToLight = normalize(dynamicLightPosition - input.worldPos);
+        float3 diffuseLightIntensity = max(dot(vectorToLight, input.normal), 0);
+        float3 diffuseLight = diffuseLightIntensity * dynamicLightStrength * dynamicLightColor;
+        float3 appliedLight = ambientLight + diffuseLight;
 
-    mixedColor.rgb = mixedColor.rgb * appliedLight;
+        mixedColor.rgb = mixedColor.rgb * appliedLight;
+    }
+
     mixedColor.w = 1.0f;
 
     return mixedColor;
