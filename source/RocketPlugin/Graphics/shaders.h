@@ -1,13 +1,15 @@
 #pragma once
 
 constexpr const char* shaderData = R"(
-
 Texture2D tex;
 SamplerState sampleType;
+
+#pragma pack_matrix( row_major )
 
 cbuffer constantBuffer
 {
     matrix wvp;
+    matrix world;
 };
 
 struct VS_Input
@@ -15,6 +17,7 @@ struct VS_Input
     float4 pos : POSITION;
     float4 color : COLOR;
     float2 texcoord : TEXCOORD;
+    float3 normal : NORMAL;
 };
 
 struct VS_Output
@@ -22,6 +25,7 @@ struct VS_Output
     float4 pos : SV_POSITION;
     float4 color : COLOR;
     float2 texcoord : TEXCOORD;
+    float3 normal : NORMAL;
 };
 
 VS_Output VS(VS_Input input)
@@ -30,6 +34,7 @@ VS_Output VS(VS_Input input)
     vsout.pos = mul(input.pos, wvp);
     vsout.color = input.color;
     vsout.texcoord = input.texcoord;
+    vsout.normal = (float3)normalize(mul(float4(input.normal, 0.0f), world));
     return vsout;
 }
 
@@ -43,10 +48,8 @@ float4 PSTex(VS_Output input) : SV_Target
     {
         discard;
     }
-    else
-    {
-        mixedColor.w = 1.0f;
-    }
+    mixedColor.w = 1.0f;
+
     return mixedColor;
 }
 
