@@ -294,14 +294,22 @@ void Renderer::DrawRenderedMesh()
 	{
 		auto mesh = meshes[i];
 
-		// Map the constant buffer on the GPU
+		// Map the vertex constant buffer on the GPU
 		D3D11_MAPPED_SUBRESOURCE mappedResource;
-		context->Map(mesh->ConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		memcpy(mappedResource.pData, &mesh->ConstBufferData, sizeof(Mesh::ConstantBufferData));
-		context->Unmap(mesh->ConstantBuffer.Get(), 0);
+		context->Map(mesh->VertexConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		memcpy(mappedResource.pData, &mesh->VertexConstBufferData, sizeof(Mesh::VS_ConstantBufferData));
+		context->Unmap(mesh->VertexConstantBuffer.Get(), 0);
 
-		context->UpdateSubresource(mesh->ConstantBuffer.Get(), 0, 0, &mesh->ConstBufferData, 0, 0);
-		context->VSSetConstantBuffers(0, 1, mesh->ConstantBuffer.GetAddressOf());
+		context->UpdateSubresource(mesh->VertexConstantBuffer.Get(), 0, 0, &mesh->VertexConstBufferData, 0, 0);
+		context->VSSetConstantBuffers(0, 1, mesh->VertexConstantBuffer.GetAddressOf());
+
+		// Map the pixel constant buffer
+		context->Map(mesh->PixelConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		memcpy(mappedResource.pData, &mesh->PixelConstBufferData, sizeof(Mesh::PS_ConstantBufferData));
+		context->Unmap(mesh->PixelConstantBuffer.Get(), 0);
+
+		context->UpdateSubresource(mesh->PixelConstantBuffer.Get(), 0, 0, &mesh->PixelConstBufferData, 0, 0);
+		context->PSSetConstantBuffers(0, 1, mesh->PixelConstantBuffer.GetAddressOf());
 
 		if (mesh->UpdateVertices)
 		{

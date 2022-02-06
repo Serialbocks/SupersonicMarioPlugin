@@ -74,8 +74,8 @@ void Mesh::Render(CameraWrapper *camera)
 
 	DirectX::XMMATRIX projection = DirectX::XMMatrixPerspectiveFovLH(verticalFovRadians, aspectRatio, NEAR_Z, FAR_Z);
 
-	ConstBufferData.world = identity * rotation * quatRotation * scale * translation;
-	ConstBufferData.wvp = ConstBufferData.world * view * projection;
+	VertexConstBufferData.world = identity * rotation * quatRotation * scale * translation;
+	VertexConstBufferData.wvp = VertexConstBufferData.world * view * projection;
 }
 
 void Mesh::SetTranslation(float x, float y, float z)
@@ -235,16 +235,34 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	// We need to send the world view projection (WVP) matrix to the shader
 	D3D11_BUFFER_DESC cbDesc = { 0 };
 	ZeroMemory(&cbDesc, sizeof(D3D11_BUFFER_DESC));
-	cbDesc.ByteWidth = sizeof(ConstantBufferData);
+	cbDesc.ByteWidth = sizeof(VS_ConstantBufferData);
 	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
 	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	cbDesc.MiscFlags = 0;
 	cbDesc.StructureByteStride = 0;
 
-	D3D11_SUBRESOURCE_DATA cbData = { &ConstBufferData, 0, 0 };
+	D3D11_SUBRESOURCE_DATA cbData = { &VertexConstBufferData, 0, 0 };
 
-	device->CreateBuffer(&cbDesc, &cbData, ConstantBuffer.GetAddressOf());
+	device->CreateBuffer(&cbDesc, &cbData, VertexConstantBuffer.GetAddressOf());
+
+	ZeroMemory(&cbDesc, sizeof(D3D11_BUFFER_DESC));
+	cbDesc.ByteWidth = sizeof(PS_ConstantBufferData);
+	cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+	cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	cbDesc.MiscFlags = 0;
+	cbDesc.StructureByteStride = 0;
+
+	D3D11_SUBRESOURCE_DATA pixelCbData = { &PixelConstBufferData, 0, 0 };
+
+	device->CreateBuffer(&cbDesc, &pixelCbData, PixelConstantBuffer.GetAddressOf());
+
+	PixelConstBufferData.ambientLightColor.x = 1.0f;
+	PixelConstBufferData.ambientLightColor.y = 1.0f;
+	PixelConstBufferData.ambientLightColor.z = 1.0f;
+	PixelConstBufferData.ambientLightStrength = 1.0f;
+
 
 	// If there's texture data, create a shader resource view for it
 	if (texData != nullptr)

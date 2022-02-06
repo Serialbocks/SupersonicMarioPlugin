@@ -6,7 +6,7 @@ SamplerState sampleType;
 
 #pragma pack_matrix( row_major )
 
-cbuffer constantBuffer
+cbuffer VS_constantBuffer
 {
     matrix wvp;
     matrix world;
@@ -38,16 +38,25 @@ VS_Output VS(VS_Input input)
     return vsout;
 }
 
+cbuffer PS_constantBuffer
+{
+    float3 ambientLightColor;
+    float ambientLightIntensity;
+};
+
 float4 PSTex(VS_Output input) : SV_Target
 {
     float4 textureColor;
     textureColor = tex.Sample(sampleType, input.texcoord);
     
-    float4 mixedColor = lerp(input.color, textureColor, textureColor.w < 0.3f ? 0.0f : textureColor.w);
     if(input.color.w == 0.0f && textureColor.w == 0.0f)
     {
         discard;
     }
+    float4 mixedColor = lerp(input.color, textureColor, textureColor.w < 0.3f ? 0.0f : textureColor.w);
+
+    float3 ambientLight = ambientLightColor * ambientLightIntensity;
+    mixedColor.rgb = mixedColor.rgb * ambientLight;
     mixedColor.w = 1.0f;
 
     return mixedColor;

@@ -61,12 +61,19 @@ public:
 		DirectX::XMFLOAT2 texCoord;
 		DirectX::XMFLOAT3 normal;
 	};
-	typedef struct ConstantBufferData_t
+	typedef struct VS_ConstantBufferData_t
 	{
 		DirectX::XMMATRIX wvp = DirectX::XMMatrixIdentity();
 		DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
-	} ConstantBufferData;
-	ConstantBufferData ConstBufferData;
+	} VS_ConstantBufferData;
+	VS_ConstantBufferData VertexConstBufferData;
+
+	typedef struct PS_ConstantBufferData_t
+	{
+		DirectX::XMFLOAT3 ambientLightColor;
+		float ambientLightStrength = 1.0f;
+	} PS_ConstantBufferData;
+	PS_ConstantBufferData PixelConstBufferData;
 
 	size_t MaxTriangles = 0;
 	size_t NumTrianglesUsed = 0;
@@ -77,7 +84,8 @@ public:
 	bool IsTransparent = false;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer = nullptr;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> ConstantBuffer = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexConstantBuffer = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> PixelConstantBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> TextureResourceView = nullptr;
 
 private:
