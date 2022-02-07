@@ -164,11 +164,13 @@
     <ClInclude Include="..\External\simdjson\singleheader\simdjson.h" />
     <ClInclude Include="ExternalModules\ExternalModules.h" />
     <ClInclude Include="GameModes\SM64.h" />
+    <ClInclude Include="Graphics\GraphicsTypes.h" />
     <ClInclude Include="Graphics\level.h" />
     <ClInclude Include="Graphics\Mesh.h" />
     <ClInclude Include="Graphics\Renderer.h" />
     <ClInclude Include="Graphics\shaders.h" />
     <ClInclude Include="Graphics\surface_terrains.h" />
+    <ClInclude Include="Graphics\Lighting.h" />
     <ClInclude Include="Modules\Utils.h" />
     <ClInclude Include="RPConfig.h" />
     <ClInclude Include="GameModes\BoostShare.h" />
@@ -220,6 +222,7 @@
     <ClCompile Include="Graphics\level.c" />
     <ClCompile Include="Graphics\Mesh.cpp" />
     <ClCompile Include="Graphics\Render.cpp" />
+    <ClCompile Include="Graphics\Lighting.cpp" />
     <ClCompile Include="Modules\Utils.cpp" />
     <ClCompile Include="RPConfig.cpp" />
     <ClCompile Include="GameModes\BoostShare.cpp" />

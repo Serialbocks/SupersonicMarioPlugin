@@ -10,6 +10,8 @@
 #include <fstream>
 #include <bakkesmod/wrappers/wrapperstructs.h>
 #include "Mesh.h"
+#include "Lighting.h"
+#include "GraphicsTypes.h"
 
 #pragma comment(lib, "d3dcompiler.lib")
 
@@ -35,16 +37,8 @@ public:
 	bool Init(IDXGISwapChain* pThis, UINT SyncInterval, UINT Flags);
 	void OnPresent(IDXGISwapChain* pThis, UINT SyncInterval, UINT Flags);
 	bool Initialized = false;
-	typedef struct PS_ConstantBufferData_t
-	{
-		DirectX::XMFLOAT3 ambientLightColor;
-		float ambientLightStrength = 0.7f;
-
-		DirectX::XMFLOAT3 dynamicLightColor;
-		float dynamicLightStrength = 1.0f;
-		DirectX::XMFLOAT3 dynamicLightPosition;
-	} PS_ConstantBufferData;
 	PS_ConstantBufferData PixelConstBufferData;
+	Lighting Lighting;
 
 private:
 	void Render();

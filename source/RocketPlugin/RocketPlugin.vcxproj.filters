@@ -210,6 +210,12 @@
     <ClInclude Include="Modules\Utils.h">
       <Filter>Modules</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\Lighting.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\GraphicsTypes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RocketPlugin.cpp">
@@ -358,6 +364,9 @@
     </ClCompile>
     <ClCompile Include="Modules\Utils.cpp">
       <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Lighting.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

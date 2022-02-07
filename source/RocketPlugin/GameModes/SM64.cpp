@@ -92,28 +92,23 @@ void SM64::RenderOptions()
 	if (renderer != nullptr)
 	{
 		ImGui::Text("Ambient Light");
-		ImGui::SliderFloat("R", &renderer->PixelConstBufferData.ambientLightColor.x, 0.0f, 1.0f);
-		ImGui::SliderFloat("G", &renderer->PixelConstBufferData.ambientLightColor.y, 0.0f, 1.0f);
-		ImGui::SliderFloat("B", &renderer->PixelConstBufferData.ambientLightColor.z, 0.0f, 1.0f);
-		ImGui::SliderFloat("Ambient Strength", &renderer->PixelConstBufferData.ambientLightStrength, 0.0f, 1.0f);
+		ImGui::SliderFloat("R", &renderer->Lighting.AmbientLightColorR, 0.0f, 1.0f);
+		ImGui::SliderFloat("G", &renderer->Lighting.AmbientLightColorG, 0.0f, 1.0f);
+		ImGui::SliderFloat("B", &renderer->Lighting.AmbientLightColorB, 0.0f, 1.0f);
+		ImGui::SliderFloat("Ambient Strength", &renderer->Lighting.AmbientLightStrength, 0.0f, 1.0f);
 
 		ImGui::NewLine();
 
 		ImGui::Text("Dynamic Light");
-		ImGui::SliderFloat("X", &renderer->PixelConstBufferData.dynamicLightPosition.x, -3000.0f, 3000.0f);
-		ImGui::SliderFloat("Y", &renderer->PixelConstBufferData.dynamicLightPosition.y, -3000.0f, 3000.0f);
-		ImGui::SliderFloat("Z", &renderer->PixelConstBufferData.dynamicLightPosition.z, -3000.0f, 3000.0f);
-		ImGui::SliderFloat("Rd", &renderer->PixelConstBufferData.dynamicLightColor.x, 0.0f, 1.0f);
-		ImGui::SliderFloat("Gd", &renderer->PixelConstBufferData.dynamicLightColor.y, 0.0f, 1.0f);
-		ImGui::SliderFloat("Bd", &renderer->PixelConstBufferData.dynamicLightColor.z, 0.0f, 1.0f);
-		ImGui::SliderFloat("Dynamic Strength", &renderer->PixelConstBufferData.dynamicLightStrength, 0.0f, 1.0f);
-
-
-
+		ImGui::SliderFloat("X", &renderer->Lighting.Lights[0].posX, -3000.0f, 3000.0f);
+		ImGui::SliderFloat("Y", &renderer->Lighting.Lights[0].posY, -3000.0f, 3000.0f);
+		ImGui::SliderFloat("Z", &renderer->Lighting.Lights[0].posZ, -3000.0f, 3000.0f);
+		ImGui::SliderFloat("Rd", &renderer->Lighting.Lights[0].r, 0.0f, 1.0f);
+		ImGui::SliderFloat("Gd", &renderer->Lighting.Lights[0].g, 0.0f, 1.0f);
+		ImGui::SliderFloat("Bd", &renderer->Lighting.Lights[0].b, 0.0f, 1.0f);
+		ImGui::SliderFloat("Dynamic Strength", &renderer->Lighting.Lights[0].strength, 0.0f, 1.0f);
+		ImGui::Checkbox("Show Bulb", &renderer->Lighting.Lights[0].showBulb);
 	}
-	
-	//ImGui::Checkbox("Auto Deplete Boost", &autoDeplete);
-	//ImGui::SliderInt("Auto Deplete Boost Rate", &autoDepleteRate, 0, 100, "%d boost per second");
 }
 
 bool SM64::IsActive()

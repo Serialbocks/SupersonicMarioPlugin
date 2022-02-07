@@ -245,18 +245,6 @@ void Renderer::CreatePipeline()
 	D3D11_SUBRESOURCE_DATA pixelCbData = { &PixelConstBufferData, 0, 0 };
 
 	device->CreateBuffer(&cbDesc, &pixelCbData, pixelConstantBuffer.GetAddressOf());
-
-	PixelConstBufferData.ambientLightColor.x = 1.0f;
-	PixelConstBufferData.ambientLightColor.y = 1.0f;
-	PixelConstBufferData.ambientLightColor.z = 1.0f;
-	PixelConstBufferData.ambientLightStrength = 0.7f;
-	PixelConstBufferData.dynamicLightColor.x = 1.0f;
-	PixelConstBufferData.dynamicLightColor.y = 1.0f;
-	PixelConstBufferData.dynamicLightColor.z = 1.0f;
-	PixelConstBufferData.dynamicLightStrength = 1.0f;
-	PixelConstBufferData.dynamicLightPosition.x = 0.0f;
-	PixelConstBufferData.dynamicLightPosition.x = 83.0f;
-	PixelConstBufferData.dynamicLightPosition.x = 2000.0f;
 }
 
 void Renderer::Render()
@@ -310,6 +298,7 @@ void Renderer::DrawRenderedMesh()
 
 	context->OMSetBlendState(blendState.Get(), NULL, 0xFFFFFFFF);
 
+	Lighting.UpdateLights(&PixelConstBufferData);
 	// Map the pixel constant buffer
 	D3D11_MAPPED_SUBRESOURCE mappedResource;
 	context->Map(pixelConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
