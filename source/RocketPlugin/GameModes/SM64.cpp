@@ -232,7 +232,11 @@ void SM64::onTick(ServerWrapper server)
 			if (marioId < 0) continue;
 		}
 
-		auto carRot = car.GetRotation();
+		auto airControl = car.GetAirControlComponent();
+		if (!airControl.IsNull())
+		{
+			airControl.SetDodgeDisableTimeRemaining(0.0f);
+		}
 
 		car.SetHidden2(TRUE);
 		car.SetbHiddenSelf(TRUE);
@@ -240,6 +244,7 @@ void SM64::onTick(ServerWrapper server)
 		car.SetLocation(Vector(marioState.posX, marioState.posZ, marioState.posY + CAR_OFFSET_Z));
 		car.SetVelocity(Vector(marioState.velX, marioState.velZ, marioState.velY + CAR_OFFSET_Z));
 
+		auto carRot = car.GetRotation();
 		carRot.Yaw = marioYaw;
 		carRot.Roll = carRotation.Roll;
 		carRot.Pitch = carRotation.Pitch;
