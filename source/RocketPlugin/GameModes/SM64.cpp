@@ -86,6 +86,9 @@ void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
 	renderRemoteMario = true;
 }
 
+#define MIN_LIGHT_COORD -6000.0f
+#define MAX_LIGHT_COORD 6000.0f
+static int currentLightIndex = 0;
 /// <summary>Renders the available options for the game mode.</summary>
 void SM64::RenderOptions()
 {
@@ -100,14 +103,29 @@ void SM64::RenderOptions()
 		ImGui::NewLine();
 
 		ImGui::Text("Dynamic Light");
-		ImGui::SliderFloat("X", &renderer->Lighting.Lights[0].posX, -3000.0f, 3000.0f);
-		ImGui::SliderFloat("Y", &renderer->Lighting.Lights[0].posY, -3000.0f, 3000.0f);
-		ImGui::SliderFloat("Z", &renderer->Lighting.Lights[0].posZ, -3000.0f, 3000.0f);
-		ImGui::SliderFloat("Rd", &renderer->Lighting.Lights[0].r, 0.0f, 1.0f);
-		ImGui::SliderFloat("Gd", &renderer->Lighting.Lights[0].g, 0.0f, 1.0f);
-		ImGui::SliderFloat("Bd", &renderer->Lighting.Lights[0].b, 0.0f, 1.0f);
-		ImGui::SliderFloat("Dynamic Strength", &renderer->Lighting.Lights[0].strength, 0.0f, 1.0f);
-		ImGui::Checkbox("Show Bulb", &renderer->Lighting.Lights[0].showBulb);
+		std::string currentLightLabel = "Light " + std::to_string(currentLightIndex + 1);
+		if (ImGui::BeginCombo("Light Select", currentLightLabel.c_str()))
+		{
+			for (int i = 0; i < MAX_LIGHTS; i++)
+			{
+				std::string lightLabel = "Light " + std::to_string(i + 1);
+				bool isSelected = i == currentLightIndex;
+				if (ImGui::Selectable(lightLabel.c_str(), isSelected))
+					currentLightIndex = i;
+				if (isSelected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
+		}
+
+		ImGui::SliderFloat("X", &renderer->Lighting.Lights[currentLightIndex].posX, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
+		ImGui::SliderFloat("Y", &renderer->Lighting.Lights[currentLightIndex].posY, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
+		ImGui::SliderFloat("Z", &renderer->Lighting.Lights[currentLightIndex].posZ, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
+		ImGui::SliderFloat("Rd", &renderer->Lighting.Lights[currentLightIndex].r, 0.0f, 1.0f);
+		ImGui::SliderFloat("Gd", &renderer->Lighting.Lights[currentLightIndex].g, 0.0f, 1.0f);
+		ImGui::SliderFloat("Bd", &renderer->Lighting.Lights[currentLightIndex].b, 0.0f, 1.0f);
+		ImGui::SliderFloat("Dynamic Strength", &renderer->Lighting.Lights[currentLightIndex].strength, 0.0f, 1.0f);
+		ImGui::Checkbox("Show Bulb", &renderer->Lighting.Lights[currentLightIndex].showBulb);
 	}
 }
 

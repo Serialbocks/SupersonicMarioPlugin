@@ -2,8 +2,6 @@
 
 #include "GraphicsTypes.h"
 
-#define MAX_LIGHTS 8
-
 class Lighting
 {
 public:

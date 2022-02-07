@@ -40,15 +40,14 @@ VS_Output VS(VS_Input input)
     return vsout;
 }
 
+static const int numLights = 16;
 cbuffer PS_constantBuffer
 {
     float3 ambientLightColor;
     float ambientLightIntensity;
 
-    float3 dynamicLightColor;
-    float dynamicLightStrength;
-
-    float3 dynamicLightPosition;
+    float4 dynamicLightColorStrengths[numLights];
+    float4 dynamicLightPositions[numLights];
 };
 
 float4 PSTex(VS_Output input) : SV_Target
@@ -65,14 +64,22 @@ float4 PSTex(VS_Output input) : SV_Target
     if(input.color.w > 0.0f)
     {
         float3 ambientLight = ambientLightColor * ambientLightIntensity;
+        float3 appliedLight = ambientLight;
+        for(int i = 0; i < numLights; i++)
+        {
+            float3 dynamicLightPosition = dynamicLightPositions[i].rgb;
+            float3 dynamicLightColor = dynamicLightColorStrengths[i].rgb;
+            float dynamicLightStrength = dynamicLightColorStrengths[i].w;
 
-        float3 vectorToLight = normalize(dynamicLightPosition - input.worldPos);
-        float3 diffuseLightIntensity = max(dot(vectorToLight, input.normal), 0);
-        float3 diffuseLight = diffuseLightIntensity * dynamicLightStrength * dynamicLightColor;
-        float3 appliedLight = ambientLight + diffuseLight;
+            float3 vectorToLight = normalize(dynamicLightPosition - input.worldPos);
+            float3 diffuseLightIntensity = max(dot(vectorToLight, input.normal), 0);
+            float3 diffuseLight = diffuseLightIntensity * dynamicLightStrength * dynamicLightColor;
+            appliedLight += diffuseLight;
+        }
 
         mixedColor.rgb = mixedColor.rgb * appliedLight;
     }
+
 
     mixedColor.w = 1.0f;
 
