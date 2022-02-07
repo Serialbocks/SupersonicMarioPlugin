@@ -68,17 +68,6 @@ public:
 	} VS_ConstantBufferData;
 	VS_ConstantBufferData VertexConstBufferData;
 
-	typedef struct PS_ConstantBufferData_t
-	{
-		DirectX::XMFLOAT3 ambientLightColor;
-		float ambientLightStrength = 0.7f;
-
-		DirectX::XMFLOAT3 dynamicLightColor;
-		float dynamicLightStrength = 1.0f;
-		DirectX::XMFLOAT3 dynamicLightPosition;
-	} PS_ConstantBufferData;
-	PS_ConstantBufferData PixelConstBufferData;
-
 	size_t MaxTriangles = 0;
 	size_t NumTrianglesUsed = 0;
 	bool UpdateVertices = false;
@@ -89,7 +78,6 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexConstantBuffer = nullptr;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> PixelConstantBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> TextureResourceView = nullptr;
 
 private:

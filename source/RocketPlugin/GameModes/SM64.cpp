@@ -89,21 +89,24 @@ void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
 /// <summary>Renders the available options for the game mode.</summary>
 void SM64::RenderOptions()
 {
-	if (marioMesh != nullptr)
+	if (renderer != nullptr)
 	{
 		ImGui::Text("Ambient Light");
-		ImGui::SliderFloat("R", &marioMesh->PixelConstBufferData.ambientLightColor.x, 0.0f, 1.0f);
-		ImGui::SliderFloat("G", &marioMesh->PixelConstBufferData.ambientLightColor.y, 0.0f, 1.0f);
-		ImGui::SliderFloat("B", &marioMesh->PixelConstBufferData.ambientLightColor.z, 0.0f, 1.0f);
-		ImGui::SliderFloat("Ambient Strength", &marioMesh->PixelConstBufferData.ambientLightStrength, 0.0f, 1.0f);
+		ImGui::SliderFloat("R", &renderer->PixelConstBufferData.ambientLightColor.x, 0.0f, 1.0f);
+		ImGui::SliderFloat("G", &renderer->PixelConstBufferData.ambientLightColor.y, 0.0f, 1.0f);
+		ImGui::SliderFloat("B", &renderer->PixelConstBufferData.ambientLightColor.z, 0.0f, 1.0f);
+		ImGui::SliderFloat("Ambient Strength", &renderer->PixelConstBufferData.ambientLightStrength, 0.0f, 1.0f);
 
 		ImGui::NewLine();
 
 		ImGui::Text("Dynamic Light");
-		ImGui::SliderFloat("X", &marioMesh->PixelConstBufferData.dynamicLightPosition.x, -3000.0f, 3000.0f);
-		ImGui::SliderFloat("Y", &marioMesh->PixelConstBufferData.dynamicLightPosition.y, -3000.0f, 3000.0f);
-		ImGui::SliderFloat("Z", &marioMesh->PixelConstBufferData.dynamicLightPosition.z, -3000.0f, 3000.0f);
-		ImGui::SliderFloat("Dynamic Strength", &marioMesh->PixelConstBufferData.dynamicLightStrength, 0.0f, 1.0f);
+		ImGui::SliderFloat("X", &renderer->PixelConstBufferData.dynamicLightPosition.x, -3000.0f, 3000.0f);
+		ImGui::SliderFloat("Y", &renderer->PixelConstBufferData.dynamicLightPosition.y, -3000.0f, 3000.0f);
+		ImGui::SliderFloat("Z", &renderer->PixelConstBufferData.dynamicLightPosition.z, -3000.0f, 3000.0f);
+		ImGui::SliderFloat("Rd", &renderer->PixelConstBufferData.dynamicLightColor.x, 0.0f, 1.0f);
+		ImGui::SliderFloat("Gd", &renderer->PixelConstBufferData.dynamicLightColor.y, 0.0f, 1.0f);
+		ImGui::SliderFloat("Bd", &renderer->PixelConstBufferData.dynamicLightColor.z, 0.0f, 1.0f);
+		ImGui::SliderFloat("Dynamic Strength", &renderer->PixelConstBufferData.dynamicLightStrength, 0.0f, 1.0f);
 
 
 

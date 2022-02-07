@@ -47,6 +47,7 @@ cbuffer PS_constantBuffer
 
     float3 dynamicLightColor;
     float dynamicLightStrength;
+
     float3 dynamicLightPosition;
 };
 

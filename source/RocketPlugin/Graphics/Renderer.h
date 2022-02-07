@@ -35,6 +35,16 @@ public:
 	bool Init(IDXGISwapChain* pThis, UINT SyncInterval, UINT Flags);
 	void OnPresent(IDXGISwapChain* pThis, UINT SyncInterval, UINT Flags);
 	bool Initialized = false;
+	typedef struct PS_ConstantBufferData_t
+	{
+		DirectX::XMFLOAT3 ambientLightColor;
+		float ambientLightStrength = 0.7f;
+
+		DirectX::XMFLOAT3 dynamicLightColor;
+		float dynamicLightStrength = 1.0f;
+		DirectX::XMFLOAT3 dynamicLightPosition;
+	} PS_ConstantBufferData;
+	PS_ConstantBufferData PixelConstBufferData;
 
 private:
 	void Render();
@@ -42,7 +52,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3DBlob> LoadShader(const char* shaderData, std::string targetShaderVersion, std::string shaderEntry);
 	void InitMeshBuffers();
 	void DrawRenderedMesh();
-
 	
 	bool drawMeshes = false;
 	bool pipelineInitialized = false;
@@ -66,4 +75,5 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencilBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthStencilView = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11BlendState> blendState = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> pixelConstantBuffer = nullptr;
 };
