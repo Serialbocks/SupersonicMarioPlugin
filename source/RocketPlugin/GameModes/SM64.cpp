@@ -6,7 +6,7 @@
 
 // CONSTANTS
 #define RL_YAW_RANGE 64692
-#define CAR_OFFSET_Z 35.0f
+#define CAR_OFFSET_Z 45.0f
 #define DEPTH_FACTOR 20000
 #define BALL_MODEL_SCALE 5.35f
 #define BLANK_TEXTURE_WIDTH 4
@@ -242,9 +242,10 @@ void SM64::onTick(ServerWrapper server)
 
 		car.SetHidden2(TRUE);
 		car.SetbHiddenSelf(TRUE);
+
 		auto marioYaw = (int)(-marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
 		car.SetLocation(Vector(marioState.posX, marioState.posZ, marioState.posY + CAR_OFFSET_Z));
-		car.SetVelocity(Vector(marioState.velX, marioState.velZ, marioState.velY + CAR_OFFSET_Z));
+		car.SetVelocity(Vector(marioState.velX, marioState.velZ, marioState.velY));
 
 		auto carRot = car.GetRotation();
 		carRot.Yaw = marioYaw;
