@@ -21,4 +21,4 @@
     url = https://github.com/CinderBlocc/NetcodeManager.git
 [submodule "source/External/soloud"]
     path = source/External/soloud
-    url = https://github.com/jarikomppa/soloud.git
+    url = https://github.com/johnrackcoach/soloud.git
