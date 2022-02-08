@@ -46,6 +46,9 @@
     <Filter Include="Graphics">
       <UniqueIdentifier>{012c66c4-24c3-4aac-816f-4c4bca16f996}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External\soloud">
+      <UniqueIdentifier>{ea841503-df1f-4b6f-8672-ec7183aee2a8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="RocketPlugin.h">
@@ -216,6 +219,24 @@
     <ClInclude Include="Graphics\Lighting.h">
       <Filter>Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="..\External\soloud\src\audiosource\wav\dr_flac.h">
+      <Filter>External\soloud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\soloud\src\audiosource\wav\dr_mp3.h">
+      <Filter>External\soloud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\soloud\src\audiosource\wav\dr_wav.h">
+      <Filter>External\soloud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\soloud\src\audiosource\wav\stb_vorbis.h">
+      <Filter>External\soloud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\soloud\src\backend\miniaudio\miniaudio.h">
+      <Filter>External\soloud</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\MarioAudio.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RocketPlugin.cpp">
@@ -367,6 +388,81 @@
     </ClCompile>
     <ClCompile Include="Graphics\Lighting.cpp">
       <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_audiosource.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_bus.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_core_3d.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_core_basicops.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_core_faderops.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_core_filterops.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_core_getters.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_core_setters.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_core_voicegroup.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_core_voiceops.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_fader.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_fft.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_fft_lut.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_file.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_filter.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_misc.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_queue.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\core\soloud_thread.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\audiosource\wav\dr_impl.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\audiosource\wav\soloud_wav.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\audiosource\wav\soloud_wavstream.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\audiosource\wav\stb_vorbis.c">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\soloud\src\backend\miniaudio\soloud_miniaudio.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\MarioAudio.cpp">
+      <Filter>Modules</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

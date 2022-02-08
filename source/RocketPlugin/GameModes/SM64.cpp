@@ -194,6 +194,7 @@ void SM64::InitSM64()
 	locationInit = false;
 
 	renderer = new Renderer();
+	marioAudio = new MarioAudio();
 }
 
 void SM64::DestroySM64()
@@ -210,6 +211,7 @@ void SM64::DestroySM64()
 	free(marioGeometry.normal);
 	free(marioGeometry.uv);
 	delete renderer;
+	delete marioAudio;
 }
 
 void SM64::onTick(ServerWrapper server)
@@ -267,6 +269,11 @@ void SM64::onTick(ServerWrapper server)
 		marioInputs.camLookZ = marioState.posZ - cameraLoc.Y;
 		
 		sm64_mario_tick(marioId, &marioInputs, &marioState, &marioGeometry, &marioBodyState, true, true);
+
+		if (marioState.soundId >= 0 && marioAudio != nullptr)
+		{
+			marioAudio->PlaySound(marioState.soundId);
+		}
 
 		if (marioGeometry.numTrianglesUsed > 0)
 		{

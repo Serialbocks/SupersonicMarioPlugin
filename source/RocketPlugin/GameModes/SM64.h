@@ -13,6 +13,7 @@
 #include "../Graphics/Renderer.h"
 #include "../Graphics/Mesh.h"
 #include "../Modules/Utils.h"
+#include "../Modules/MarioAudio.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_additions.h"
 #include "GameModes/RocketGameMode.h"
@@ -79,5 +80,5 @@ private:
     std::shared_ptr<NetcodeManager> Netcode;
     std::shared_ptr<GameWrapper> gameWrapper;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
-
+    MarioAudio* marioAudio = nullptr;
 };
