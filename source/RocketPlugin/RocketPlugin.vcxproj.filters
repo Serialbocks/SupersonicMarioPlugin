@@ -464,6 +464,9 @@
     <ClCompile Include="Modules\MarioAudio.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
+    <ClCompile Include="..\External\soloud\src\backend\winmm\soloud_winmm.cpp">
+      <Filter>External\soloud</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="RLConstants.inc">

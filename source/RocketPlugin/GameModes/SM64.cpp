@@ -271,10 +271,7 @@ void SM64::onTick(ServerWrapper server)
 		
 		sm64_mario_tick(marioId, &marioInputs, &marioState, &marioGeometry, &marioBodyState, true, true);
 
-		if (marioState.soundId >= 0 && marioAudio != nullptr)
-		{
-			marioAudio->PlaySound(marioState.soundId);
-		}
+		marioAudio->UpdateSounds(marioState.soundMask);
 
 		if (marioGeometry.numTrianglesUsed > 0)
 		{

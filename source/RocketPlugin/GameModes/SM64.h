@@ -7,6 +7,7 @@
 #include <iostream>
 #include <tchar.h>
 #include <shlwapi.h>
+#include <stdlib.h>
 #pragma comment(lib,"shlwapi.lib")
 #include "shlobj.h"
 
@@ -53,6 +54,8 @@ private:
     uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
     Utils utils;
 
+public:
+    MarioAudio* marioAudio = nullptr;
 private:
     /* SM64 Members */
     uint8_t* texture;
@@ -80,5 +83,4 @@ private:
     std::shared_ptr<NetcodeManager> Netcode;
     std::shared_ptr<GameWrapper> gameWrapper;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
-    MarioAudio* marioAudio = nullptr;
 };

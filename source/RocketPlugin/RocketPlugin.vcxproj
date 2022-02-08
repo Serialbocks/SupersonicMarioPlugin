@@ -226,6 +226,7 @@
     <ClCompile Include="..\External\soloud\src\audiosource\wav\soloud_wavstream.cpp" />
     <ClCompile Include="..\External\soloud\src\audiosource\wav\stb_vorbis.c" />
     <ClCompile Include="..\External\soloud\src\backend\miniaudio\soloud_miniaudio.cpp" />
+    <ClCompile Include="..\External\soloud\src\backend\winmm\soloud_winmm.cpp" />
     <ClCompile Include="..\External\soloud\src\core\soloud.cpp" />
     <ClCompile Include="..\External\soloud\src\core\soloud_audiosource.cpp" />
     <ClCompile Include="..\External\soloud\src\core\soloud_bus.cpp" />

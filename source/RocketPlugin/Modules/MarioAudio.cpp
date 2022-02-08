@@ -1,35 +1,48 @@
 #include "pch.h"
 #include "MarioAudio.h"
 
+static SoLoud::Soloud* soloud = nullptr;
+
+void onExit(void)
+{
+	if (soloud != nullptr)
+	{
+		// Ensure the process fully ends... not great but here we are
+		abort();
+		soloud->deinit();
+	}
+}
+
 MarioAudio::MarioAudio()
 {
+	atexit(onExit);
 	soloud = new SoLoud::Soloud();
 	soloud->init();
 
 	std::string soundDir = utils.GetBakkesmodFolderPath() + "data\\assets\\sound\\";
-	for (auto i = 0; i < soundPaths.size(); i++)
+	for (auto i = 0; i < marioSounds.size(); i++)
 	{
-		std::string soundPath = soundDir + soundPaths[i];
-		SoLoud::Wav *sound = new SoLoud::Wav();
-		sound->load(soundPath.c_str());
-		audioSources.push_back(sound);
+		std::string soundPath = soundDir + marioSounds[i].wavPath;
+		marioSounds[i].wav.load(soundPath.c_str());
 	}
 }
 
 MarioAudio::~MarioAudio()
 {
-	for (auto i = 0; i < audioSources.size(); i++)
-	{
-		delete audioSources[i];
-	}
 	soloud->deinit();
 	delete soloud;
+	soloud = nullptr;
 }
 
-void MarioAudio::PlaySound(int soundIndex)
+void MarioAudio::UpdateSounds(int soundMask)
 {
-	if (soundIndex >= 0 && soundIndex < audioSources.size())
+	for (auto i = 0; i < marioSounds.size(); i++)
 	{
-		soloud->play(*(audioSources[soundIndex]));
+		auto marioSound = &marioSounds[i];
+		auto shouldBePlaying = marioSound->mask & soundMask;
+		if (shouldBePlaying)
+		{
+			soloud->play(marioSound->wav);
+		}
 	}
 }
