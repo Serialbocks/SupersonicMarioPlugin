@@ -8,11 +8,18 @@ Lighting::Lighting()
 	Lights[0].r = 1.0f;
 	Lights[0].g = 1.0f;
 	Lights[0].b = 1.0f;
-	Lights[0].strength = 0.3f;
-	Lights[0].posX = 0.0f;
-	Lights[0].posY = 83.0f;
-	Lights[0].posZ = 2000.0f;
-	for (auto i = 1; i < MAX_LIGHTS; i++)
+	Lights[0].strength = 0.45f;
+	Lights[0].posX = 3500.0f;
+	Lights[0].posY = 3500.0f;
+	Lights[0].posZ = 350.0f;
+	Lights[1].r = 1.0f;
+	Lights[1].g = 1.0f;
+	Lights[1].b = 1.0f;
+	Lights[1].strength = 0.45f;
+	Lights[1].posX = -3500.0f;
+	Lights[1].posY = -3500.0f;
+	Lights[1].posZ = 350.0f;
+	for (auto i = 2; i < MAX_LIGHTS; i++)
 	{
 		Lights[i].r = 1.0f;
 		Lights[i].g = 1.0f;

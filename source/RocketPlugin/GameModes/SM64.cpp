@@ -244,7 +244,8 @@ void SM64::onTick(ServerWrapper server)
 		car.SetbHiddenSelf(TRUE);
 
 		auto marioYaw = (int)(-marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-		car.SetLocation(Vector(marioState.posX, marioState.posZ, marioState.posY + CAR_OFFSET_Z));
+		auto carPosition = Vector(marioState.posX, marioState.posZ, marioState.posY + CAR_OFFSET_Z);
+		car.SetLocation(carPosition);
 		car.SetVelocity(Vector(marioState.velX, marioState.velZ, marioState.velY));
 
 		auto carRot = car.GetRotation();
@@ -272,8 +273,10 @@ void SM64::onTick(ServerWrapper server)
 		sm64_mario_tick(marioId, &marioInputs, &marioState, &marioGeometry, &marioBodyState, true, true);
 
 		auto carVelocity = car.GetVelocity();
-		auto netVelocity = Vector(marioState.velX - carVelocity.X, marioState.velZ - carVelocity.Y, )
-		marioAudio->UpdateSounds(marioState.soundMask);
+		auto netVelocity = Vector(marioState.velX - carVelocity.X, marioState.velZ - carVelocity.Y, marioState.velY - carVelocity.Z);
+		auto netPosition = Vector(marioState.posX - carPosition.X, marioState.posZ - carPosition.Y, marioState.posY - carPosition.Z);
+		marioAudio->UpdateSounds(marioState.soundMask,
+			netPosition.X / 100.0f, netPosition.Y / 100.0f, netPosition.Z / 100.0f);
 
 		if (marioGeometry.numTrianglesUsed > 0)
 		{
