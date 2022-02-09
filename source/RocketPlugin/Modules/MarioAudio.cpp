@@ -17,7 +17,7 @@ MarioAudio::MarioAudio()
 {
 	atexit(onExit);
 	soloud = new SoLoud::Soloud();
-	soloud->init();
+	soloud->init(SoLoud::Soloud::LEFT_HANDED_3D);
 
 	std::string soundDir = utils.GetBakkesmodFolderPath() + "data\\assets\\sound\\";
 	for (auto i = 0; i < marioSounds.size(); i++)
@@ -34,15 +34,22 @@ MarioAudio::~MarioAudio()
 	soloud = nullptr;
 }
 
-void MarioAudio::UpdateSounds(int soundMask)
+void MarioAudio::UpdateSounds(int soundMask,
+	float aPosX,
+	float aPosY,
+	float aPosZ,
+	float aVelX = 0.0f,
+	float aVelY = 0.0f,
+	float aVelZ = 0.0f)
 {
+	if (soundMask == 0)
+		return;
 	for (auto i = 0; i < marioSounds.size(); i++)
 	{
 		auto marioSound = &marioSounds[i];
-		auto shouldBePlaying = marioSound->mask & soundMask;
-		if (shouldBePlaying)
+		if (marioSound->mask & soundMask)
 		{
-			soloud->play(marioSound->wav);
+			soloud->play3d(marioSound->wav, aPosX, aPosY, aPosZ, aVelX, aVelY, aVelZ);
 		}
 	}
 }

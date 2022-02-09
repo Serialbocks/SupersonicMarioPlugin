@@ -271,6 +271,8 @@ void SM64::onTick(ServerWrapper server)
 		
 		sm64_mario_tick(marioId, &marioInputs, &marioState, &marioGeometry, &marioBodyState, true, true);
 
+		auto carVelocity = car.GetVelocity();
+		auto netVelocity = Vector(marioState.velX - carVelocity.X, marioState.velZ - carVelocity.Y, )
 		marioAudio->UpdateSounds(marioState.soundMask);
 
 		if (marioGeometry.numTrianglesUsed > 0)
