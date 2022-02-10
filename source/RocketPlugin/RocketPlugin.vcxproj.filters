@@ -237,6 +237,9 @@
     <ClInclude Include="Modules\MarioAudio.h">
       <Filter>Modules</Filter>
     </ClInclude>
+    <ClInclude Include="..\External\soxr\src\soxr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="RocketPlugin.cpp">

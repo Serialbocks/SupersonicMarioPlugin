@@ -4,11 +4,21 @@
 #include "soloud_wav.h"
 #include "Utils.h"
 
+#include <soxr./src/soxr.h>
+#pragma comment(lib, "libsoxr.lib")
+
 #define SOUND_MARIO_YAH				0x00000001
 #define SOUND_MARIO_WAH				0x00000002
 #define SOUND_MARIO_HOO				0x00000004
 #define SOUND_MARIO_YAHOO           0x00000008
 #define SOUND_MARIO_HOOHOO          0x00000010
+
+struct soxr;
+extern "C" void soxr_delete(soxr*);
+struct soxr_deleter {
+	void operator () (soxr* p) const { if (p) soxr_delete(p); }
+};
+using soxrHandle = std::unique_ptr<soxr, soxr_deleter>;
 
 typedef struct MarioSound_t
 {
@@ -31,6 +41,12 @@ public:
 		float aVelX = 0.0f,
 		float aVelY = 0.0f,
 		float aVelZ = 0.0f);
+	std::pair<size_t, size_t> Resample(double  factor,
+		float* inBuffer,
+		size_t  inBufferLen,
+		bool    lastFlag,
+		float* outBuffer,
+		size_t  outBufferLen);
 
 private:
 	SoLoud::Wav testWav;
@@ -42,5 +58,7 @@ private:
 		{ SOUND_MARIO_HOOHOO,	"sfx_mario_peach/01.wav",	}
 	};
 	Utils utils;
+	soxrHandle soxrHandle;
+	bool constRateResample;
 };
 
