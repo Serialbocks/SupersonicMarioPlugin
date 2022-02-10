@@ -41,12 +41,13 @@ public:
 		float aVelX = 0.0f,
 		float aVelY = 0.0f,
 		float aVelZ = 0.0f);
-	std::pair<size_t, size_t> Resample(double  factor,
+private:
+	std::pair<size_t, size_t> resample(double factor,
 		float* inBuffer,
-		size_t  inBufferLen,
-		bool    lastFlag,
+		size_t inBufferLen,
+		bool lastFlag,
 		float* outBuffer,
-		size_t  outBufferLen);
+		size_t outBufferLen);
 
 private:
 	SoLoud::Wav testWav;
@@ -59,6 +60,5 @@ private:
 	};
 	Utils utils;
 	soxrHandle soxrHandle;
-	bool constRateResample;
 };
 

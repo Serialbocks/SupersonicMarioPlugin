@@ -13,24 +13,6 @@ void onExit(void)
 	}
 }
 
-std::pair<size_t, size_t> MarioAudio::Resample(double  factor,
-	float* inBuffer,
-	size_t  inBufferLen,
-	bool    lastFlag,
-	float* outBuffer,
-	size_t  outBufferLen)
-{
-	size_t idone, odone;
-	soxr_quality_spec_t q_spec;
-
-	q_spec = soxr_quality_spec(SOXR_HQ, SOXR_VR);
-	soxrHandle.reset(soxr_create(1, factor, 1, 0, 0, &q_spec, 0));
-	soxr_process(soxrHandle.get(),
-		inBuffer, (lastFlag ? ~inBufferLen : inBufferLen), &idone,
-		outBuffer, outBufferLen, &odone);
-	return { idone, odone };
-}
-
 MarioAudio::MarioAudio()
 {
 	atexit(onExit);
@@ -72,4 +54,23 @@ void MarioAudio::UpdateSounds(int soundMask,
 			soloud->setRelativePlaySpeed(handle, marioSound->playbackSpeed);
 		}
 	}
+}
+
+
+std::pair<size_t, size_t> MarioAudio::resample(double factor,
+	float* inBuffer,
+	size_t inBufferLen,
+	bool lastFlag,
+	float* outBuffer,
+	size_t outBufferLen)
+{
+	size_t idone, odone;
+	soxr_quality_spec_t q_spec;
+
+	q_spec = soxr_quality_spec(SOXR_HQ, SOXR_VR);
+	soxrHandle.reset(soxr_create(1, factor, 1, 0, 0, &q_spec, 0));
+	soxr_process(soxrHandle.get(),
+		inBuffer, (lastFlag ? ~inBufferLen : inBufferLen), &idone,
+		outBuffer, outBufferLen, &odone);
+	return { idone, odone };
 }
