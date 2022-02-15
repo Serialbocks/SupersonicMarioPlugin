@@ -26,6 +26,22 @@ extern "C" {
 
 #include "../Graphics/level.h"
 
+
+class SM64MarioInstance
+{
+public:
+    SM64MarioInstance();
+    ~SM64MarioInstance();
+
+public:
+    int32_t marioId = -2;
+    struct SM64MarioInputs marioInputs;
+    struct SM64MarioState marioState;
+    struct SM64MarioGeometryBuffers marioGeometry;
+    struct SM64MarioBodyState marioBodyState;
+    Mesh* mesh = nullptr;
+};
+
 class SM64 final : public RocketGameMode
 {
 public:
@@ -52,18 +68,15 @@ private:
     std::string bytesToHex(unsigned char* data, unsigned int len);
     std::vector<char> hexToBytes(const std::string& hex);
     uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
-    Utils utils;
+    void tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper* car);
 
 public:
     MarioAudio* marioAudio = nullptr;
 private:
     /* SM64 Members */
     uint8_t* texture;
-    int32_t marioId;
-    int32_t remoteMarioId;
-    struct SM64MarioInputs marioInputs;
-    struct SM64MarioState marioState;
-    struct SM64MarioGeometryBuffers marioGeometry;
+    std::map<std::string, SM64MarioInstance*> remoteMarios;
+    SM64MarioInstance localMario;
     vec3 cameraPos;
     float cameraRot;
     Vector carLocation;
@@ -76,11 +89,11 @@ private:
     Mesh* ballMesh = nullptr;
     bool sm64Initialized = false;
     bool meshesInitialized = false;
-    struct SM64MarioBodyState marioBodyState;
     struct SM64MarioBodyState marioBodyStateIn;
     bool renderLocalMario = false;
     bool renderRemoteMario = false;
     std::shared_ptr<NetcodeManager> Netcode;
     std::shared_ptr<GameWrapper> gameWrapper;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
+    Utils utils;
 };

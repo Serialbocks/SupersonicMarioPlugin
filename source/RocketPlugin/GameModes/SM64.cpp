@@ -7,11 +7,7 @@
 // CONSTANTS
 #define RL_YAW_RANGE 64692
 #define CAR_OFFSET_Z 45.0f
-#define DEPTH_FACTOR 20000
 #define BALL_MODEL_SCALE 5.35f
-#define BLANK_TEXTURE_WIDTH 4
-#define BLANK_TEXTURE_HEIGHT 4
-#define BLANK_TEXTURE_SIZE (4 * BLANK_TEXTURE_WIDTH * BLANK_TEXTURE_HEIGHT)
 
 SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, BakkesMod::Plugin::PluginInfo exports)
 {
@@ -39,10 +35,10 @@ SM64::~SM64()
 
 void SM64::StopRenderMario(std::string eventName)
 {
-	if (marioId >= 0 && renderLocalMario)
+	if (localMario.marioId >= 0 && renderLocalMario)
 	{
-		sm64_mario_delete(marioId);
-		marioId = -1;
+		sm64_mario_delete(localMario.marioId);
+		localMario.marioId = -1;
 	}
 	renderLocalMario = false;
 	renderRemoteMario = false;
@@ -60,16 +56,28 @@ void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
 		return;
 	}
 
+	auto playerName = sender.GetPlayerName().ToString();
+	auto marioIterator = remoteMarios.find(playerName);
+	SM64MarioInstance* marioInstance = nullptr;
+	if (marioIterator == remoteMarios.end())
+	{
+		// Initialize mario for this player
+		marioInstance = new SM64MarioInstance();
+		remoteMarios[playerName] = marioInstance;
+	}
+
+	if (marioInstance == nullptr) return;
+
 	char messageType = message[0];
 
 	char* dest = nullptr;
 	if (messageType == 'M')
 	{
-		dest = (char*)&marioBodyStateIn.marioState;
+		dest = (char*)&marioInstance->marioState;
 	}
 	else if (messageType == 'B')
 	{
-		dest = (char*)&marioBodyStateIn;
+		dest = (char*)&marioInstance->marioBodyState;
 	}
 
 	if (dest == nullptr)
@@ -171,10 +179,6 @@ void SM64::InitSM64()
 	
 	size_t textureSize = 4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT;
 	texture = (uint8_t*)malloc(textureSize);
-	marioGeometry.position = (float*)malloc(sizeof(float) * 9 * SM64_GEO_MAX_TRIANGLES);
-	marioGeometry.color = (float*)malloc(sizeof(float) * 9 * SM64_GEO_MAX_TRIANGLES);
-	marioGeometry.normal = (float*)malloc(sizeof(float) * 9 * SM64_GEO_MAX_TRIANGLES);
-	marioGeometry.uv = (float*)malloc(sizeof(float) * 6 * SM64_GEO_MAX_TRIANGLES);
 	
 	//sm64_global_terminate();
 	if (!sm64Initialized)
@@ -184,8 +188,6 @@ void SM64::InitSM64()
 		sm64Initialized = true;
 	}
 	
-	marioId = -1;
-	remoteMarioId = -1;
 	cameraPos[0] = 0.0f;
 	cameraPos[1] = 0.0f;
 	cameraPos[2] = 0.0f;
@@ -199,17 +201,13 @@ void SM64::InitSM64()
 
 void SM64::DestroySM64()
 {
-	if (marioId >= 0)
+	if (localMario.marioId >= 0)
 	{
-		sm64_mario_delete(marioId);
+		sm64_mario_delete(localMario.marioId);
 	}
-	marioId = -2;
+	localMario.marioId = -2;
 	//sm64_global_terminate();
 	free(texture);
-	free(marioGeometry.position);
-	free(marioGeometry.color);
-	free(marioGeometry.normal);
-	free(marioGeometry.uv);
 	delete renderer;
 	delete marioAudio;
 }
@@ -219,84 +217,122 @@ void SM64::onTick(ServerWrapper server)
 	for (CarWrapper car : server.GetCars())
 	{
 		PriWrapper player = car.GetPRI();
-		if (!player.GetbMatchAdmin()) continue;
-
-		carLocation = car.GetLocation();
-		auto x = (int16_t)(carLocation.X);
-		auto y = (int16_t)(carLocation.Y);
-		auto z = (int16_t)(carLocation.Z);
-		if (marioId < 0)
+		if (player.IsNull()) continue;
+		if (player.GetbMatchAdmin())
 		{
-			carRotation = car.GetRotation();
-
-			// Unreal swaps coords
-			marioId = sm64_mario_create(x, z, y);
-			if (marioId < 0) continue;
+			tickMarioInstance(&localMario, &car);
 		}
-
-		auto airControl = car.GetAirControlComponent();
-		if (!airControl.IsNull())
+		else
 		{
-			airControl.SetDodgeDisableTimeRemaining(0.0f);
-		}
+			auto playerNamePtr = player.GetPlayerName();
+			if (playerNamePtr.IsNull()) continue;
+			auto playerName = playerNamePtr.ToString();
 
-		car.SetHidden2(TRUE);
-		car.SetbHiddenSelf(TRUE);
-
-		auto marioYaw = (int)(-marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-		auto carPosition = Vector(marioState.posX, marioState.posZ, marioState.posY + CAR_OFFSET_Z);
-		car.SetLocation(carPosition);
-		car.SetVelocity(Vector(marioState.velX, marioState.velZ, marioState.velY));
-
-		auto carRot = car.GetRotation();
-		carRot.Yaw = marioYaw;
-		carRot.Roll = carRotation.Roll;
-		carRot.Pitch = carRotation.Pitch;
-		car.SetRotation(carRot);
-		
-		auto camera = gameWrapper->GetCamera();
-		if (!camera.IsNull())
-		{
-			cameraLoc = camera.GetLocation();
-		}
-
-		auto playerController = car.GetPlayerController();
-		playerInputs = playerController.GetVehicleInput();
-		marioInputs.buttonA = playerInputs.Jump;
-		marioInputs.buttonB = playerInputs.Handbrake;
-		marioInputs.buttonZ = playerInputs.Throttle < 0;
-		marioInputs.stickX = playerInputs.Steer;
-		marioInputs.stickY = playerInputs.Pitch;
-		marioInputs.camLookX = marioState.posX - cameraLoc.X;
-		marioInputs.camLookZ = marioState.posZ - cameraLoc.Y;
-		
-		sm64_mario_tick(marioId, &marioInputs, &marioState, &marioGeometry, &marioBodyState, true, true);
-
-		auto carVelocity = car.GetVelocity();
-		auto netVelocity = Vector(marioState.velX - carVelocity.X, marioState.velZ - carVelocity.Y, marioState.velY - carVelocity.Z);
-		auto netPosition = Vector(marioState.posX - carPosition.X, marioState.posZ - carPosition.Y, marioState.posY - carPosition.Z);
-		marioAudio->UpdateSounds(marioState.soundMask,
-			netPosition.X / 100.0f, netPosition.Y / 100.0f, netPosition.Z / 100.0f);
-
-		if (marioGeometry.numTrianglesUsed > 0)
-		{
-			renderLocalMario = true;
-
-			unsigned char* bodyStateBytes = (unsigned char*)&marioBodyState;
-			unsigned char* marioStateBytes = (unsigned char*)&marioBodyState.marioState;
-			std::string bodyStateStr = "B";
-			bodyStateStr += bytesToHex(bodyStateBytes, sizeof(struct SM64MarioBodyState) - sizeof(struct SM64MarioState));
-			std::string marioStateStr = "M";
-			marioStateStr += bytesToHex(marioStateBytes, sizeof(struct SM64MarioState));
-
-			if (bodyStateStr.length() < 110)
+			SM64MarioInstance* marioInstance = nullptr;
+			auto marioIterator = remoteMarios.find(playerName);
+			if (marioIterator != remoteMarios.end())
 			{
-				Netcode->SendNewMessage(bodyStateStr);
+				car.SetHidden2(TRUE);
+				car.SetbHiddenSelf(TRUE);
+
+				auto marioYaw = (int)(-marioInstance->marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+				auto carPosition = Vector(marioInstance->marioState.posX, marioInstance->marioState.posZ, marioInstance->marioState.posY + CAR_OFFSET_Z);
+				car.SetLocation(carPosition);
+				car.SetVelocity(Vector(marioInstance->marioState.velX, marioInstance->marioState.velZ, marioInstance->marioState.velY));
 			}
-			if (marioStateStr.length() < 110)
-			{
-				Netcode->SendNewMessage(marioStateStr);
-			}
+		}
+
+		
+	}
+}
+
+void SM64::tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper* car)
+{
+	carLocation = car->GetLocation();
+	auto x = (int16_t)(carLocation.X);
+	auto y = (int16_t)(carLocation.Y);
+	auto z = (int16_t)(carLocation.Z);
+	if (marioInstance->marioId < 0)
+	{
+		carRotation = car->GetRotation();
+
+		// Unreal swaps coords
+		marioInstance->marioId = sm64_mario_create(x, z, y);
+		if (marioInstance->marioId < 0) return;
+	}
+
+	auto airControl = car->GetAirControlComponent();
+	if (!airControl.IsNull())
+	{
+		airControl.SetDodgeDisableTimeRemaining(0.0f);
+	}
+
+	car->SetHidden2(TRUE);
+	car->SetbHiddenSelf(TRUE);
+
+	auto marioYaw = (int)(-marioInstance->marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+	auto carPosition = Vector(marioInstance->marioState.posX, marioInstance->marioState.posZ, marioInstance->marioState.posY + CAR_OFFSET_Z);
+	car->SetLocation(carPosition);
+	car->SetVelocity(Vector(marioInstance->marioState.velX, marioInstance->marioState.velZ, marioInstance->marioState.velY));
+
+	auto carRot = car->GetRotation();
+	carRot.Yaw = marioYaw;
+	carRot.Roll = carRotation.Roll;
+	carRot.Pitch = carRotation.Pitch;
+	car->SetRotation(carRot);
+
+	auto camera = gameWrapper->GetCamera();
+	if (!camera.IsNull())
+	{
+		cameraLoc = camera.GetLocation();
+	}
+
+	auto playerController = car->GetPlayerController();
+	playerInputs = playerController.GetVehicleInput();
+	marioInstance->marioInputs.buttonA = playerInputs.Jump;
+	marioInstance->marioInputs.buttonB = playerInputs.Handbrake;
+	marioInstance->marioInputs.buttonZ = playerInputs.Throttle < 0;
+	marioInstance->marioInputs.stickX = playerInputs.Steer;
+	marioInstance->marioInputs.stickY = playerInputs.Pitch;
+	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - cameraLoc.X;
+	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - cameraLoc.Y;
+
+	sm64_mario_tick(marioInstance->marioId,
+		&marioInstance->marioInputs,
+		&marioInstance->marioState,
+		&marioInstance->marioGeometry,
+		&marioInstance->marioBodyState,
+		true,
+		true);
+
+	auto carVelocity = car->GetVelocity();
+	auto netVelocity = Vector(marioInstance->marioState.velX - carVelocity.X,
+		marioInstance->marioState.velZ - carVelocity.Y,
+		marioInstance->marioState.velY - carVelocity.Z);
+	auto netPosition = Vector(marioInstance->marioState.posX - carPosition.X,
+		marioInstance->marioState.posZ - carPosition.Y,
+		marioInstance->marioState.posY - carPosition.Z);
+	marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
+		netPosition.X / 100.0f, netPosition.Y / 100.0f, netPosition.Z / 100.0f);
+
+	if (marioInstance->marioGeometry.numTrianglesUsed > 0)
+	{
+		renderLocalMario = true;
+
+		unsigned char* bodyStateBytes = (unsigned char*)&marioInstance->marioBodyState;
+		unsigned char* marioStateBytes = (unsigned char*)&marioInstance->marioBodyState.marioState;
+		std::string bodyStateStr = "B";
+		bodyStateStr += bytesToHex(bodyStateBytes, sizeof(struct SM64MarioBodyState) - sizeof(struct SM64MarioState));
+		std::string marioStateStr = "M";
+		marioStateStr += bytesToHex(marioStateBytes, sizeof(struct SM64MarioState));
+
+		if (bodyStateStr.length() < 110)
+		{
+			Netcode->SendNewMessage(bodyStateStr);
+		}
+		if (marioStateStr.length() < 110)
+		{
+			Netcode->SendNewMessage(marioStateStr);
 		}
 	}
 }
@@ -319,8 +355,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 			SM64_TEXTURE_WIDTH,
 			SM64_TEXTURE_HEIGHT);
 
-
-
 		meshesInitialized = true;
 		return;
 	}
@@ -335,43 +369,120 @@ void SM64::OnRender(CanvasWrapper canvas)
 	auto camera = gameWrapper->GetCamera();
 	if (camera.IsNull()) return;
 
+	auto server = gameWrapper->GetGameEventAsServer();
+	if (server.IsNull()) return;
 
-	if (renderRemoteMario && remoteMarioId < 0)
+	auto localCar = gameWrapper->GetLocalCar();
+	std::string localPlayerName = "";
+	if (!localCar.IsNull())
 	{
-		remoteMarioId = sm64_mario_create((int16_t)marioBodyStateIn.marioState.posX,
-			(int16_t)marioBodyStateIn.marioState.posY,
-			(int16_t)marioBodyStateIn.marioState.posZ);
-		if (remoteMarioId < 0) return;
+		auto localPlayer = localCar.GetPRI();
+		if (!localPlayer.IsNull())
+		{
+			localPlayerName = localPlayer.GetPlayerName().ToString();
+		}
 	}
 
-	if (renderRemoteMario)
+	for (CarWrapper car : server.GetCars())
 	{
-		sm64_mario_tick(remoteMarioId, &marioInputs, &marioBodyStateIn.marioState, &marioGeometry, &marioBodyStateIn, false, false);
-	}
+		auto player = car.GetPRI();
+		if (player.IsNull()) continue;
+		auto playerNamePtr = player.GetPlayerName();
+		if (playerNamePtr.IsNull()) continue;
+		auto playerName = playerNamePtr.ToString();
 
-	auto currentCameraLocation = camera.GetLocation();
+		SM64MarioInstance* marioInstance = nullptr;
 
-	for (auto i = 0; i < marioGeometry.numTrianglesUsed * 3; i++)
-	{
-		auto position = &marioGeometry.position[i * 3];
-		auto color = &marioGeometry.color[i * 3];
-		auto uv = &marioGeometry.uv[i * 2];
-		auto normal = &marioGeometry.normal[i * 3];
+		bool isLocalPlayer = false;
+		bool isMatchAdmin = player.GetbMatchAdmin();
+		if (playerName == localPlayerName)
+		{
+			// This is the local player - use that mario
+			marioInstance = &localMario;
+			isLocalPlayer = true;
+		}
+		else
+		{
+			// Not the local player. See if we have this player already
+			auto marioIterator = remoteMarios.find(playerName);
+			if (marioIterator != remoteMarios.end())
+			{
+				marioInstance = marioIterator->second;
+			}
+			else
+			{
+				// There is no mario initialized for this player
+				continue;
+			}
+		}
 
-		auto currentVertex = &marioMesh->Vertices[i];
-		// Unreal engine swaps x and y coords for 3d model
-		currentVertex->pos.x = position[0];
-		currentVertex->pos.y = position[2];
-		currentVertex->pos.z = position[1];
-		currentVertex->color.x = color[0];
-		currentVertex->color.y = color[1];
-		currentVertex->color.z = color[2];
-		currentVertex->color.w = i >= (WINGCAP_VERTEX_INDEX * 3) ? 0.0f : 1.0f;
-		currentVertex->texCoord.x = uv[0];
-		currentVertex->texCoord.y = uv[1];
-		currentVertex->normal.x = normal[0];
-		currentVertex->normal.y = normal[2];
-		currentVertex->normal.z = normal[1];
+		if (marioInstance == nullptr) continue;
+
+		if (marioInstance->marioId < 0 && !isLocalPlayer)
+		{
+			marioInstance->marioId = sm64_mario_create((int16_t)marioInstance->marioState.posX,
+				(int16_t)marioInstance->marioState.posY,
+				(int16_t)marioInstance->marioState.posZ);
+		}
+		else if (marioInstance->marioId < 0 && isLocalPlayer)
+		{
+			carLocation = car.GetLocation();
+			auto x = (int16_t)(carLocation.X);
+			auto y = (int16_t)(carLocation.Y);
+			auto z = (int16_t)(carLocation.Z);
+			marioInstance->marioId = sm64_mario_create(x, z, y);
+		}
+		
+		if (marioInstance->mesh == nullptr)
+		{
+			// Initialize the mesh
+			marioInstance->mesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
+				texture,
+				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
+				SM64_TEXTURE_WIDTH,
+				SM64_TEXTURE_HEIGHT);
+		}
+
+		if (!isLocalPlayer)
+		{
+			sm64_mario_tick(marioInstance->marioId,
+				&marioInstance->marioInputs,
+				&marioInstance->marioState,
+				&marioInstance->marioGeometry,
+				&marioInstance->marioBodyState,
+				false,
+				false);
+		}
+		else if(!isMatchAdmin)
+		{
+			tickMarioInstance(marioInstance, &car);
+		}
+
+		for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
+		{
+			auto position = &marioInstance->marioGeometry.position[i * 3];
+			auto color = &marioInstance->marioGeometry.color[i * 3];
+			auto uv = &marioInstance->marioGeometry.uv[i * 2];
+			auto normal = &marioInstance->marioGeometry.normal[i * 3];
+
+			auto currentVertex = &marioInstance->mesh->Vertices[i];
+			// Unreal engine swaps x and y coords for 3d model
+			currentVertex->pos.x = position[0];
+			currentVertex->pos.y = position[2];
+			currentVertex->pos.z = position[1];
+			currentVertex->color.x = color[0];
+			currentVertex->color.y = color[1];
+			currentVertex->color.z = color[2];
+			currentVertex->color.w = i >= (WINGCAP_VERTEX_INDEX * 3) ? 0.0f : 1.0f;
+			currentVertex->texCoord.x = uv[0];
+			currentVertex->texCoord.y = uv[1];
+			currentVertex->normal.x = normal[0];
+			currentVertex->normal.y = normal[2];
+			currentVertex->normal.z = normal[1];
+		}
+
+		marioInstance->mesh->RenderUpdateVertices(marioInstance->marioGeometry.numTrianglesUsed, &camera);
+
 	}
 
 	if (ballMesh != nullptr)
@@ -395,9 +506,24 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		}
 	}
-	marioMesh->RenderUpdateVertices(marioGeometry.numTrianglesUsed, &camera);
 
 
+}
+
+SM64MarioInstance::SM64MarioInstance()
+{
+	marioGeometry.position = (float*)malloc(sizeof(float) * 9 * SM64_GEO_MAX_TRIANGLES);
+	marioGeometry.color = (float*)malloc(sizeof(float) * 9 * SM64_GEO_MAX_TRIANGLES);
+	marioGeometry.normal = (float*)malloc(sizeof(float) * 9 * SM64_GEO_MAX_TRIANGLES);
+	marioGeometry.uv = (float*)malloc(sizeof(float) * 6 * SM64_GEO_MAX_TRIANGLES);
+}
+
+SM64MarioInstance::~SM64MarioInstance()
+{
+	free(marioGeometry.position);
+	free(marioGeometry.color);
+	free(marioGeometry.normal);
+	free(marioGeometry.uv);
 }
 
 float SM64::distance(Vector v1, Vector v2)
