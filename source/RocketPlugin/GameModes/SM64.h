@@ -68,7 +68,7 @@ private:
     std::string bytesToHex(unsigned char* data, unsigned int len);
     std::vector<char> hexToBytes(const std::string& hex);
     uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
-    void tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper* car);
+    void tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper car);
 
 public:
     MarioAudio* marioAudio = nullptr;

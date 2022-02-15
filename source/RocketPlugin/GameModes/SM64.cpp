@@ -220,7 +220,7 @@ void SM64::onTick(ServerWrapper server)
 		if (player.IsNull()) continue;
 		if (player.GetbMatchAdmin())
 		{
-			tickMarioInstance(&localMario, &car);
+			tickMarioInstance(&localMario, car);
 		}
 		else
 		{
@@ -246,40 +246,41 @@ void SM64::onTick(ServerWrapper server)
 	}
 }
 
-void SM64::tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper* car)
+void SM64::tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper car)
 {
-	carLocation = car->GetLocation();
+	if (car.IsNull()) return;
+	carLocation = car.GetLocation();
 	auto x = (int16_t)(carLocation.X);
 	auto y = (int16_t)(carLocation.Y);
 	auto z = (int16_t)(carLocation.Z);
 	if (marioInstance->marioId < 0)
 	{
-		carRotation = car->GetRotation();
+		carRotation = car.GetRotation();
 
 		// Unreal swaps coords
 		marioInstance->marioId = sm64_mario_create(x, z, y);
 		if (marioInstance->marioId < 0) return;
 	}
 
-	auto airControl = car->GetAirControlComponent();
+	auto airControl = car.GetAirControlComponent();
 	if (!airControl.IsNull())
 	{
 		airControl.SetDodgeDisableTimeRemaining(0.0f);
 	}
 
-	car->SetHidden2(TRUE);
-	car->SetbHiddenSelf(TRUE);
+	car.SetHidden2(TRUE);
+	car.SetbHiddenSelf(TRUE);
 
 	auto marioYaw = (int)(-marioInstance->marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
 	auto carPosition = Vector(marioInstance->marioState.posX, marioInstance->marioState.posZ, marioInstance->marioState.posY + CAR_OFFSET_Z);
-	car->SetLocation(carPosition);
-	car->SetVelocity(Vector(marioInstance->marioState.velX, marioInstance->marioState.velZ, marioInstance->marioState.velY));
+	car.SetLocation(carPosition);
+	car.SetVelocity(Vector(marioInstance->marioState.velX, marioInstance->marioState.velZ, marioInstance->marioState.velY));
 
-	auto carRot = car->GetRotation();
+	auto carRot = car.GetRotation();
 	carRot.Yaw = marioYaw;
 	carRot.Roll = carRotation.Roll;
 	carRot.Pitch = carRotation.Pitch;
-	car->SetRotation(carRot);
+	car.SetRotation(carRot);
 
 	auto camera = gameWrapper->GetCamera();
 	if (!camera.IsNull())
@@ -287,7 +288,7 @@ void SM64::tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper* car)
 		cameraLoc = camera.GetLocation();
 	}
 
-	auto playerController = car->GetPlayerController();
+	auto playerController = car.GetPlayerController();
 	playerInputs = playerController.GetVehicleInput();
 	marioInstance->marioInputs.buttonA = playerInputs.Jump;
 	marioInstance->marioInputs.buttonB = playerInputs.Handbrake;
@@ -305,7 +306,7 @@ void SM64::tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper* car)
 		true,
 		true);
 
-	auto carVelocity = car->GetVelocity();
+	auto carVelocity = car.GetVelocity();
 	auto netVelocity = Vector(marioInstance->marioState.velX - carVelocity.X,
 		marioInstance->marioState.velZ - carVelocity.Y,
 		marioInstance->marioState.velY - carVelocity.Z);
@@ -455,7 +456,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		}
 		else if(!isMatchAdmin)
 		{
-			tickMarioInstance(marioInstance, &car);
+			tickMarioInstance(marioInstance, car);
 		}
 
 		for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
