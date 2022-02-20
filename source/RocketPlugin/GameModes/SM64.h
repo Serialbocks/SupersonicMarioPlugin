@@ -62,16 +62,20 @@ public:
     void OnMessageReceived(const std::string& message, PriWrapper sender);
     void OnRender(CanvasWrapper canvas);
 
+    std::string bytesToHex(unsigned char* data, unsigned int len);
+
 private:
     float distance(Vector v1, Vector v2);
     void onTick(ServerWrapper server);
-    std::string bytesToHex(unsigned char* data, unsigned int len);
     std::vector<char> hexToBytes(const std::string& hex);
     uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
-    void tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper car);
 
 public:
     MarioAudio* marioAudio = nullptr;
+    std::shared_ptr<GameWrapper> gameWrapper;
+    Vector cameraLoc = Vector(0, 0, 0);
+    ControllerInput playerInputs;
+    std::shared_ptr<NetcodeManager> Netcode;
 private:
     /* SM64 Members */
     uint8_t* texture;
@@ -81,8 +85,6 @@ private:
     float cameraRot;
     Vector carLocation;
     bool locationInit;
-    ControllerInput playerInputs;
-    Vector cameraLoc = Vector(0, 0, 0);
     Rotator carRotation;
     Renderer* renderer = nullptr;
     Mesh* marioMesh = nullptr;
@@ -92,8 +94,7 @@ private:
     struct SM64MarioBodyState marioBodyStateIn;
     bool renderLocalMario = false;
     bool renderRemoteMario = false;
-    std::shared_ptr<NetcodeManager> Netcode;
-    std::shared_ptr<GameWrapper> gameWrapper;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
     Utils utils;
+
 };

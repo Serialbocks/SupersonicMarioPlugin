@@ -9,6 +9,8 @@
 #define CAR_OFFSET_Z 45.0f
 #define BALL_MODEL_SCALE 5.35f
 
+inline void tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper car, SM64* instance);
+
 SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, BakkesMod::Plugin::PluginInfo exports)
 {
 	using namespace std::placeholders;
@@ -220,7 +222,8 @@ void SM64::onTick(ServerWrapper server)
 		if (player.IsNull()) continue;
 		if (player.GetbMatchAdmin())
 		{
-			tickMarioInstance(&localMario, car);
+			tickMarioInstance(&localMario, car, this);
+			renderLocalMario = true;
 		}
 		else
 		{
@@ -246,17 +249,16 @@ void SM64::onTick(ServerWrapper server)
 	}
 }
 
-void SM64::tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper car)
+inline void tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper car, SM64* instance)
 {
 	if (car.IsNull()) return;
-	carLocation = car.GetLocation();
+	auto carLocation = car.GetLocation();
 	auto x = (int16_t)(carLocation.X);
 	auto y = (int16_t)(carLocation.Y);
 	auto z = (int16_t)(carLocation.Z);
+	auto carRotation = car.GetRotation();
 	if (marioInstance->marioId < 0)
 	{
-		carRotation = car.GetRotation();
-
 		// Unreal swaps coords
 		marioInstance->marioId = sm64_mario_create(x, z, y);
 		if (marioInstance->marioId < 0) return;
@@ -282,21 +284,21 @@ void SM64::tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper car)
 	carRot.Pitch = carRotation.Pitch;
 	car.SetRotation(carRot);
 
-	auto camera = gameWrapper->GetCamera();
+	auto camera = instance->gameWrapper->GetCamera();
 	if (!camera.IsNull())
 	{
-		cameraLoc = camera.GetLocation();
+		instance->cameraLoc = camera.GetLocation();
 	}
 
 	auto playerController = car.GetPlayerController();
-	playerInputs = playerController.GetVehicleInput();
-	marioInstance->marioInputs.buttonA = playerInputs.Jump;
-	marioInstance->marioInputs.buttonB = playerInputs.Handbrake;
-	marioInstance->marioInputs.buttonZ = playerInputs.Throttle < 0;
-	marioInstance->marioInputs.stickX = playerInputs.Steer;
-	marioInstance->marioInputs.stickY = playerInputs.Pitch;
-	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - cameraLoc.X;
-	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - cameraLoc.Y;
+	instance->playerInputs = playerController.GetVehicleInput();
+	marioInstance->marioInputs.buttonA = instance->playerInputs.Jump;
+	marioInstance->marioInputs.buttonB = instance->playerInputs.Handbrake;
+	marioInstance->marioInputs.buttonZ = instance->playerInputs.Throttle < 0;
+	marioInstance->marioInputs.stickX = instance->playerInputs.Steer;
+	marioInstance->marioInputs.stickY = instance->playerInputs.Pitch;
+	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - instance->cameraLoc.X;
+	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - instance->cameraLoc.Y;
 
 	sm64_mario_tick(marioInstance->marioId,
 		&marioInstance->marioInputs,
@@ -313,27 +315,25 @@ void SM64::tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper car)
 	auto netPosition = Vector(marioInstance->marioState.posX - carPosition.X,
 		marioInstance->marioState.posZ - carPosition.Y,
 		marioInstance->marioState.posY - carPosition.Z);
-	marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
+	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
 		netPosition.X / 100.0f, netPosition.Y / 100.0f, netPosition.Z / 100.0f);
 
 	if (marioInstance->marioGeometry.numTrianglesUsed > 0)
 	{
-		renderLocalMario = true;
-
 		unsigned char* bodyStateBytes = (unsigned char*)&marioInstance->marioBodyState;
 		unsigned char* marioStateBytes = (unsigned char*)&marioInstance->marioBodyState.marioState;
 		std::string bodyStateStr = "B";
-		bodyStateStr += bytesToHex(bodyStateBytes, sizeof(struct SM64MarioBodyState) - sizeof(struct SM64MarioState));
+		bodyStateStr += instance->bytesToHex(bodyStateBytes, sizeof(struct SM64MarioBodyState) - sizeof(struct SM64MarioState));
 		std::string marioStateStr = "M";
-		marioStateStr += bytesToHex(marioStateBytes, sizeof(struct SM64MarioState));
+		marioStateStr += instance->bytesToHex(marioStateBytes, sizeof(struct SM64MarioState));
 
 		if (bodyStateStr.length() < 110)
 		{
-			Netcode->SendNewMessage(bodyStateStr);
+			instance->Netcode->SendNewMessage(bodyStateStr);
 		}
 		if (marioStateStr.length() < 110)
 		{
-			Netcode->SendNewMessage(marioStateStr);
+			instance->Netcode->SendNewMessage(marioStateStr);
 		}
 	}
 }
@@ -456,7 +456,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		}
 		else if(!isMatchAdmin)
 		{
-			tickMarioInstance(marioInstance, car);
+			tickMarioInstance(marioInstance, car, this);
 		}
 
 		for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
