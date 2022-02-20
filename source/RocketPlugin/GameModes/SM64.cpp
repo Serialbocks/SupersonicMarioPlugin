@@ -61,11 +61,15 @@ void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
 	auto playerName = sender.GetPlayerName().ToString();
 	auto marioIterator = remoteMarios.find(playerName);
 	SM64MarioInstance* marioInstance = nullptr;
-	if (marioIterator == remoteMarios.end())
+	if (remoteMarios.count(playerName) == 0)
 	{
 		// Initialize mario for this player
 		marioInstance = new SM64MarioInstance();
 		remoteMarios[playerName] = marioInstance;
+	}
+	else
+	{
+		marioInstance = remoteMarios[playerName];
 	}
 
 	if (marioInstance == nullptr) return;
@@ -371,6 +375,11 @@ void SM64::OnRender(CanvasWrapper canvas)
 	if (camera.IsNull()) return;
 
 	auto server = gameWrapper->GetGameEventAsServer();
+	if (server.IsNull())
+	{
+		server = gameWrapper->GetCurrentGameState();
+	}
+
 	if (server.IsNull()) return;
 
 	auto localCar = gameWrapper->GetLocalCar();
