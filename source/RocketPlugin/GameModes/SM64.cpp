@@ -235,10 +235,9 @@ void SM64::onTick(ServerWrapper server)
 			if (playerNamePtr.IsNull()) continue;
 			auto playerName = playerNamePtr.ToString();
 
-			SM64MarioInstance* marioInstance = nullptr;
-			auto marioIterator = remoteMarios.find(playerName);
-			if (marioIterator != remoteMarios.end())
+			if (remoteMarios.count(playerName) > 0)
 			{
+				SM64MarioInstance* marioInstance = remoteMarios[playerName];
 				car.SetHidden2(TRUE);
 				car.SetbHiddenSelf(TRUE);
 
