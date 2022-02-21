@@ -8,6 +8,7 @@
 #define RL_YAW_RANGE 64692
 #define CAR_OFFSET_Z 45.0f
 #define BALL_MODEL_SCALE 5.35f
+#define SM64_TEXTURE_SIZE (4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT)
 
 inline void tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper car, SM64* instance);
 
@@ -183,8 +184,7 @@ void SM64::InitSM64()
 		return;
 	}
 	
-	size_t textureSize = 4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT;
-	texture = (uint8_t*)malloc(textureSize);
+	texture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
 	
 	//sm64_global_terminate();
 	if (!sm64Initialized)
@@ -350,9 +350,11 @@ void SM64::OnRender(CanvasWrapper canvas)
 		if (!renderer->Initialized) return;
 
 		ballMesh = renderer->CreateMesh(utils.GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj");
-
+		
 		if (ballMesh == nullptr) return;
 
+		auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
+		memcpy(tmpTexture, texture, SM64_TEXTURE_SIZE);
 		marioMesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
 			texture,
 			4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
@@ -413,10 +415,9 @@ void SM64::OnRender(CanvasWrapper canvas)
 		else
 		{
 			// Not the local player. See if we have this player already
-			auto marioIterator = remoteMarios.find(playerName);
-			if (marioIterator != remoteMarios.end())
+			if (remoteMarios.count(playerName) > 0)
 			{
-				marioInstance = marioIterator->second;
+				marioInstance = remoteMarios[playerName];
 			}
 			else
 			{
@@ -445,8 +446,10 @@ void SM64::OnRender(CanvasWrapper canvas)
 		if (marioInstance->mesh == nullptr)
 		{
 			// Initialize the mesh
+			auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
+			memcpy(tmpTexture, texture, SM64_TEXTURE_SIZE);
 			marioInstance->mesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
-				texture,
+				tmpTexture,
 				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
 				SM64_TEXTURE_WIDTH,
 				SM64_TEXTURE_HEIGHT);
@@ -496,7 +499,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 	if (ballMesh != nullptr)
 	{
-		auto server = gameWrapper->GetCurrentGameState();
 		if (!server.IsNull())
 		{
 			auto ball = server.GetBall();
