@@ -80,7 +80,7 @@ void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
 	char* dest = nullptr;
 	if (messageType == 'M')
 	{
-		dest = (char*)&marioInstance->marioState;
+		dest = (char*)&marioInstance->marioBodyState.marioState;
 	}
 	else if (messageType == 'B')
 	{
@@ -459,7 +459,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		{
 			sm64_mario_tick(marioInstance->marioId,
 				&marioInstance->marioInputs,
-				&marioInstance->marioState,
+				&marioInstance->marioBodyState.marioState,
 				&marioInstance->marioGeometry,
 				&marioInstance->marioBodyState,
 				false,
