@@ -10,7 +10,10 @@
 #define BALL_MODEL_SCALE 5.35f
 #define SM64_TEXTURE_SIZE (4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT)
 
-inline void tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper car, SM64* instance);
+inline void tickMarioInstance(SM64MarioInstance* marioInstance,
+	CarWrapper car,
+	SM64* instance,
+	bool isAdmin);
 
 SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, BakkesMod::Plugin::PluginInfo exports)
 {
@@ -226,7 +229,7 @@ void SM64::onTick(ServerWrapper server)
 		if (player.IsNull()) continue;
 		if (player.GetbMatchAdmin())
 		{
-			tickMarioInstance(&localMario, car, this);
+			tickMarioInstance(&localMario, car, this, true);
 			renderLocalMario = true;
 		}
 		else
@@ -241,10 +244,12 @@ void SM64::onTick(ServerWrapper server)
 				car.SetHidden2(TRUE);
 				car.SetbHiddenSelf(TRUE);
 
-				auto marioYaw = (int)(-marioInstance->marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-				auto carPosition = Vector(marioInstance->marioState.posX, marioInstance->marioState.posZ, marioInstance->marioState.posY + CAR_OFFSET_Z);
+				auto marioState = &marioInstance->marioBodyState.marioState;
+
+				auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+				auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
 				car.SetLocation(carPosition);
-				car.SetVelocity(Vector(marioInstance->marioState.velX, marioInstance->marioState.velZ, marioInstance->marioState.velY));
+				car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
 			}
 		}
 
@@ -252,7 +257,10 @@ void SM64::onTick(ServerWrapper server)
 	}
 }
 
-inline void tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper car, SM64* instance)
+inline void tickMarioInstance(SM64MarioInstance* marioInstance,
+	CarWrapper car,
+	SM64* instance,
+	bool isAdmin)
 {
 	if (car.IsNull()) return;
 	auto carLocation = car.GetLocation();
@@ -272,20 +280,24 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper car, 
 	{
 		airControl.SetDodgeDisableTimeRemaining(0.0f);
 	}
+	
 
-	car.SetHidden2(TRUE);
-	car.SetbHiddenSelf(TRUE);
+	if (isAdmin)
+	{
+		car.SetHidden2(TRUE);
+		car.SetbHiddenSelf(TRUE);
 
-	auto marioYaw = (int)(-marioInstance->marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-	auto carPosition = Vector(marioInstance->marioState.posX, marioInstance->marioState.posZ, marioInstance->marioState.posY + CAR_OFFSET_Z);
-	car.SetLocation(carPosition);
-	car.SetVelocity(Vector(marioInstance->marioState.velX, marioInstance->marioState.velZ, marioInstance->marioState.velY));
+		auto marioYaw = (int)(-marioInstance->marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+		auto carPosition = Vector(marioInstance->marioState.posX, marioInstance->marioState.posZ, marioInstance->marioState.posY + CAR_OFFSET_Z);
+		car.SetLocation(carPosition);
+		car.SetVelocity(Vector(marioInstance->marioState.velX, marioInstance->marioState.velZ, marioInstance->marioState.velY));
 
-	auto carRot = car.GetRotation();
-	carRot.Yaw = marioYaw;
-	carRot.Roll = carRotation.Roll;
-	carRot.Pitch = carRotation.Pitch;
-	car.SetRotation(carRot);
+		auto carRot = car.GetRotation();
+		carRot.Yaw = marioYaw;
+		carRot.Roll = carRotation.Roll;
+		carRot.Pitch = carRotation.Pitch;
+		car.SetRotation(carRot);
+	}
 
 	auto camera = instance->gameWrapper->GetCamera();
 	if (!camera.IsNull())
@@ -312,12 +324,12 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance, CarWrapper car, 
 		true);
 
 	auto carVelocity = car.GetVelocity();
-	auto netVelocity = Vector(marioInstance->marioState.velX - carVelocity.X,
-		marioInstance->marioState.velZ - carVelocity.Y,
-		marioInstance->marioState.velY - carVelocity.Z);
-	auto netPosition = Vector(marioInstance->marioState.posX - carPosition.X,
-		marioInstance->marioState.posZ - carPosition.Y,
-		marioInstance->marioState.posY - carPosition.Z);
+	auto netVelocity = Vector(marioInstance->marioState.velX,// -carVelocity.X,
+		marioInstance->marioState.velZ,// - carVelocity.Y,
+		marioInstance->marioState.velY);// - carVelocity.Z);
+	auto netPosition = Vector(marioInstance->marioState.posX,// - carPosition.X,
+		marioInstance->marioState.posZ,// - carPosition.Y,
+		marioInstance->marioState.posY);// - carPosition.Z);
 	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
 		netPosition.X / 100.0f, netPosition.Y / 100.0f, netPosition.Z / 100.0f);
 
@@ -467,7 +479,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		}
 		else if(!isMatchAdmin)
 		{
-			tickMarioInstance(marioInstance, car, this);
+			tickMarioInstance(marioInstance, car, this, false);
 		}
 
 		for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
