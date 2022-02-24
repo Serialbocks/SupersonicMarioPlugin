@@ -474,9 +474,9 @@ void SM64::OnRender(CanvasWrapper canvas)
 				false,
 				false);
 		}
-		else if(!isHost)
+		else if(!isHost && player.GetbMatchAdmin())
 		{
-			tickMarioInstance(marioInstance, car, this, false);
+			tickMarioInstance(marioInstance, car, this, true);
 		}
 
 		if (marioInstance->mesh != nullptr)
