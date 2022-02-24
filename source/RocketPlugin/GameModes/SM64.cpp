@@ -460,24 +460,10 @@ void SM64::OnRender(CanvasWrapper canvas)
 			auto z = (int16_t)(carLocation.Z);
 			marioInstance->marioId = sm64_mario_create(x, z, y);
 		}
-		
-		if (marioInstance->mesh == nullptr)
-		{
-			// Initialize the mesh
-			marioInstance->sema.acquire();
-			auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
-			memcpy(tmpTexture, texture, SM64_TEXTURE_SIZE);
-			marioInstance->mesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
-				tmpTexture,
-				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
-				SM64_TEXTURE_WIDTH,
-				SM64_TEXTURE_HEIGHT);
-			marioInstance->sema.release();
-		}
 
+		marioInstance->sema.acquire();
 		if (!isLocalPlayer)
 		{
-			marioInstance->sema.acquire();
 			sm64_mario_tick(marioInstance->marioId,
 				&marioInstance->marioInputs,
 				&marioInstance->marioBodyState.marioState,
@@ -485,14 +471,24 @@ void SM64::OnRender(CanvasWrapper canvas)
 				&marioInstance->marioBodyState,
 				false,
 				false);
-			marioInstance->sema.release();
 		}
 		else if(!isMatchAdmin)
 		{
 			tickMarioInstance(marioInstance, car, this, false);
 		}
 
-		marioInstance->sema.acquire();
+		if (marioInstance->mesh == nullptr)
+		{
+			// Initialize the mesh
+			auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
+			memcpy(tmpTexture, texture, SM64_TEXTURE_SIZE);
+			marioInstance->mesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
+				tmpTexture,
+				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
+				SM64_TEXTURE_WIDTH,
+				SM64_TEXTURE_HEIGHT);
+		}
+
 		for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
 		{
 			auto position = &marioInstance->marioGeometry.position[i * 3];
