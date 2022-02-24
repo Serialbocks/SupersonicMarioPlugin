@@ -71,7 +71,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>.\;..\External;..\External\BakkesModAdditions\include;..\External\BakkesModSDK\include;..\External\fmt\include;..\External\libsm64\dist\include;..\External\simdjson\singleheader;%(AdditionalIncludeDirectories);..\External\soloud\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\External\gainput\include;.\;..\External;..\External\BakkesModAdditions\include;..\External\BakkesModSDK\include;..\External\fmt\include;..\External\libsm64\dist\include;..\External\simdjson\singleheader;%(AdditionalIncludeDirectories);..\External\soloud\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;WITH_MINIAUDIO</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -87,7 +87,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\External\BakkesModSDK\lib;..\External\libsm64\dist;..\External\soxr\msvc\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\External\gainput\lib;..\External\BakkesModSDK\lib;..\External\libsm64\dist;..\External\soxr\msvc\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <PreventDllBinding>
       </PreventDllBinding>
@@ -107,8 +107,8 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <TreatWarningAsError>true</TreatWarningAsError>
-      <AdditionalIncludeDirectories>.\;..\External;..\External\BakkesModAdditions\include;..\External\BakkesModSDK\include;..\External\fmt\include;..\External\libsm64\dist\include;..\External\simdjson\singleheader;..\External\libsm64\dist\include;%(AdditionalIncludeDirectories);..\External\soloud\include</AdditionalIncludeDirectories>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <AdditionalIncludeDirectories>..\External\gainput\include;.\;..\External;..\External\BakkesModAdditions\include;..\External\BakkesModSDK\include;..\External\fmt\include;..\External\libsm64\dist\include;..\External\simdjson\singleheader;..\External\libsm64\dist\include;%(AdditionalIncludeDirectories);..\External\soloud\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;WITH_MINIAUDIO</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -124,7 +124,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\External\BakkesModSDK\lib;..\External\libsm64\dist;..\External\soxr\msvc\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\External\gainput\lib;..\External\BakkesModSDK\lib;..\External\libsm64\dist;..\External\soxr\msvc\x64\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>%(AdditionalDependencies)</AdditionalDependencies>
       <PreventDllBinding>
       </PreventDllBinding>

@@ -1,6 +1,8 @@
 #pragma once
 
 #pragma comment(lib, "sm64.lib")
+#pragma comment(lib,"shlwapi.lib")
+#pragma comment(lib, "gainput.lib")
 
 #include <fstream>
 #include <semaphore>
@@ -8,8 +10,9 @@
 #include <tchar.h>
 #include <shlwapi.h>
 #include <stdlib.h>
-#pragma comment(lib,"shlwapi.lib")
+
 #include "shlobj.h"
+#include "gainput/gainput.h"
 
 #include "../Graphics/Renderer.h"
 #include "../Graphics/Mesh.h"
