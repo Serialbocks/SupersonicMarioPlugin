@@ -108,12 +108,10 @@ void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
 
 	std::string bytesStr = message.substr(1, message.size() - 1);
 	auto bytes = hexToBytes(bytesStr);
-	marioInstance->sema.acquire();
 	for (unsigned int i = 0; i < bytes.size(); i++)
 	{
 		dest[i] = bytes[i];
 	}
-	marioInstance->sema.release();
 	renderRemoteMario = true;
 }
 
