@@ -382,7 +382,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
 		memcpy(tmpTexture, texture, SM64_TEXTURE_SIZE);
-		marioMesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
+		localMario.mesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
 			texture,
 			4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
 			SM64_TEXTURE_WIDTH,
@@ -395,7 +395,16 @@ void SM64::OnRender(CanvasWrapper canvas)
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay();
 	if ((!renderLocalMario && !renderRemoteMario) || (!inGame && isActive))
 	{
-		marioMesh->RenderUpdateVertices(0, nullptr);
+		if(localMario.mesh != nullptr)
+			localMario.mesh->RenderUpdateVertices(0, nullptr);
+		for (const auto& remoteMario : remoteMarios)
+		{
+			SM64MarioInstance* marioInstance = remoteMario.second;
+			if (marioInstance->mesh != nullptr)
+			{
+				marioInstance->mesh->RenderUpdateVertices(0, nullptr);
+			}
+		}
 		return;
 	}
 
