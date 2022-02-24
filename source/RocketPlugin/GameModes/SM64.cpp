@@ -180,10 +180,16 @@ void SM64::Activate(const bool active)
 			[this](const ServerWrapper& caller, void* params, const std::string&) {
 				onTick(caller);
 			});
+		HookEventWithCaller<CarWrapper>(
+			"Function TAGame.Car_TA.SetVehicleInput",
+			[this](const CarWrapper& caller, void* params, const std::string&) {
+				onVehicleTick(caller);
+			});
 	}
 	else if (!active && isActive) {
 		isHost = false;
 		UnhookEvent("Function GameEvent_Soccar_TA.Active.Tick");
+		UnhookEvent("Function TAGame.Car_TA.SetVehicleInput");
 	}
 
 	isActive = active;
@@ -234,6 +240,59 @@ void SM64::DestroySM64()
 	delete marioAudio;
 }
 
+void SM64::onVehicleTick(CarWrapper car)
+{
+	isHost = true;
+	PriWrapper player = car.GetPRI();
+	if (player.IsNull()) return;
+	auto isLocalPlayer = player.IsLocalPlayerPRI();
+
+	auto playerNamePtr = player.GetPlayerName();
+	if (playerNamePtr.IsNull()) return;
+	auto playerName = playerNamePtr.ToString();
+
+	SM64MarioInstance* marioInstance = nullptr;
+	if (isLocalPlayer)
+	{
+		marioInstance = &localMario;
+	}
+	else if (remoteMarios.count(playerName) > 0)
+	{
+		marioInstance = remoteMarios[playerName];
+	}
+
+	if (marioInstance == nullptr) return;
+
+	marioInstance->sema.acquire();
+
+	auto playerController = car.GetPlayerController();
+	auto playerInputs = playerController.GetVehicleInput();
+	marioInstance->marioInputs.buttonA = playerInputs.Jump;
+	marioInstance->marioInputs.buttonB = playerInputs.Handbrake;
+	marioInstance->marioInputs.buttonZ = playerInputs.Throttle < 0;
+	marioInstance->marioInputs.stickX = playerInputs.Steer;
+	marioInstance->marioInputs.stickY = playerInputs.Pitch;
+	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - cameraLoc.X;
+	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - cameraLoc.Y;
+
+	playerInputs.Jump = 0;
+	playerInputs.Handbrake = 0;
+	playerInputs.Throttle = 0;
+	playerInputs.Steer = 0;
+	playerInputs.Pitch = 0;
+	playerController.SetVehicleInput(playerInputs);
+
+	car.SetHidden2(TRUE);
+	car.SetbHiddenSelf(TRUE);
+	auto marioState = &marioInstance->marioBodyState.marioState;
+	auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+	auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+	car.SetLocation(carPosition);
+	car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+	marioInstance->sema.release();
+
+}
+
 void SM64::onTick(ServerWrapper server)
 {
 	isHost = true;
@@ -243,31 +302,11 @@ void SM64::onTick(ServerWrapper server)
 		if (player.IsNull()) continue;
 		if (player.IsLocalPlayerPRI())
 		{
-			tickMarioInstance(&localMario, car, this, true);
+			localMario.sema.acquire();
+			tickMarioInstance(&localMario, car, this, false);
+			localMario.sema.release();
 			renderLocalMario = true;
 		}
-		else
-		{
-			player.SetbMatchAdmin(true);
-			auto playerNamePtr = player.GetPlayerName();
-			if (playerNamePtr.IsNull()) continue;
-			auto playerName = playerNamePtr.ToString();
-			
-			if (remoteMarios.count(playerName) > 0)
-			{
-				SM64MarioInstance* marioInstance = remoteMarios[playerName];
-				marioInstance->sema.acquire();
-				car.SetHidden2(TRUE);
-				car.SetbHiddenSelf(TRUE);
-				auto marioState = &marioInstance->marioBodyState.marioState;
-				auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-				auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
-				car.SetLocation(carPosition);
-				car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
-				marioInstance->sema.release();
-			}
-		}
-
 		
 	}
 }
@@ -320,15 +359,15 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		instance->cameraLoc = camera.GetLocation();
 	}
 
-	auto playerController = car.GetPlayerController();
-	instance->playerInputs = playerController.GetVehicleInput();
-	marioInstance->marioInputs.buttonA = instance->playerInputs.Jump;
-	marioInstance->marioInputs.buttonB = instance->playerInputs.Handbrake;
-	marioInstance->marioInputs.buttonZ = instance->playerInputs.Throttle < 0;
-	marioInstance->marioInputs.stickX = instance->playerInputs.Steer;
-	marioInstance->marioInputs.stickY = instance->playerInputs.Pitch;
-	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - instance->cameraLoc.X;
-	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - instance->cameraLoc.Y;
+	//auto playerController = car.GetPlayerController();
+	//instance->playerInputs = playerController.GetVehicleInput();
+	//marioInstance->marioInputs.buttonA = instance->playerInputs.Jump;
+	//marioInstance->marioInputs.buttonB = instance->playerInputs.Handbrake;
+	//marioInstance->marioInputs.buttonZ = instance->playerInputs.Throttle < 0;
+	//marioInstance->marioInputs.stickX = instance->playerInputs.Steer;
+	//marioInstance->marioInputs.stickY = instance->playerInputs.Pitch;
+	//marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - instance->cameraLoc.X;
+	//marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - instance->cameraLoc.Y;
 
 	sm64_mario_tick(marioInstance->marioId,
 		&marioInstance->marioInputs,
