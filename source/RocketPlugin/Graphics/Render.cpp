@@ -315,6 +315,8 @@ void Renderer::DrawRenderedMesh()
 	{
 		auto mesh = meshes[i];
 
+		if (!mesh->render) continue;
+
 		// Map the vertex constant buffer on the GPU
 		context->Map(mesh->VertexConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
 		memcpy(mappedResource.pData, &mesh->VertexConstBufferData, sizeof(Mesh::VS_ConstantBufferData));

@@ -84,6 +84,17 @@ void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
 	if (messageType == 'M')
 	{
 		dest = (char*)&marioInstance->marioBodyState.marioState;
+		if (marioInstance->mesh == nullptr)
+		{
+			// Initialize the mesh
+			auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
+			memcpy(tmpTexture, texture, SM64_TEXTURE_SIZE);
+			marioInstance->mesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
+				tmpTexture,
+				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
+				SM64_TEXTURE_WIDTH,
+				SM64_TEXTURE_HEIGHT);
+		}
 	}
 	else if (messageType == 'B')
 	{
@@ -477,42 +488,36 @@ void SM64::OnRender(CanvasWrapper canvas)
 			tickMarioInstance(marioInstance, car, this, false);
 		}
 
-		if (marioInstance->mesh == nullptr)
+		if (marioInstance->mesh != nullptr)
 		{
-			// Initialize the mesh
-			auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
-			memcpy(tmpTexture, texture, SM64_TEXTURE_SIZE);
-			marioInstance->mesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
-				tmpTexture,
-				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
-				SM64_TEXTURE_WIDTH,
-				SM64_TEXTURE_HEIGHT);
-		}
+			for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
+			{
+				auto position = &marioInstance->marioGeometry.position[i * 3];
+				auto color = &marioInstance->marioGeometry.color[i * 3];
+				auto uv = &marioInstance->marioGeometry.uv[i * 2];
+				auto normal = &marioInstance->marioGeometry.normal[i * 3];
 
-		for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
+				auto currentVertex = &marioInstance->mesh->Vertices[i];
+				// Unreal engine swaps x and y coords for 3d model
+				currentVertex->pos.x = position[0];
+				currentVertex->pos.y = position[2];
+				currentVertex->pos.z = position[1];
+				currentVertex->color.x = color[0];
+				currentVertex->color.y = color[1];
+				currentVertex->color.z = color[2];
+				currentVertex->color.w = i >= (WINGCAP_VERTEX_INDEX * 3) ? 0.0f : 1.0f;
+				currentVertex->texCoord.x = uv[0];
+				currentVertex->texCoord.y = uv[1];
+				currentVertex->normal.x = normal[0];
+				currentVertex->normal.y = normal[2];
+				currentVertex->normal.z = normal[1];
+			}
+			marioInstance->mesh->RenderUpdateVertices(marioInstance->marioGeometry.numTrianglesUsed, &camera);
+		}
+		else
 		{
-			auto position = &marioInstance->marioGeometry.position[i * 3];
-			auto color = &marioInstance->marioGeometry.color[i * 3];
-			auto uv = &marioInstance->marioGeometry.uv[i * 2];
-			auto normal = &marioInstance->marioGeometry.normal[i * 3];
 
-			auto currentVertex = &marioInstance->mesh->Vertices[i];
-			// Unreal engine swaps x and y coords for 3d model
-			currentVertex->pos.x = position[0];
-			currentVertex->pos.y = position[2];
-			currentVertex->pos.z = position[1];
-			currentVertex->color.x = color[0];
-			currentVertex->color.y = color[1];
-			currentVertex->color.z = color[2];
-			currentVertex->color.w = i >= (WINGCAP_VERTEX_INDEX * 3) ? 0.0f : 1.0f;
-			currentVertex->texCoord.x = uv[0];
-			currentVertex->texCoord.y = uv[1];
-			currentVertex->normal.x = normal[0];
-			currentVertex->normal.y = normal[2];
-			currentVertex->normal.z = normal[1];
 		}
-
-		marioInstance->mesh->RenderUpdateVertices(marioInstance->marioGeometry.numTrianglesUsed, &camera);
 		marioInstance->sema.release();
 	}
 

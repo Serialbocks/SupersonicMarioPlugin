@@ -76,6 +76,7 @@ void Mesh::Render(CameraWrapper *camera)
 
 	VertexConstBufferData.world = identity * rotation * quatRotation * scale * translation;
 	VertexConstBufferData.wvp = VertexConstBufferData.world * view * projection;
+	render = true;
 }
 
 void Mesh::SetTranslation(float x, float y, float z)
