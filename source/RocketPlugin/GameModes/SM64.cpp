@@ -245,25 +245,26 @@ void SM64::onTick(ServerWrapper server)
 		}
 		else
 		{
-			auto playerNamePtr = player.GetPlayerName();
-			if (playerNamePtr.IsNull()) continue;
-			auto playerName = playerNamePtr.ToString();
-
-			if (remoteMarios.count(playerName) > 0)
-			{
-				SM64MarioInstance* marioInstance = remoteMarios[playerName];
-				marioInstance->sema.acquire();
-				//car.SetHidden2(TRUE);
-				//car.SetbHiddenSelf(TRUE);
-				//
-				//auto marioState = &marioInstance->marioBodyState.marioState;
-				//
-				//auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-				//auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
-				//car.SetLocation(carPosition);
-				//car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
-				marioInstance->sema.release();
-			}
+			player.SetbMatchAdmin(true);
+			//auto playerNamePtr = player.GetPlayerName();
+			//if (playerNamePtr.IsNull()) continue;
+			//auto playerName = playerNamePtr.ToString();
+			//
+			//if (remoteMarios.count(playerName) > 0)
+			//{
+			//	SM64MarioInstance* marioInstance = remoteMarios[playerName];
+			//	marioInstance->sema.acquire();
+			//	//car.SetHidden2(TRUE);
+			//	//car.SetbHiddenSelf(TRUE);
+			//	//
+			//	auto marioState = &marioInstance->marioBodyState.marioState;
+			//	//
+			//	auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+			//	auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+			//	car.SetLocation(carPosition);
+			//	car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+			//	marioInstance->sema.release();
+			//}
 		}
 
 		
