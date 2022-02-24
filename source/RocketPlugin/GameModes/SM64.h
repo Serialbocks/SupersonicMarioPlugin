@@ -35,10 +35,10 @@ public:
 
 public:
     int32_t marioId = -2;
-    struct SM64MarioInputs marioInputs;
-    struct SM64MarioState marioState;
-    struct SM64MarioGeometryBuffers marioGeometry;
-    struct SM64MarioBodyState marioBodyState;
+    struct SM64MarioInputs marioInputs { 0 };
+    struct SM64MarioState marioState { 0 };
+    struct SM64MarioGeometryBuffers marioGeometry { 0 };
+    struct SM64MarioBodyState marioBodyState { 0 };
     Mesh* mesh = nullptr;
     std::counting_semaphore<1> sema{ 1 };
 };
