@@ -249,6 +249,23 @@ void SM64::onTick(ServerWrapper server)
 		else
 		{
 			player.SetbMatchAdmin(true);
+			auto playerNamePtr = player.GetPlayerName();
+			if (playerNamePtr.IsNull()) continue;
+			auto playerName = playerNamePtr.ToString();
+			
+			if (remoteMarios.count(playerName) > 0)
+			{
+				SM64MarioInstance* marioInstance = remoteMarios[playerName];
+				marioInstance->sema.acquire();
+				car.SetHidden2(TRUE);
+				car.SetbHiddenSelf(TRUE);
+				auto marioState = &marioInstance->marioBodyState.marioState;
+				auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+				auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+				car.SetLocation(carPosition);
+				car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+				marioInstance->sema.release();
+			}
 		}
 
 		
@@ -474,9 +491,9 @@ void SM64::OnRender(CanvasWrapper canvas)
 				false,
 				false);
 		}
-		else if(!isHost && player.GetbMatchAdmin())
+		else if(!isHost)
 		{
-			tickMarioInstance(marioInstance, car, this, true);
+			tickMarioInstance(marioInstance, car, this, false);
 		}
 
 		if (marioInstance->mesh != nullptr)
