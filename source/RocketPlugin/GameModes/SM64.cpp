@@ -174,6 +174,7 @@ std::string SM64::GetGameModeName()
 void SM64::Activate(const bool active)
 {
 	if (active && !isActive) {
+		isHost = false;
 		HookEventWithCaller<ServerWrapper>(
 			"Function GameEvent_Soccar_TA.Active.Tick",
 			[this](const ServerWrapper& caller, void* params, const std::string&) {
@@ -181,6 +182,7 @@ void SM64::Activate(const bool active)
 			});
 	}
 	else if (!active && isActive) {
+		isHost = false;
 		UnhookEvent("Function GameEvent_Soccar_TA.Active.Tick");
 	}
 
@@ -234,11 +236,12 @@ void SM64::DestroySM64()
 
 void SM64::onTick(ServerWrapper server)
 {
+	isHost = true;
 	for (CarWrapper car : server.GetCars())
 	{
 		PriWrapper player = car.GetPRI();
 		if (player.IsNull()) continue;
-		if (player.GetbMatchAdmin())
+		if (player.IsLocalPlayerPRI())
 		{
 			tickMarioInstance(&localMario, car, this, true);
 			renderLocalMario = true;
@@ -246,25 +249,6 @@ void SM64::onTick(ServerWrapper server)
 		else
 		{
 			player.SetbMatchAdmin(true);
-			//auto playerNamePtr = player.GetPlayerName();
-			//if (playerNamePtr.IsNull()) continue;
-			//auto playerName = playerNamePtr.ToString();
-			//
-			//if (remoteMarios.count(playerName) > 0)
-			//{
-			//	SM64MarioInstance* marioInstance = remoteMarios[playerName];
-			//	marioInstance->sema.acquire();
-			//	//car.SetHidden2(TRUE);
-			//	//car.SetbHiddenSelf(TRUE);
-			//	//
-			//	auto marioState = &marioInstance->marioBodyState.marioState;
-			//	//
-			//	auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-			//	auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
-			//	car.SetLocation(carPosition);
-			//	car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
-			//	marioInstance->sema.release();
-			//}
 		}
 
 		
@@ -440,7 +424,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 		SM64MarioInstance* marioInstance = nullptr;
 
 		bool isLocalPlayer = false;
-		bool isMatchAdmin = player.GetbMatchAdmin();
 		if (playerName == localPlayerName)
 		{
 			// This is the local player - use that mario
@@ -491,7 +474,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 				false,
 				false);
 		}
-		else if(!isMatchAdmin)
+		else if(!isHost)
 		{
 			tickMarioInstance(marioInstance, car, this, false);
 		}

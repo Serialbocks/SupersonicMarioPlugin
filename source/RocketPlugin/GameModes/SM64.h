@@ -97,5 +97,6 @@ private:
     bool renderRemoteMario = false;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
     Utils utils;
+    bool isHost = false;
 
 };
