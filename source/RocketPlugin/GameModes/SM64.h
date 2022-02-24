@@ -40,6 +40,7 @@ public:
     struct SM64MarioGeometryBuffers marioGeometry;
     struct SM64MarioBodyState marioBodyState;
     Mesh* mesh = nullptr;
+    std::counting_semaphore<1> sema{ 1 };
 };
 
 class SM64 final : public RocketGameMode

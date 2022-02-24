@@ -97,10 +97,12 @@ void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
 
 	std::string bytesStr = message.substr(1, message.size() - 1);
 	auto bytes = hexToBytes(bytesStr);
+	marioInstance->sema.acquire();
 	for (unsigned int i = 0; i < bytes.size(); i++)
 	{
 		dest[i] = bytes[i];
 	}
+	marioInstance->sema.release();
 	renderRemoteMario = true;
 }
 
@@ -241,15 +243,17 @@ void SM64::onTick(ServerWrapper server)
 			if (remoteMarios.count(playerName) > 0)
 			{
 				SM64MarioInstance* marioInstance = remoteMarios[playerName];
-				car.SetHidden2(TRUE);
-				car.SetbHiddenSelf(TRUE);
-
-				auto marioState = &marioInstance->marioBodyState.marioState;
-
-				auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-				auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
-				car.SetLocation(carPosition);
-				car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+				marioInstance->sema.acquire();
+				//car.SetHidden2(TRUE);
+				//car.SetbHiddenSelf(TRUE);
+				//
+				//auto marioState = &marioInstance->marioBodyState.marioState;
+				//
+				//auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+				//auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+				//car.SetLocation(carPosition);
+				//car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+				marioInstance->sema.release();
 			}
 		}
 
@@ -442,9 +446,11 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		if (marioInstance->marioId < 0 && !isLocalPlayer)
 		{
+			marioInstance->sema.acquire();
 			marioInstance->marioId = sm64_mario_create((int16_t)marioInstance->marioState.posX,
 				(int16_t)marioInstance->marioState.posY,
 				(int16_t)marioInstance->marioState.posZ);
+			marioInstance->sema.release();
 		}
 		else if (marioInstance->marioId < 0 && isLocalPlayer)
 		{
@@ -458,6 +464,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		if (marioInstance->mesh == nullptr)
 		{
 			// Initialize the mesh
+			marioInstance->sema.acquire();
 			auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
 			memcpy(tmpTexture, texture, SM64_TEXTURE_SIZE);
 			marioInstance->mesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
@@ -465,10 +472,12 @@ void SM64::OnRender(CanvasWrapper canvas)
 				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
 				SM64_TEXTURE_WIDTH,
 				SM64_TEXTURE_HEIGHT);
+			marioInstance->sema.release();
 		}
 
 		if (!isLocalPlayer)
 		{
+			marioInstance->sema.acquire();
 			sm64_mario_tick(marioInstance->marioId,
 				&marioInstance->marioInputs,
 				&marioInstance->marioBodyState.marioState,
@@ -476,12 +485,14 @@ void SM64::OnRender(CanvasWrapper canvas)
 				&marioInstance->marioBodyState,
 				false,
 				false);
+			marioInstance->sema.release();
 		}
 		else if(!isMatchAdmin)
 		{
 			tickMarioInstance(marioInstance, car, this, false);
 		}
 
+		marioInstance->sema.acquire();
 		for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
 		{
 			auto position = &marioInstance->marioGeometry.position[i * 3];
@@ -506,7 +517,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		}
 
 		marioInstance->mesh->RenderUpdateVertices(marioInstance->marioGeometry.numTrianglesUsed, &camera);
-
+		marioInstance->sema.release();
 	}
 
 	if (ballMesh != nullptr)
