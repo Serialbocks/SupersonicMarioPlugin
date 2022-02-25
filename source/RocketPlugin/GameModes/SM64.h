@@ -45,7 +45,6 @@ public:
     struct SM64MarioBodyState marioBodyState { 0 };
     Mesh* mesh = nullptr;
     std::counting_semaphore<1> sema{ 1 };
-    bool carLocationNeedsUpdate = false;
 };
 
 class SM64 final : public RocketGameMode

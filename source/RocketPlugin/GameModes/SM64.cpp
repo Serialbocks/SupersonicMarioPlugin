@@ -335,17 +335,13 @@ void SM64::onVehicleTick(CarWrapper car)
 	playerInputs.Pitch = 0;
 	playerController.SetVehicleInput(playerInputs);
 
-	if (marioInstance->carLocationNeedsUpdate)
-	{
-		car.SetHidden2(TRUE);
-		car.SetbHiddenSelf(TRUE);
-		auto marioState = &marioInstance->marioBodyState.marioState;
-		auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-		auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
-		car.SetLocation(carPosition);
-		car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
-		marioInstance->carLocationNeedsUpdate = false;
-	}
+	car.SetHidden2(TRUE);
+	car.SetbHiddenSelf(TRUE);
+	auto marioState = &marioInstance->marioBodyState.marioState;
+	auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+	auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+	car.SetLocation(carPosition);
+	car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
 	marioInstance->sema.release();
 
 }
@@ -454,8 +450,6 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		&marioInstance->marioBodyState,
 		true,
 		true);
-
-	marioInstance->carLocationNeedsUpdate = true;
 
 	auto carVelocity = car.GetVelocity();
 	auto netVelocity = Vector(marioInstance->marioState.velX,// -carVelocity.X,
