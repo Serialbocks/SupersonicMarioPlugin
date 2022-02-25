@@ -3,6 +3,7 @@
 #include <thread>
 #include <chrono>
 #include <functional>
+#include <WinUser.h>
 
 // CONSTANTS
 #define RL_YAW_RANGE 64692
@@ -90,7 +91,7 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	gainput::DeviceId keyboardId = InputManager.CreateDevice<gainput::InputDeviceKeyboard>();
 	gainput::DeviceId padId = InputManager.CreateDevice<gainput::InputDevicePad>();
 	InputMap = new gainput::InputMap(InputManager);
-	InputManager.SetDisplaySize(100, 100);
+	
 	InputMap->MapBool(ButtonA, mouseId, gainput::MouseButtonRight);
 	InputMap->MapBool(ButtonB, mouseId, gainput::MouseButtonLeft);
 	InputMap->MapBool(ButtonZ, keyboardId, gainput::KeyShiftL);
@@ -108,10 +109,7 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
 	self = this;
-	g_hhkCallWndProc = SetWindowsHookEx(WH_CALLWNDPROC,
-		CallWndProc,
-		GetModuleHandle(NULL),
-		0);
+
 }
 
 SM64::~SM64()
@@ -525,6 +523,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 #define WINGCAP_VERTEX_INDEX 750
 void SM64::OnRender(CanvasWrapper canvas)
 {
+	InputManager.SetDisplaySize(canvas.GetSize().X, canvas.GetSize().Y);
 	if (renderer == nullptr) return;
 	if (!meshesInitialized)
 	{
@@ -544,6 +543,28 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		meshesInitialized = true;
 		return;
+	}
+
+	if (!inputManagerInitialized)
+	{
+		static HINSTANCE hinstance = (HINSTANCE)GetWindowLongPtr(renderer->Window, GWLP_HINSTANCE);
+		PluginManagerWrapper PluginManager = gameWrapper->GetPluginManager();
+		if (PluginManager.memory_address != NULL)
+		{ 
+			auto* PluginList = PluginManager.GetLoadedPlugins();
+			for (const auto& ThisPlugin : *PluginList)
+			{
+				if (std::string(ThisPlugin->_details->className) == "RocketPlugin")
+				{
+					g_hhkCallWndProc = SetWindowsHookEx(WH_CALLWNDPROCRET,
+						CallWndProc,
+						ThisPlugin->_instance,
+						0);
+				}
+			}
+		}
+
+		inputManagerInitialized = true;
 	}
 
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay();

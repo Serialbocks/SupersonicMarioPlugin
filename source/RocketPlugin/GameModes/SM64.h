@@ -22,6 +22,7 @@
 #include "imgui/imgui_additions.h"
 #include "GameModes/RocketGameMode.h"
 #include "../../External/NetcodeManager/NetcodeManager.h"
+#include "../../External/BakkesModSDK/include/bakkesmod/wrappers/PluginManagerWrapper.h"
 
 extern "C" {
     #include "libsm64.h"
