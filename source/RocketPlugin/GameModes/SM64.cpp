@@ -15,6 +15,68 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	SM64* instance,
 	bool isAdmin);
 
+enum Button
+{
+	ButtonA,
+	ButtonB,
+	ButtonZ,
+	StickX,
+	StickY,
+	KeyboardW,
+	KeyboardA,
+	KeyboardS,
+	KeyboardD
+};
+
+SM64* self = nullptr;
+
+//WM_CHAR, WM_KEYDOWN, WM_KEYUP,
+//* WM_SYSKEYDOWN, WM_SYSKEYUP, WM_ ? BUTTON*, WM_MOUSEMOVE, WM_MOUSEWHEEL
+
+HHOOK g_hhkCallWndProc = NULL;
+LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	/* If nCode is greater than or equal to HC_ACTION,
+	 * we should process the message. */
+	if (nCode >= HC_ACTION)
+	{
+		/* Retrieve a pointer to the structure that contains details about
+		 * the message, and see if it is one that we want to handle. */
+		const LPCWPRETSTRUCT lpcwprs = (LPCWPRETSTRUCT)lParam;
+		MSG msg;
+		switch (lpcwprs->message)
+		{
+		case WM_CHAR:
+		case WM_KEYDOWN:
+		case WM_KEYUP:
+		case WM_SYSKEYDOWN:
+		case WM_SYSKEYUP:
+		case WM_LBUTTONDOWN:
+		case WM_LBUTTONUP:
+		case WM_RBUTTONDOWN:
+		case WM_RBUTTONUP:
+			if (self != nullptr && self->InputMap != nullptr)
+			{
+				msg.message = lpcwprs->message;
+				msg.hwnd = lpcwprs->hwnd;
+				msg.lParam = lpcwprs->lParam;
+				msg.wParam = lpcwprs->wParam;
+				self->InputManager.HandleMessage(msg);
+			}
+			break;
+		default:
+			break;
+			/* ...SNIP: process the messages we're interested in ... */
+		}
+	}
+
+	/* At this point, we are either not processing the message
+	 * (because nCode is less than HC_ACTION),
+	 * or we've already finished processing it.
+	 * Either way, pass the message on. */
+	return CallNextHookEx(g_hhkCallWndProc, nCode, wParam, lParam);
+}
+
 SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, BakkesMod::Plugin::PluginInfo exports)
 {
 	using namespace std::placeholders;
@@ -22,6 +84,20 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	cvarManager = cm;
 	Netcode = std::make_shared<NetcodeManager>(cvarManager, gameWrapper, exports,
 		std::bind(&SM64::OnMessageReceived, this, _1, _2));
+
+	// Init button mappings
+	gainput::DeviceId mouseId = InputManager.CreateDevice<gainput::InputDeviceMouse>();
+	gainput::DeviceId keyboardId = InputManager.CreateDevice<gainput::InputDeviceKeyboard>();
+	gainput::DeviceId padId = InputManager.CreateDevice<gainput::InputDevicePad>();
+	InputMap = new gainput::InputMap(InputManager);
+	InputManager.SetDisplaySize(100, 100);
+	InputMap->MapBool(ButtonA, mouseId, gainput::MouseButtonRight);
+	InputMap->MapBool(ButtonB, mouseId, gainput::MouseButtonLeft);
+	InputMap->MapBool(ButtonZ, keyboardId, gainput::KeyShiftL);
+	InputMap->MapBool(KeyboardW, keyboardId, gainput::KeyW);
+	InputMap->MapBool(KeyboardA, keyboardId, gainput::KeyA);
+	InputMap->MapBool(KeyboardS, keyboardId, gainput::KeyS);
+	InputMap->MapBool(KeyboardD, keyboardId, gainput::KeyD);
 
 	gameWrapper->HookEvent("Function TAGame.Replay_TA.StartPlaybackAtTimeSeconds", bind(&SM64::StopRenderMario, this, _1));
 	gameWrapper->HookEvent("Function TAGame.GameEvent_Soccer_TA.ReplayPlayback.BeginState", bind(&SM64::StopRenderMario, this, _1));
@@ -31,11 +107,17 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	gameWrapper->RegisterDrawable(std::bind(&SM64::OnRender, this, _1));
 
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
+	self = this;
+	g_hhkCallWndProc = SetWindowsHookEx(WH_CALLWNDPROC,
+		CallWndProc,
+		GetModuleHandle(NULL),
+		0);
 }
 
 SM64::~SM64()
 {
 	gameWrapper->UnregisterDrawables();
+	delete InputMap;
 	DestroySM64();
 }
 
@@ -265,16 +347,52 @@ void SM64::onVehicleTick(CarWrapper car)
 
 	marioInstance->sema.acquire();
 
-	auto playerController = car.GetPlayerController();
-	auto playerInputs = playerController.GetVehicleInput();
-	marioInstance->marioInputs.buttonA = playerInputs.Jump;
-	marioInstance->marioInputs.buttonB = playerInputs.Handbrake;
-	marioInstance->marioInputs.buttonZ = playerInputs.Throttle < 0;
-	marioInstance->marioInputs.stickX = playerInputs.Steer;
-	marioInstance->marioInputs.stickY = playerInputs.Pitch;
+	//if (renderer != nullptr && renderer->Window != nullptr)
+	//{
+	//	MSG msg;
+	//	while (PeekMessage(&msg, renderer->Window, 0, 0, PM_REMOVE))
+	//	{
+	//		TranslateMessage(&msg);
+	//		DispatchMessage(&msg);
+	//
+	//		// Forward any input messages to Gainput
+	//		InputManager.HandleMessage(msg);
+	//	}
+	//}
+
+	InputManager.Update();
+	marioInstance->marioInputs.buttonA = InputMap->GetBool(ButtonA);
+	marioInstance->marioInputs.buttonB = InputMap->GetBool(ButtonB);
+	marioInstance->marioInputs.buttonZ = InputMap->GetBool(ButtonZ);
+	if (InputMap->GetBool(KeyboardS))
+	{
+		marioInstance->marioInputs.stickY = 1.0f;
+	}
+	else if (InputMap->GetBool(KeyboardW))
+	{
+		marioInstance->marioInputs.stickY = -1.0f;
+	}
+	else
+	{
+		marioInstance->marioInputs.stickY = 0.0f;
+	}
+	if (InputMap->GetBool(KeyboardD))
+	{
+		marioInstance->marioInputs.stickX = 1.0f;
+	}
+	else if (InputMap->GetBool(KeyboardA))
+	{
+		marioInstance->marioInputs.stickX = -1.0f;
+	}
+	else
+	{
+		marioInstance->marioInputs.stickX = 0.0f;
+	}
 	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - cameraLoc.X;
 	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - cameraLoc.Y;
 
+	auto playerController = car.GetPlayerController();
+	auto playerInputs = playerController.GetVehicleInput();
 	playerInputs.Jump = 0;
 	playerInputs.Handbrake = 0;
 	playerInputs.Throttle = 0;
@@ -282,13 +400,17 @@ void SM64::onVehicleTick(CarWrapper car)
 	playerInputs.Pitch = 0;
 	playerController.SetVehicleInput(playerInputs);
 
-	car.SetHidden2(TRUE);
-	car.SetbHiddenSelf(TRUE);
-	auto marioState = &marioInstance->marioBodyState.marioState;
-	auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-	auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
-	car.SetLocation(carPosition);
-	car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+	if (marioInstance->carLocationNeedsUpdate)
+	{
+		car.SetHidden2(TRUE);
+		car.SetbHiddenSelf(TRUE);
+		auto marioState = &marioInstance->marioBodyState.marioState;
+		auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+		auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+		car.SetLocation(carPosition);
+		car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+		marioInstance->carLocationNeedsUpdate = false;
+	}
 	marioInstance->sema.release();
 
 }
@@ -359,15 +481,6 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		instance->cameraLoc = camera.GetLocation();
 	}
 
-	//auto playerController = car.GetPlayerController();
-	//instance->playerInputs = playerController.GetVehicleInput();
-	//marioInstance->marioInputs.buttonA = instance->playerInputs.Jump;
-	//marioInstance->marioInputs.buttonB = instance->playerInputs.Handbrake;
-	//marioInstance->marioInputs.buttonZ = instance->playerInputs.Throttle < 0;
-	//marioInstance->marioInputs.stickX = instance->playerInputs.Steer;
-	//marioInstance->marioInputs.stickY = instance->playerInputs.Pitch;
-	//marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - instance->cameraLoc.X;
-	//marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - instance->cameraLoc.Y;
 
 	sm64_mario_tick(marioInstance->marioId,
 		&marioInstance->marioInputs,
@@ -376,6 +489,8 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		&marioInstance->marioBodyState,
 		true,
 		true);
+
+	marioInstance->carLocationNeedsUpdate = true;
 
 	auto carVelocity = car.GetVelocity();
 	auto netVelocity = Vector(marioInstance->marioState.velX,// -carVelocity.X,

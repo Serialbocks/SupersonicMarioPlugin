@@ -39,6 +39,7 @@ public:
 	bool Initialized = false;
 	PS_ConstantBufferData PixelConstBufferData;
 	Lighting Lighting;
+	HWND Window = nullptr;
 
 private:
 	void Render();

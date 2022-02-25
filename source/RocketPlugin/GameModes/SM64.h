@@ -44,6 +44,7 @@ public:
     struct SM64MarioBodyState marioBodyState { 0 };
     Mesh* mesh = nullptr;
     std::counting_semaphore<1> sema{ 1 };
+    bool carLocationNeedsUpdate = false;
 };
 
 class SM64 final : public RocketGameMode
@@ -81,6 +82,10 @@ public:
     Vector cameraLoc = Vector(0, 0, 0);
     ControllerInput playerInputs;
     std::shared_ptr<NetcodeManager> Netcode;
+    gainput::InputManager InputManager;
+    gainput::InputMap* InputMap = nullptr;
+    bool inputManagerInitialized = false;
+    Renderer* renderer = nullptr;
 private:
     /* SM64 Members */
     uint8_t* texture;
@@ -91,7 +96,6 @@ private:
     Vector carLocation;
     bool locationInit;
     Rotator carRotation;
-    Renderer* renderer = nullptr;
     Mesh* marioMesh = nullptr;
     Mesh* ballMesh = nullptr;
     bool sm64Initialized = false;

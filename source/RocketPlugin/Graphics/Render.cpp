@@ -104,6 +104,7 @@ bool Renderer::Init(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags)
 	GetClientRect(desc.OutputWindow, &hwndRect);
 	windowWidth = hwndRect.right - hwndRect.left;
 	windowHeight = hwndRect.bottom - hwndRect.top;
+	Window = desc.OutputWindow;
 
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 	viewport.Width = (float)windowWidth;
