@@ -13,8 +13,7 @@
 
 inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
-	SM64* instance,
-	bool isAdmin);
+	SM64* instance);
 
 enum Button
 {
@@ -61,6 +60,12 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	gameWrapper->RegisterDrawable(std::bind(&SM64::OnRender, this, _1));
 
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
+
+	HookEventWithCaller<CarWrapper>(
+		"Function TAGame.Car_TA.SetVehicleInput",
+		[this](const CarWrapper& caller, void* params, const std::string&) {
+			onVehicleTick(caller);
+		});
 	self = this;
 
 }
@@ -70,6 +75,7 @@ SM64::~SM64()
 	gameWrapper->UnregisterDrawables();
 	delete InputMap;
 	DestroySM64();
+	UnhookEvent("Function TAGame.Car_TA.SetVehicleInput");
 }
 
 // Hook into the main window's GetMessage function to process input messages through ginput
@@ -241,16 +247,10 @@ void SM64::Activate(const bool active)
 			[this](const ServerWrapper& caller, void* params, const std::string&) {
 				onTick(caller);
 			});
-		HookEventWithCaller<CarWrapper>(
-			"Function TAGame.Car_TA.SetVehicleInput",
-			[this](const CarWrapper& caller, void* params, const std::string&) {
-				onVehicleTick(caller);
-			});
 	}
 	else if (!active && isActive) {
 		isHost = false;
 		UnhookEvent("Function GameEvent_Soccar_TA.Active.Tick");
-		UnhookEvent("Function TAGame.Car_TA.SetVehicleInput");
 	}
 
 	isActive = active;
@@ -303,7 +303,6 @@ void SM64::DestroySM64()
 
 void SM64::onVehicleTick(CarWrapper car)
 {
-	isHost = true;
 	PriWrapper player = car.GetPRI();
 	if (player.IsNull()) return;
 	auto isLocalPlayer = player.IsLocalPlayerPRI();
@@ -312,19 +311,31 @@ void SM64::onVehicleTick(CarWrapper car)
 	if (playerNamePtr.IsNull()) return;
 	auto playerName = playerNamePtr.ToString();
 
-	SM64MarioInstance* marioInstance = nullptr;
-	if (isLocalPlayer)
+	if (isHost)
 	{
-		marioInstance = &localMario;
-	}
-	else if (remoteMarios.count(playerName) > 0)
-	{
-		marioInstance = remoteMarios[playerName];
-	}
+		SM64MarioInstance* marioInstance = nullptr;
+		if (isLocalPlayer)
+		{
+			marioInstance = &localMario;
+		}
+		else if (remoteMarios.count(playerName) > 0)
+		{
+			marioInstance = remoteMarios[playerName];
+		}
 
-	if (marioInstance == nullptr) return;
+		if (marioInstance == nullptr) return;
 
-	marioInstance->sema.acquire();
+		marioInstance->sema.acquire();
+
+		car.SetHidden2(TRUE);
+		car.SetbHiddenSelf(TRUE);
+		auto marioState = &marioInstance->marioBodyState.marioState;
+		auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+		auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+		car.SetLocation(carPosition);
+		car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+		marioInstance->sema.release();
+	}
 
 	auto playerController = car.GetPlayerController();
 	auto playerInputs = playerController.GetVehicleInput();
@@ -334,15 +345,6 @@ void SM64::onVehicleTick(CarWrapper car)
 	playerInputs.Steer = 0;
 	playerInputs.Pitch = 0;
 	playerController.SetVehicleInput(playerInputs);
-
-	car.SetHidden2(TRUE);
-	car.SetbHiddenSelf(TRUE);
-	auto marioState = &marioInstance->marioBodyState.marioState;
-	auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-	auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
-	car.SetLocation(carPosition);
-	car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
-	marioInstance->sema.release();
 
 }
 
@@ -356,7 +358,7 @@ void SM64::onTick(ServerWrapper server)
 		if (player.IsLocalPlayerPRI())
 		{
 			localMario.sema.acquire();
-			tickMarioInstance(&localMario, car, this, false);
+			tickMarioInstance(&localMario, car, this);
 			localMario.sema.release();
 			renderLocalMario = true;
 		}
@@ -366,8 +368,7 @@ void SM64::onTick(ServerWrapper server)
 
 inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
-	SM64* instance,
-	bool isAdmin)
+	SM64* instance)
 {
 	if (car.IsNull()) return;
 	auto carLocation = car.GetLocation();
@@ -386,24 +387,6 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	if (!airControl.IsNull())
 	{
 		airControl.SetDodgeDisableTimeRemaining(0.0f);
-	}
-	
-
-	if (isAdmin)
-	{
-		car.SetHidden2(TRUE);
-		car.SetbHiddenSelf(TRUE);
-
-		auto marioYaw = (int)(-marioInstance->marioState.faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-		auto carPosition = Vector(marioInstance->marioState.posX, marioInstance->marioState.posZ, marioInstance->marioState.posY + CAR_OFFSET_Z);
-		car.SetLocation(carPosition);
-		car.SetVelocity(Vector(marioInstance->marioState.velX, marioInstance->marioState.velZ, marioInstance->marioState.velY));
-
-		auto carRot = car.GetRotation();
-		carRot.Yaw = marioYaw;
-		carRot.Roll = carRotation.Roll;
-		carRot.Pitch = carRotation.Pitch;
-		car.SetRotation(carRot);
 	}
 
 	auto camera = instance->gameWrapper->GetCamera();
@@ -629,7 +612,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		}
 		else if(!isHost)
 		{
-			tickMarioInstance(marioInstance, car, this, false);
+			tickMarioInstance(marioInstance, car, this);
 		}
 
 		if (marioInstance->mesh != nullptr)
