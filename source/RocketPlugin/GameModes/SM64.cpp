@@ -327,27 +327,27 @@ void SM64::onVehicleTick(CarWrapper car)
 
 		marioInstance->sema.acquire();
 
-		car.SetHidden2(TRUE);
-		car.SetbHiddenSelf(TRUE);
-		auto marioState = &marioInstance->marioBodyState.marioState;
-		auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-		auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
-		car.SetLocation(carPosition);
-		car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+		//car.SetHidden2(TRUE);
+		//car.SetbHiddenSelf(TRUE);
+		//auto marioState = &marioInstance->marioBodyState.marioState;
+		//auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+		//auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+		//car.SetLocation(carPosition);
+		//car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
 		marioInstance->sema.release();
 	}
 
-	if (isLocalPlayer)
-	{
-		auto playerController = car.GetPlayerController();
-		auto playerInputs = playerController.GetVehicleInput();
-		playerInputs.Jump = 0;
-		playerInputs.Handbrake = 0;
-		playerInputs.Throttle = 0;
-		playerInputs.Steer = 0;
-		playerInputs.Pitch = 0;
-		playerController.SetVehicleInput(playerInputs);
-	}
+	//if (isLocalPlayer)
+	//{
+	//	auto playerController = car.GetPlayerController();
+	//	auto playerInputs = playerController.GetVehicleInput();
+	//	playerInputs.Jump = 0;
+	//	playerInputs.Handbrake = 0;
+	//	playerInputs.Throttle = 0;
+	//	playerInputs.Steer = 0;
+	//	playerInputs.Pitch = 0;
+	//	playerController.SetVehicleInput(playerInputs);
+	//}
 
 
 }
