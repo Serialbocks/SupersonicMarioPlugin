@@ -337,14 +337,18 @@ void SM64::onVehicleTick(CarWrapper car)
 		marioInstance->sema.release();
 	}
 
-	auto playerController = car.GetPlayerController();
-	auto playerInputs = playerController.GetVehicleInput();
-	playerInputs.Jump = 0;
-	playerInputs.Handbrake = 0;
-	playerInputs.Throttle = 0;
-	playerInputs.Steer = 0;
-	playerInputs.Pitch = 0;
-	playerController.SetVehicleInput(playerInputs);
+	if (isLocalPlayer)
+	{
+		auto playerController = car.GetPlayerController();
+		auto playerInputs = playerController.GetVehicleInput();
+		playerInputs.Jump = 0;
+		playerInputs.Handbrake = 0;
+		playerInputs.Throttle = 0;
+		playerInputs.Steer = 0;
+		playerInputs.Pitch = 0;
+		playerController.SetVehicleInput(playerInputs);
+	}
+
 
 }
 
