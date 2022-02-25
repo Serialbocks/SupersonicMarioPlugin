@@ -31,53 +31,6 @@ enum Button
 
 SM64* self = nullptr;
 
-//WM_CHAR, WM_KEYDOWN, WM_KEYUP,
-//* WM_SYSKEYDOWN, WM_SYSKEYUP, WM_ ? BUTTON*, WM_MOUSEMOVE, WM_MOUSEWHEEL
-
-HHOOK g_hhkCallWndProc = NULL;
-LRESULT CALLBACK CallWndProc(int nCode, WPARAM wParam, LPARAM lParam)
-{
-	/* If nCode is greater than or equal to HC_ACTION,
-	 * we should process the message. */
-	if (nCode >= HC_ACTION)
-	{
-		/* Retrieve a pointer to the structure that contains details about
-		 * the message, and see if it is one that we want to handle. */
-		const LPCWPRETSTRUCT lpcwprs = (LPCWPRETSTRUCT)lParam;
-		MSG msg;
-		switch (lpcwprs->message)
-		{
-		case WM_CHAR:
-		case WM_KEYDOWN:
-		case WM_KEYUP:
-		case WM_SYSKEYDOWN:
-		case WM_SYSKEYUP:
-		case WM_LBUTTONDOWN:
-		case WM_LBUTTONUP:
-		case WM_RBUTTONDOWN:
-		case WM_RBUTTONUP:
-			if (self != nullptr && self->InputMap != nullptr)
-			{
-				msg.message = lpcwprs->message;
-				msg.hwnd = lpcwprs->hwnd;
-				msg.lParam = lpcwprs->lParam;
-				msg.wParam = lpcwprs->wParam;
-				self->InputManager.HandleMessage(msg);
-			}
-			break;
-		default:
-			break;
-			/* ...SNIP: process the messages we're interested in ... */
-		}
-	}
-
-	/* At this point, we are either not processing the message
-	 * (because nCode is less than HC_ACTION),
-	 * or we've already finished processing it.
-	 * Either way, pass the message on. */
-	return CallNextHookEx(g_hhkCallWndProc, nCode, wParam, lParam);
-}
-
 SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, BakkesMod::Plugin::PluginInfo exports)
 {
 	using namespace std::placeholders;
@@ -413,6 +366,34 @@ void SM64::onVehicleTick(CarWrapper car)
 
 }
 
+// Hook into the main window's GetMessage function to process input messages through ginput
+HHOOK g_hhkCallMsgProc = NULL;
+LRESULT CALLBACK CallMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	MSG* lpmsg = (MSG*)lParam;
+	switch (lpmsg->message)
+	{
+	case WM_CHAR:
+	case WM_KEYDOWN:
+	case WM_KEYUP:
+	case WM_SYSKEYDOWN:
+	case WM_SYSKEYUP:
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+		if (self != nullptr && self->InputMap != nullptr)
+		{
+			self->InputManager.HandleMessage(*lpmsg);
+		}
+		break;
+	default:
+		break;
+	}
+
+	return CallNextHookEx(g_hhkCallMsgProc, nCode, wParam, lParam);
+}
+
 void SM64::onTick(ServerWrapper server)
 {
 	isHost = true;
@@ -545,9 +526,9 @@ void SM64::OnRender(CanvasWrapper canvas)
 		return;
 	}
 
-	if (!inputManagerInitialized)
+	// Hook into the main window's GetMessage function to process input messages through ginput
+	if (g_hhkCallMsgProc == NULL)
 	{
-		static HINSTANCE hinstance = (HINSTANCE)GetWindowLongPtr(renderer->Window, GWLP_HINSTANCE);
 		PluginManagerWrapper PluginManager = gameWrapper->GetPluginManager();
 		if (PluginManager.memory_address != NULL)
 		{ 
@@ -556,8 +537,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 			{
 				if (std::string(ThisPlugin->_details->className) == "RocketPlugin")
 				{
-					g_hhkCallWndProc = SetWindowsHookEx(WH_CALLWNDPROCRET,
-						CallWndProc,
+					g_hhkCallMsgProc = SetWindowsHookEx(WH_GETMESSAGE,
+						CallMsgProc,
 						ThisPlugin->_instance,
 						0);
 				}
