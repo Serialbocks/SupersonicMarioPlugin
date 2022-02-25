@@ -72,6 +72,34 @@ SM64::~SM64()
 	DestroySM64();
 }
 
+// Hook into the main window's GetMessage function to process input messages through ginput
+HHOOK g_hhkCallMsgProc = NULL;
+LRESULT CALLBACK CallMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	MSG* lpmsg = (MSG*)lParam;
+	switch (lpmsg->message)
+	{
+	case WM_CHAR:
+	case WM_KEYDOWN:
+	case WM_KEYUP:
+	case WM_SYSKEYDOWN:
+	case WM_SYSKEYUP:
+	case WM_LBUTTONDOWN:
+	case WM_LBUTTONUP:
+	case WM_RBUTTONDOWN:
+	case WM_RBUTTONUP:
+		if (self != nullptr && self->InputMap != nullptr)
+		{
+			self->InputManager.HandleMessage(*lpmsg);
+		}
+		break;
+	default:
+		break;
+	}
+
+	return CallNextHookEx(g_hhkCallMsgProc, nCode, wParam, lParam);
+}
+
 void SM64::StopRenderMario(std::string eventName)
 {
 	if (localMario.marioId >= 0 && renderLocalMario)
@@ -298,50 +326,6 @@ void SM64::onVehicleTick(CarWrapper car)
 
 	marioInstance->sema.acquire();
 
-	//if (renderer != nullptr && renderer->Window != nullptr)
-	//{
-	//	MSG msg;
-	//	while (PeekMessage(&msg, renderer->Window, 0, 0, PM_REMOVE))
-	//	{
-	//		TranslateMessage(&msg);
-	//		DispatchMessage(&msg);
-	//
-	//		// Forward any input messages to Gainput
-	//		InputManager.HandleMessage(msg);
-	//	}
-	//}
-
-	InputManager.Update();
-	marioInstance->marioInputs.buttonA = InputMap->GetBool(ButtonA);
-	marioInstance->marioInputs.buttonB = InputMap->GetBool(ButtonB);
-	marioInstance->marioInputs.buttonZ = InputMap->GetBool(ButtonZ);
-	if (InputMap->GetBool(KeyboardS))
-	{
-		marioInstance->marioInputs.stickY = 1.0f;
-	}
-	else if (InputMap->GetBool(KeyboardW))
-	{
-		marioInstance->marioInputs.stickY = -1.0f;
-	}
-	else
-	{
-		marioInstance->marioInputs.stickY = 0.0f;
-	}
-	if (InputMap->GetBool(KeyboardD))
-	{
-		marioInstance->marioInputs.stickX = 1.0f;
-	}
-	else if (InputMap->GetBool(KeyboardA))
-	{
-		marioInstance->marioInputs.stickX = -1.0f;
-	}
-	else
-	{
-		marioInstance->marioInputs.stickX = 0.0f;
-	}
-	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - cameraLoc.X;
-	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - cameraLoc.Y;
-
 	auto playerController = car.GetPlayerController();
 	auto playerInputs = playerController.GetVehicleInput();
 	playerInputs.Jump = 0;
@@ -364,34 +348,6 @@ void SM64::onVehicleTick(CarWrapper car)
 	}
 	marioInstance->sema.release();
 
-}
-
-// Hook into the main window's GetMessage function to process input messages through ginput
-HHOOK g_hhkCallMsgProc = NULL;
-LRESULT CALLBACK CallMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
-{
-	MSG* lpmsg = (MSG*)lParam;
-	switch (lpmsg->message)
-	{
-	case WM_CHAR:
-	case WM_KEYDOWN:
-	case WM_KEYUP:
-	case WM_SYSKEYDOWN:
-	case WM_SYSKEYUP:
-	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP:
-	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP:
-		if (self != nullptr && self->InputMap != nullptr)
-		{
-			self->InputManager.HandleMessage(*lpmsg);
-		}
-		break;
-	default:
-		break;
-	}
-
-	return CallNextHookEx(g_hhkCallMsgProc, nCode, wParam, lParam);
 }
 
 void SM64::onTick(ServerWrapper server)
@@ -460,6 +416,36 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		instance->cameraLoc = camera.GetLocation();
 	}
 
+	instance->InputManager.Update();
+	marioInstance->marioInputs.buttonA = instance->InputMap->GetBool(ButtonA);
+	marioInstance->marioInputs.buttonB = instance->InputMap->GetBool(ButtonB);
+	marioInstance->marioInputs.buttonZ = instance->InputMap->GetBool(ButtonZ);
+	if (instance->InputMap->GetBool(KeyboardS))
+	{
+		marioInstance->marioInputs.stickY = 1.0f;
+	}
+	else if (instance->InputMap->GetBool(KeyboardW))
+	{
+		marioInstance->marioInputs.stickY = -1.0f;
+	}
+	else
+	{
+		marioInstance->marioInputs.stickY = 0.0f;
+	}
+	if (instance->InputMap->GetBool(KeyboardD))
+	{
+		marioInstance->marioInputs.stickX = 1.0f;
+	}
+	else if (instance->InputMap->GetBool(KeyboardA))
+	{
+		marioInstance->marioInputs.stickX = -1.0f;
+	}
+	else
+	{
+		marioInstance->marioInputs.stickX = 0.0f;
+	}
+	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - instance->cameraLoc.X;
+	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - instance->cameraLoc.Y;
 
 	sm64_mario_tick(marioInstance->marioId,
 		&marioInstance->marioInputs,
@@ -776,4 +762,5 @@ uint8_t* SM64::utilsReadFileAlloc(std::string path, size_t* fileLength)
 
 	return (uint8_t*)buffer;
 }
+
 
