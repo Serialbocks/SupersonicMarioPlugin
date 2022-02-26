@@ -3,6 +3,19 @@
 
 #define MAX_LIGHTS 16
 
+struct Vertex
+{
+	DirectX::XMFLOAT3 pos;
+	DirectX::XMFLOAT4 color;
+	DirectX::XMFLOAT2 texCoord;
+	DirectX::XMFLOAT3 normal;
+};
+typedef struct VS_ConstantBufferData_t
+{
+	DirectX::XMMATRIX wvp = DirectX::XMMatrixIdentity();
+	DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
+} VS_ConstantBufferData;
+
 typedef struct PS_ConstantBufferData_t
 {
 	DirectX::XMFLOAT3 ambientLightColor;

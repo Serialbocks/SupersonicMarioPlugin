@@ -3,6 +3,7 @@
 #include "Renderer.h"
 #include "../Modules/Utils.h"
 #include <WICTextureLoader.h>
+#include "GraphicsTypes.h"
 
 class Renderer;
 
@@ -15,6 +16,8 @@ public:
 		float r, g, b, a;
 		float u, v;
 	} MeshVertex;
+
+	VS_ConstantBufferData VertexConstBufferData;
 	Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 		int inWindowWidth,
 		int inWindowHeight,
@@ -26,7 +29,7 @@ public:
 	Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 		int inWindowWidth,
 		int inWindowHeight,
-		std::string objFileName,
+		std::vector<Vertex>* inVertices,
 		uint8_t* inTexture,
 		size_t inTexSize,
 		uint16_t inTexWidth,
@@ -47,27 +50,11 @@ private:
 		size_t inTexSize = 0,
 		uint16_t inTexWidth = 0,
 		uint16_t inTexHeight = 0);
-	void parseObjFile(std::string path);
-	std::vector<std::string> splitStr(std::string str, char delimiter);
 	Utils utils;
 	float rotRoll, rotPitch, rotYaw = 0.0f;
 	float quatX, quatY, quatZ, quatW = 0.0f;
 
 public:
-	struct Vertex
-	{
-		DirectX::XMFLOAT3 pos;
-		DirectX::XMFLOAT4 color;
-		DirectX::XMFLOAT2 texCoord;
-		DirectX::XMFLOAT3 normal;
-	};
-	typedef struct VS_ConstantBufferData_t
-	{
-		DirectX::XMMATRIX wvp = DirectX::XMMatrixIdentity();
-		DirectX::XMMATRIX world = DirectX::XMMatrixIdentity();
-	} VS_ConstantBufferData;
-	VS_ConstantBufferData VertexConstBufferData;
-
 	size_t MaxTriangles = 0;
 	size_t NumTrianglesUsed = 0;
 	bool UpdateVertices = false;

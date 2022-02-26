@@ -16,6 +16,7 @@
 
 #include "../Graphics/Renderer.h"
 #include "../Graphics/Mesh.h"
+#include "../Graphics/GraphicsTypes.h"
 #include "../Modules/Utils.h"
 #include "../Modules/MarioAudio.h"
 #include "imgui/imgui.h"
@@ -86,6 +87,10 @@ public:
     gainput::InputMap* InputMap = nullptr;
     bool inputManagerInitialized = false;
     Renderer* renderer = nullptr;
+    std::vector<Vertex> ballVertices;
+    bool loadMeshesThreadStarted = false;
+    bool loadMeshesThreadFinished = false;
+    Utils utils;
 private:
     /* SM64 Members */
     uint8_t* texture;
@@ -104,7 +109,7 @@ private:
     bool renderLocalMario = false;
     bool renderRemoteMario = false;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
-    Utils utils;
+
     bool isHost = false;
 
 };

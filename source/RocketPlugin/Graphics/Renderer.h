@@ -29,7 +29,7 @@ public:
 		size_t inTexSize = 0,
 		uint16_t inTexWidth = 0,
 		uint16_t inTexHeight = 0);
-	Mesh* CreateMesh(std::string objFilePath,
+	Mesh* CreateMesh(std::vector<Vertex>* inVertices,
 		uint8_t* inTexture = nullptr,
 		size_t inTexSize = 0,
 		uint16_t inTexWidth = 0,

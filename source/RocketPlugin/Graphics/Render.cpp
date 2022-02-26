@@ -53,7 +53,7 @@ Mesh* Renderer::CreateMesh(size_t maxTriangles,
 	return newMesh;
 }
 
-Mesh* Renderer::CreateMesh(std::string objFilePath,
+Mesh* Renderer::CreateMesh(std::vector<Vertex> *inVertices,
 	uint8_t* inTexture,
 	size_t inTexSize,
 	uint16_t inTexWidth,
@@ -63,7 +63,7 @@ Mesh* Renderer::CreateMesh(std::string objFilePath,
 	{
 		return nullptr;
 	}
-	Mesh* newMesh = new Mesh(device, windowWidth, windowHeight, objFilePath, inTexture, inTexSize, inTexWidth, inTexHeight);
+	Mesh* newMesh = new Mesh(device, windowWidth, windowHeight, inVertices, inTexture, inTexSize, inTexWidth, inTexHeight);
 	meshes.push_back(newMesh);
 	return newMesh;
 }
@@ -309,7 +309,7 @@ void Renderer::DrawRenderedMesh()
 	context->UpdateSubresource(pixelConstantBuffer.Get(), 0, 0, &PixelConstBufferData, 0, 0);
 	context->PSSetConstantBuffers(0, 1, pixelConstantBuffer.GetAddressOf());
 
-	UINT stride = sizeof(Mesh::Vertex);
+	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
 	for (auto i = 0; i < meshes.size(); i++)
@@ -323,7 +323,7 @@ void Renderer::DrawRenderedMesh()
 
 		// Map the vertex constant buffer on the GPU
 		context->Map(mesh->VertexConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		memcpy(mappedResource.pData, &mesh->VertexConstBufferData, sizeof(Mesh::VS_ConstantBufferData));
+		memcpy(mappedResource.pData, &mesh->VertexConstBufferData, sizeof(VS_ConstantBufferData));
 		context->Unmap(mesh->VertexConstantBuffer.Get(), 0);
 
 		context->UpdateSubresource(mesh->VertexConstantBuffer.Get(), 0, 0, &mesh->VertexConstBufferData, 0, 0);
@@ -332,7 +332,7 @@ void Renderer::DrawRenderedMesh()
 		if (mesh->UpdateVertices)
 		{
 			context->Map(mesh->VertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-			memcpy(mappedResource.pData, (void*)mesh->Vertices.data(), sizeof(Mesh::Vertex) * mesh->NumTrianglesUsed * 3);
+			memcpy(mappedResource.pData, (void*)mesh->Vertices.data(), sizeof(Vertex) * mesh->NumTrianglesUsed * 3);
 			context->Unmap(mesh->VertexBuffer.Get(), 0);
 			mesh->UpdateVertices = false;
 		}

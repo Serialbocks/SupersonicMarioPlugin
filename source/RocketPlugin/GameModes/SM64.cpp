@@ -10,6 +10,7 @@
 #define CAR_OFFSET_Z 45.0f
 #define BALL_MODEL_SCALE 5.35f
 #define SM64_TEXTURE_SIZE (4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT)
+#define WINGCAP_VERTEX_INDEX 750
 
 inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
@@ -490,29 +491,37 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	}
 }
 
-#define WINGCAP_VERTEX_INDEX 750
+void loadBallMesh()
+{
+	self->utils.ParseObjFile(self->utils.GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj", &self->ballVertices);
+	self->loadMeshesThreadFinished = true;
+}
+
 void SM64::OnRender(CanvasWrapper canvas)
 {
 	InputManager.SetDisplaySize(canvas.GetSize().X, canvas.GetSize().Y);
 	if (renderer == nullptr) return;
-	if (!meshesInitialized)
+	if (!loadMeshesThreadStarted)
 	{
 		if (!renderer->Initialized) return;
+		std::thread loadMeshesThread(loadBallMesh);
+		loadMeshesThread.detach();
+		loadMeshesThreadStarted = true;
+		return;
+	}
 
-		ballMesh = renderer->CreateMesh(utils.GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj");
-		
-		if (ballMesh == nullptr) return;
+	if (!loadMeshesThreadFinished) return;
 
-		auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
-		memcpy(tmpTexture, texture, SM64_TEXTURE_SIZE);
+	if (!meshesInitialized)
+	{
+		ballMesh = renderer->CreateMesh(&ballVertices);
+
 		localMario.mesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
 			texture,
 			4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
 			SM64_TEXTURE_WIDTH,
 			SM64_TEXTURE_HEIGHT);
-
 		meshesInitialized = true;
-		return;
 	}
 
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay();

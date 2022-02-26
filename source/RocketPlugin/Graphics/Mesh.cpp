@@ -18,14 +18,17 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	int inWindowWidth,
 	int inWindowHeight,
-	std::string objFileName,
+	std::vector<Vertex> *inVertices,
 	uint8_t* inTexture,
 	size_t inTexSize,
 	uint16_t inTexWidth,
 	uint16_t inTexHeight)
 {
 	IsTransparent = true;
-	parseObjFile(objFileName);
+	for (int i = 0; i < inVertices->size(); i++)
+	{
+		Vertices.push_back((*inVertices)[i]);
+	}
 	init(deviceIn, inWindowWidth, inWindowHeight, Vertices.size(), inTexture, inTexSize, inTexWidth, inTexHeight);
 	NumTrianglesUsed = Vertices.size();
 }
@@ -106,78 +109,6 @@ void Mesh::SetRotationQuat(float x, float y, float z, float w)
 	quatY = y;
 	quatZ = z;
 	quatW = w;
-}
-
-void Mesh::parseObjFile(std::string path)
-{
-	std::ifstream file(path);
-	std::string line;
-
-	std::vector<Vertex> vertices;
-	std::vector<Vertex> normals;
-	while (std::getline(file, line))
-	{
-		if (line.size() == 0) continue;
-		auto split = splitStr(line, ' ');
-		auto type = split[0];
-		auto lastIndex = split.size() - 1;
-		if (type == "v")
-		{
-			Vertex vertex;
-			vertex.pos.x = std::stof(split[lastIndex - 2], nullptr);
-			vertex.pos.y = std::stof(split[lastIndex - 1], nullptr);
-			vertex.pos.z = std::stof(split[lastIndex], nullptr);
-			vertex.color.x = 1.0f;
-			vertex.color.y = 1.0f;
-			vertex.color.z = 1.0f;
-			vertex.color.w = 0.0f;
-			vertex.texCoord.x = 1.0f;
-			vertex.texCoord.y = 0.0f;
-			vertices.push_back(vertex);
-		}
-		else if (type == "vn")
-		{
-			Vertex vertex;
-			vertex.normal.x = std::stof(split[lastIndex - 2], nullptr);
-			vertex.normal.y = std::stof(split[lastIndex - 1], nullptr);
-			vertex.normal.z = std::stof(split[lastIndex], nullptr);
-			normals.push_back(vertex);
-		}
-		else if (type == "f")
-		{
-			auto vertIndex1 = std::stoul(splitStr(split[lastIndex - 2], '/')[0], nullptr);
-			auto vertIndex2 = std::stoul(splitStr(split[lastIndex - 1], '/')[0], nullptr);
-			auto vertIndex3 = std::stoul(splitStr(split[lastIndex], '/')[0], nullptr);
-			auto normalIndex1 = std::stoul(splitStr(split[lastIndex - 2], '/')[2], nullptr);
-			auto normalIndex2 = std::stoul(splitStr(split[lastIndex - 1], '/')[2], nullptr);
-			auto normalIndex3 = std::stoul(splitStr(split[lastIndex], '/')[2], nullptr);
-			vertices[vertIndex1].normal.x = normals[normalIndex1].normal.x;
-			vertices[vertIndex1].normal.y = normals[normalIndex1].normal.y;
-			vertices[vertIndex1].normal.z = normals[normalIndex1].normal.z;
-			vertices[vertIndex2].normal.x = normals[normalIndex2].normal.x;
-			vertices[vertIndex2].normal.y = normals[normalIndex2].normal.y;
-			vertices[vertIndex2].normal.z = normals[normalIndex2].normal.z;
-			vertices[vertIndex3].normal.x = normals[normalIndex3].normal.x;
-			vertices[vertIndex3].normal.y = normals[normalIndex3].normal.y;
-			vertices[vertIndex3].normal.z = normals[normalIndex3].normal.z;
-			Vertices.push_back(vertices[vertIndex1]);
-			Vertices.push_back(vertices[vertIndex2]);
-			Vertices.push_back(vertices[vertIndex3]);
-		}
-	}
-
-}
-
-std::vector<std::string> Mesh::splitStr(std::string str, char delimiter)
-{
-	std::stringstream stringStream(str);
-	std::vector<std::string> seglist;
-	std::string segment;
-	while (std::getline(stringStream, segment, delimiter))
-	{
-		seglist.push_back(segment);
-	}
-	return seglist;
 }
 
 void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
