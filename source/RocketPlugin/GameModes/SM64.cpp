@@ -30,54 +30,6 @@ enum Button
 
 SM64* self = nullptr;
 
-SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, BakkesMod::Plugin::PluginInfo exports)
-{
-	using namespace std::placeholders;
-	gameWrapper = gw;
-	cvarManager = cm;
-	Netcode = std::make_shared<NetcodeManager>(cvarManager, gameWrapper, exports,
-		std::bind(&SM64::OnMessageReceived, this, _1, _2));
-
-	// Init button mappings
-	gainput::DeviceId mouseId = InputManager.CreateDevice<gainput::InputDeviceMouse>();
-	gainput::DeviceId keyboardId = InputManager.CreateDevice<gainput::InputDeviceKeyboard>();
-	gainput::DeviceId padId = InputManager.CreateDevice<gainput::InputDevicePad>();
-	InputMap = new gainput::InputMap(InputManager);
-	
-	InputMap->MapBool(ButtonA, mouseId, gainput::MouseButtonRight);
-	InputMap->MapBool(ButtonB, mouseId, gainput::MouseButtonLeft);
-	InputMap->MapBool(ButtonZ, keyboardId, gainput::KeyShiftL);
-	InputMap->MapBool(KeyboardW, keyboardId, gainput::KeyW);
-	InputMap->MapBool(KeyboardA, keyboardId, gainput::KeyA);
-	InputMap->MapBool(KeyboardS, keyboardId, gainput::KeyS);
-	InputMap->MapBool(KeyboardD, keyboardId, gainput::KeyD);
-
-	gameWrapper->HookEvent("Function TAGame.Replay_TA.StartPlaybackAtTimeSeconds", bind(&SM64::StopRenderMario, this, _1));
-	gameWrapper->HookEvent("Function TAGame.GameEvent_Soccer_TA.ReplayPlayback.BeginState", bind(&SM64::StopRenderMario, this, _1));
-	gameWrapper->HookEvent("Function TAGame.GameEvent_TA.OnCarSpawned", bind(&SM64::OnCarSpawned, this, _1));
-
-	InitSM64();
-	gameWrapper->RegisterDrawable(std::bind(&SM64::OnRender, this, _1));
-
-	typeIdx = std::make_unique<std::type_index>(typeid(*this));
-
-	HookEventWithCaller<CarWrapper>(
-		"Function TAGame.Car_TA.SetVehicleInput",
-		[this](const CarWrapper& caller, void* params, const std::string&) {
-			onVehicleTick(caller);
-		});
-	self = this;
-
-}
-
-SM64::~SM64()
-{
-	gameWrapper->UnregisterDrawables();
-	delete InputMap;
-	DestroySM64();
-	UnhookEvent("Function TAGame.Car_TA.SetVehicleInput");
-}
-
 // Hook into the main window's GetMessage function to process input messages through ginput
 HHOOK g_hhkCallMsgProc = NULL;
 LRESULT CALLBACK CallMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -104,6 +56,76 @@ LRESULT CALLBACK CallMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
 	}
 
 	return CallNextHookEx(g_hhkCallMsgProc, nCode, wParam, lParam);
+}
+
+SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, BakkesMod::Plugin::PluginInfo exports)
+{
+	using namespace std::placeholders;
+	gameWrapper = gw;
+	cvarManager = cm;
+	Netcode = std::make_shared<NetcodeManager>(cvarManager, gameWrapper, exports,
+		std::bind(&SM64::OnMessageReceived, this, _1, _2));
+
+	// Init button mappings
+	gainput::DeviceId mouseId = InputManager.CreateDevice<gainput::InputDeviceMouse>();
+	gainput::DeviceId keyboardId = InputManager.CreateDevice<gainput::InputDeviceKeyboard>();
+	gainput::DeviceId padId = InputManager.CreateDevice<gainput::InputDevicePad>();
+	InputMap = new gainput::InputMap(InputManager);
+	
+	InputMap->MapBool(ButtonA, mouseId, gainput::MouseButtonRight);
+	InputMap->MapBool(ButtonB, mouseId, gainput::MouseButtonLeft);
+	InputMap->MapBool(ButtonZ, keyboardId, gainput::KeyShiftL);
+	InputMap->MapBool(KeyboardW, keyboardId, gainput::KeyW);
+	InputMap->MapBool(KeyboardA, keyboardId, gainput::KeyA);
+	InputMap->MapBool(KeyboardS, keyboardId, gainput::KeyS);
+	InputMap->MapBool(KeyboardD, keyboardId, gainput::KeyD);
+
+	gameWrapper->HookEvent("Function TAGame.Replay_TA.StartPlaybackAtTimeSeconds", bind(&SM64::StopRenderMario, this, _1));
+	gameWrapper->HookEvent("Function TAGame.GameEvent_Soccer_TA.ReplayPlayback.BeginState", bind(&SM64::StopRenderMario, this, _1));
+	gameWrapper->HookEvent("Function TAGame.GameEvent_TA.OnCarSpawned", bind(&SM64::OnCarSpawned, this, _1));
+
+	// Hook into the main window's GetMessage function to process input messages through ginput
+	if (g_hhkCallMsgProc == NULL)
+	{
+		PluginManagerWrapper PluginManager = gameWrapper->GetPluginManager();
+		if (PluginManager.memory_address != NULL)
+		{
+			auto* PluginList = PluginManager.GetLoadedPlugins();
+			for (const auto& ThisPlugin : *PluginList)
+			{
+				if (std::string(ThisPlugin->_details->className) == "RocketPlugin")
+				{
+					g_hhkCallMsgProc = SetWindowsHookEx(WH_GETMESSAGE,
+						CallMsgProc,
+						ThisPlugin->_instance,
+						0);
+				}
+			}
+		}
+
+		inputManagerInitialized = true;
+	}
+
+	InitSM64();
+	gameWrapper->RegisterDrawable(std::bind(&SM64::OnRender, this, _1));
+
+	typeIdx = std::make_unique<std::type_index>(typeid(*this));
+
+	HookEventWithCaller<CarWrapper>(
+		"Function TAGame.Car_TA.SetVehicleInput",
+		[this](const CarWrapper& caller, void* params, const std::string&) {
+			onVehicleTick(caller);
+		});
+	self = this;
+
+}
+
+SM64::~SM64()
+{
+	gameWrapper->UnregisterDrawables();
+	delete InputMap;
+	DestroySM64();
+	UnhookEvent("Function TAGame.Car_TA.SetVehicleInput");
 }
 
 void SM64::StopRenderMario(std::string eventName)
@@ -327,27 +349,27 @@ void SM64::onVehicleTick(CarWrapper car)
 
 		marioInstance->sema.acquire();
 
-		//car.SetHidden2(TRUE);
-		//car.SetbHiddenSelf(TRUE);
-		//auto marioState = &marioInstance->marioBodyState.marioState;
-		//auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-		//auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
-		//car.SetLocation(carPosition);
-		//car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+		car.SetHidden2(TRUE);
+		car.SetbHiddenSelf(TRUE);
+		auto marioState = &marioInstance->marioBodyState.marioState;
+		auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+		auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+		car.SetLocation(carPosition);
+		car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
 		marioInstance->sema.release();
 	}
 
-	//if (isLocalPlayer)
-	//{
-	//	auto playerController = car.GetPlayerController();
-	//	auto playerInputs = playerController.GetVehicleInput();
-	//	playerInputs.Jump = 0;
-	//	playerInputs.Handbrake = 0;
-	//	playerInputs.Throttle = 0;
-	//	playerInputs.Steer = 0;
-	//	playerInputs.Pitch = 0;
-	//	playerController.SetVehicleInput(playerInputs);
-	//}
+	if (isLocalPlayer)
+	{
+		auto playerController = car.GetPlayerController();
+		auto playerInputs = playerController.GetVehicleInput();
+		playerInputs.Jump = 0;
+		playerInputs.Handbrake = 0;
+		playerInputs.Throttle = 0;
+		playerInputs.Steer = 0;
+		playerInputs.Pitch = 0;
+		playerController.SetVehicleInput(playerInputs);
+	}
 
 
 }
@@ -491,28 +513,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		meshesInitialized = true;
 		return;
-	}
-
-	// Hook into the main window's GetMessage function to process input messages through ginput
-	if (g_hhkCallMsgProc == NULL)
-	{
-		PluginManagerWrapper PluginManager = gameWrapper->GetPluginManager();
-		if (PluginManager.memory_address != NULL)
-		{ 
-			auto* PluginList = PluginManager.GetLoadedPlugins();
-			for (const auto& ThisPlugin : *PluginList)
-			{
-				if (std::string(ThisPlugin->_details->className) == "RocketPlugin")
-				{
-					g_hhkCallMsgProc = SetWindowsHookEx(WH_GETMESSAGE,
-						CallMsgProc,
-						ThisPlugin->_instance,
-						0);
-				}
-			}
-		}
-
-		inputManagerInitialized = true;
 	}
 
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay();
