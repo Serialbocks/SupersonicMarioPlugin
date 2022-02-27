@@ -73,7 +73,7 @@ public:
 private:
     float distance(Vector v1, Vector v2);
     void onTick(ServerWrapper server);
-    void onVehicleTick(CarWrapper car);
+    void onVehicleTick(CarWrapper car, void* params);
     std::vector<char> hexToBytes(const std::string& hex);
     uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
 
@@ -91,6 +91,8 @@ public:
     bool loadMeshesThreadStarted = false;
     bool loadMeshesThreadFinished = false;
     Utils utils;
+    Rotator carRotation;
+
 private:
     /* SM64 Members */
     uint8_t* texture;
@@ -100,7 +102,6 @@ private:
     float cameraRot;
     Vector carLocation;
     bool locationInit;
-    Rotator carRotation;
     Mesh* marioMesh = nullptr;
     Mesh* ballMesh = nullptr;
     bool sm64Initialized = false;

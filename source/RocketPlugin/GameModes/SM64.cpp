@@ -125,7 +125,7 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	HookEventWithCaller<CarWrapper>(
 		"Function TAGame.Car_TA.SetVehicleInput",
 		[this](const CarWrapper& caller, void* params, const std::string&) {
-			onVehicleTick(caller);
+			onVehicleTick(caller, params);
 		});
 	self = this;
 
@@ -334,7 +334,7 @@ void SM64::DestroySM64()
 	delete marioAudio;
 }
 
-void SM64::onVehicleTick(CarWrapper car)
+void SM64::onVehicleTick(CarWrapper car, void* params)
 {
 	PriWrapper player = car.GetPRI();
 	if (player.IsNull()) return;
@@ -367,24 +367,18 @@ void SM64::onVehicleTick(CarWrapper car)
 		auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
 		car.SetLocation(carPosition);
 		car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+		auto carRot = car.GetRotation();
+		carRot.Yaw = marioYaw;
+		carRot.Roll = carRotation.Roll;
+		carRot.Pitch = carRotation.Pitch;
+		car.SetRotation(carRot);
+		ControllerInput* newInput = (ControllerInput*)params;
+		newInput->Jump = 0;
+		newInput->Handbrake = 0;
+		newInput->Throttle = 0;
+		newInput->Steer = 0;
+		newInput->Pitch = 0;
 		marioInstance->sema.release();
-	}
-
-	if (isLocalPlayer)
-	{
-		auto playerController = car.GetPlayerController();
-		auto playerInputs = playerController.GetVehicleInput();
-		playerInputs.Jump = 0;
-		playerInputs.Handbrake = 0;
-		playerInputs.Throttle = 0;
-		playerInputs.Steer = 0;
-		playerInputs.Pitch = 0;
-		playerController.SetVehicleInput(playerInputs);
-		auto airControl = car.GetAirControlComponent();
-		if (!airControl.IsNull())
-		{
-			airControl.SetDodgeDisableTimeRemaining(0.0f);
-		}
 	}
 
 
@@ -417,10 +411,11 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	auto x = (int16_t)(carLocation.X);
 	auto y = (int16_t)(carLocation.Y);
 	auto z = (int16_t)(carLocation.Z);
-	auto carRotation = car.GetRotation();
+
 	if (marioInstance->marioId < 0)
 	{
 		// Unreal swaps coords
+		instance->carRotation = car.GetRotation();
 		marioInstance->marioId = sm64_mario_create(x, z, y);
 		if (marioInstance->marioId < 0) return;
 	}
