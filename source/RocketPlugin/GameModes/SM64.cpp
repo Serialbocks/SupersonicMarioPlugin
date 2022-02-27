@@ -73,6 +73,7 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	gainput::DeviceId padId = InputManager.CreateDevice<gainput::InputDevicePad>();
 	InputMap = new gainput::InputMap(InputManager);
 	
+	// Map keyboard
 	InputMap->MapBool(ButtonA, mouseId, gainput::MouseButtonRight);
 	InputMap->MapBool(ButtonB, mouseId, gainput::MouseButtonLeft);
 	InputMap->MapBool(ButtonZ, keyboardId, gainput::KeyShiftL);
@@ -80,6 +81,15 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	InputMap->MapBool(KeyboardA, keyboardId, gainput::KeyA);
 	InputMap->MapBool(KeyboardS, keyboardId, gainput::KeyS);
 	InputMap->MapBool(KeyboardD, keyboardId, gainput::KeyD);
+
+	// Map controller
+	InputMap->MapBool(ButtonA, padId, gainput::PadButtonA);
+	InputMap->MapBool(ButtonB, padId, gainput::PadButtonX);
+	InputMap->MapBool(ButtonB, padId, gainput::PadButtonB);
+	InputMap->MapBool(ButtonZ, padId, gainput::PadButtonL1);
+	InputMap->MapBool(ButtonZ, padId, gainput::PadButtonL2);
+	InputMap->MapFloat(StickX, padId, gainput::PadButtonLeftStickX);
+	InputMap->MapFloat(StickY, padId, gainput::PadButtonLeftStickY);
 
 	gameWrapper->HookEvent("Function TAGame.Replay_TA.StartPlaybackAtTimeSeconds", bind(&SM64::StopRenderMario, this, _1));
 	gameWrapper->HookEvent("Function TAGame.GameEvent_Soccer_TA.ReplayPlayback.BeginState", bind(&SM64::StopRenderMario, this, _1));
@@ -370,6 +380,11 @@ void SM64::onVehicleTick(CarWrapper car)
 		playerInputs.Steer = 0;
 		playerInputs.Pitch = 0;
 		playerController.SetVehicleInput(playerInputs);
+		auto airControl = car.GetAirControlComponent();
+		if (!airControl.IsNull())
+		{
+			airControl.SetDodgeDisableTimeRemaining(0.0f);
+		}
 	}
 
 
@@ -410,12 +425,6 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		if (marioInstance->marioId < 0) return;
 	}
 
-	auto airControl = car.GetAirControlComponent();
-	if (!airControl.IsNull())
-	{
-		airControl.SetDodgeDisableTimeRemaining(0.0f);
-	}
-
 	auto camera = instance->gameWrapper->GetCamera();
 	if (!camera.IsNull())
 	{
@@ -436,7 +445,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	}
 	else
 	{
-		marioInstance->marioInputs.stickY = 0.0f;
+		marioInstance->marioInputs.stickY = -instance->InputMap->GetFloat(StickY);
 	}
 	if (instance->InputMap->GetBool(KeyboardD))
 	{
@@ -448,7 +457,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	}
 	else
 	{
-		marioInstance->marioInputs.stickX = 0.0f;
+		marioInstance->marioInputs.stickX = instance->InputMap->GetFloat(StickX);
 	}
 	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - instance->cameraLoc.X;
 	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - instance->cameraLoc.Y;
