@@ -486,8 +486,8 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	int playerId = car.GetPRI().GetPlayerID();
 	ZeroMemory(self->netcodeOutBuf, SM64_NETCODE_BUF_LEN);
 	memcpy(self->netcodeOutBuf, &playerId, sizeof(playerId));
-	memcpy(self->netcodeOutBuf + sizeof(playerId), &marioInstance->marioBodyState, sizeof(marioInstance->marioBodyState));
-	Networking::SendBytes(self->netcodeOutBuf, sizeof(playerId) + sizeof(marioInstance->marioBodyState));
+	memcpy(self->netcodeOutBuf + sizeof(int), &marioInstance->marioBodyState, sizeof(struct SM64MarioBodyState));
+	Networking::SendBytes(self->netcodeOutBuf, sizeof(int) + sizeof(struct SM64MarioBodyState));
 	//if (marioInstance->marioGeometry.numTrianglesUsed > 0)
 	//{
 	//	unsigned char* bodyStateBytes = (unsigned char*)&marioInstance->marioBodyState;
