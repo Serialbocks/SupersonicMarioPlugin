@@ -86,6 +86,8 @@ public:
     std::counting_semaphore<1> masterSetSema{ 1 };
     SOCKET serverExitSocket;
     SOCKET listening;
+    std::map<SOCKET, int> playerIdMap;
+    int nextPlayerId = 1;
 
 public:
     TcpServer(TcpServer const&) = delete;

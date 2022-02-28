@@ -162,7 +162,7 @@ void serverThread()
 				ZeroMemory(buf, TCP_BUF_SIZE);
 
 				// Receive message
-				int bytesIn = recv(sock, buf, TCP_BUF_SIZE, 0);
+				int bytesIn = recv(sock, buf + sizeof(int), TCP_BUF_SIZE - sizeof(int), 0);
 				if (bytesIn <= 0)
 				{
 					// Drop the client
@@ -173,20 +173,28 @@ void serverThread()
 				}
 				else
 				{
+					if (instance->playerIdMap.count(sock) == 0)
+					{
+						instance->playerIdMap[sock] = instance->nextPlayerId++;
+					}
+					int playerId = instance->playerIdMap[sock];
+
+					*((int*)buf) = playerId;
+					
 					// Send message to other clients, and definitely NOT the listening socket
 					for (int k = 0; k < instance->master.fd_count; k++)
 					{
 						SOCKET outSock = instance->master.fd_array[k];
 						if (outSock != instance->listening && outSock != sock && outSock != instance->serverExitSocket)
 						{
-							send(outSock, buf, bytesIn, 0);
+							send(outSock, buf + sizeof(int), bytesIn, 0);
 						}
 					}
 
 					// Handle the message ourselves too if a callback is set
 					if (instance != nullptr && instance->msgReceivedClbk != nullptr)
 					{
-						instance->msgReceivedClbk(buf, bytesIn);
+						instance->msgReceivedClbk(buf + sizeof(int), bytesIn);
 					}
 
 
@@ -213,6 +221,8 @@ void TcpServer::StartServer(int inPort)
 		return;
 	}
 
+	playerIdMap.clear();
+	nextPlayerId = 1;
 	port = inPort;
 	std::thread servThread(serverThread);
 	servThread.detach();
@@ -226,6 +236,8 @@ void TcpServer::StopServer()
 		return;
 	}
 
+	playerIdMap.clear();
+	nextPlayerId = 1;
 	std::string emptyStr = "";
 	int sendResult = send(stopServerSocket, emptyStr.c_str(), 1, 0);
 }
@@ -245,12 +257,19 @@ void TcpServer::SendBytes(char* buf, int len)
 	fd_set setCopy = master;
 	masterSetSema.release();
 
+	int outBufSize = len + sizeof(int);
+	char* outBuf = (char*)malloc(len + sizeof(int));
+	ZeroMemory(outBuf, outBufSize);
+	memcpy(outBuf + sizeof(int), buf, len);
+
 	for (int k = 0; k < instance->master.fd_count; k++)
 	{
 		SOCKET outSock = instance->master.fd_array[k];
 		if (outSock != listening && outSock != serverExitSocket)
 		{
-			send(outSock, buf, len, 0);
+			send(outSock, outBuf, len, 0);
 		}
 	}
+
+	free(outBuf);
 }

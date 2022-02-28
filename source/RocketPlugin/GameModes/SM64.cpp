@@ -94,6 +94,25 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	gameWrapper->HookEvent("Function TAGame.Replay_TA.StartPlaybackAtTimeSeconds", bind(&SM64::StopRenderMario, this, _1));
 	gameWrapper->HookEvent("Function TAGame.GameEvent_Soccer_TA.ReplayPlayback.BeginState", bind(&SM64::StopRenderMario, this, _1));
 	gameWrapper->HookEvent("Function TAGame.GameEvent_TA.OnCarSpawned", bind(&SM64::OnCarSpawned, this, _1));
+	HookEventWithCaller<PlayerControllerWrapper>("Function Engine.PlayerController.NotifyDisconnect",
+		[this](const PlayerControllerWrapper& caller, void*, const std::string&) {
+			// Cleanup after a game session has been left
+			isHost = false;
+			isInSm64GameSema.acquire();
+			isInSm64Game = false;
+			isInSm64GameSema.release();
+			if (localMario.mesh != nullptr)
+				localMario.mesh->RenderUpdateVertices(0, nullptr);
+			for (const auto& remoteMario : remoteMarios)
+			{
+				SM64MarioInstance* marioInstance = remoteMario.second;
+				if (marioInstance->mesh != nullptr)
+				{
+					marioInstance->mesh->RenderUpdateVertices(0, nullptr);
+				}
+			}
+			remoteMarios.clear();
+		});
 
 	// Register callback to receiving TCP data from server/clients
 	Networking::RegisterCallback(MessageReceived);
@@ -171,10 +190,11 @@ void MessageReceived(char* buf, int len)
 		targetData = (uint8_t*)(buf + len - targetLen);
 	}
 
-	unsigned long long playerId = (unsigned long long)(*targetData);
-	struct SM64MarioBodyState* bodyStateData = (struct SM64MarioBodyState*)(targetData + sizeof(unsigned long long));
+	int playerId = (int)(*targetData);
+	struct SM64MarioBodyState* bodyStateData = (struct SM64MarioBodyState*)(targetData + sizeof(playerId));
 
 	SM64MarioInstance* marioInstance = nullptr;
+	self->remoteMariosSema.acquire();
 	if (self->remoteMarios.count(playerId) == 0)
 	{
 		// Initialize mario for this player
@@ -185,15 +205,16 @@ void MessageReceived(char* buf, int len)
 	{
 		marioInstance = self->remoteMarios[playerId];
 	}
+	self->remoteMariosSema.release();
 
 	if (marioInstance == nullptr) return;
 
-	if (!marioInstance->sema.try_acquire())
-	{
-		return;
-	}
+	marioInstance->sema.acquire();
 	memcpy(&marioInstance->marioBodyState, targetData, len - sizeof(int));
 	marioInstance->sema.release();
+	self->isInSm64GameSema.acquire();
+	self->isInSm64Game = true;
+	self->isInSm64GameSema.release();
 }
 
 void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
@@ -386,14 +407,17 @@ void SM64::onVehicleTick(CarWrapper car, void* params)
 	if (isHost)
 	{
 		SM64MarioInstance* marioInstance = nullptr;
+
 		if (isLocalPlayer)
 		{
 			marioInstance = &localMario;
 		}
-		else if (remoteMarios.count(playerId) > 0)
+		remoteMariosSema.acquire();
+		if (remoteMarios.count(playerId) > 0)
 		{
 			marioInstance = remoteMarios[playerId];
 		}
+		remoteMariosSema.release();
 
 		if (marioInstance == nullptr) return;
 
@@ -426,6 +450,9 @@ void SM64::onVehicleTick(CarWrapper car, void* params)
 void SM64::onTick(ServerWrapper server)
 {
 	isHost = true;
+	isInSm64GameSema.acquire();
+	isInSm64Game = true;
+	isInSm64GameSema.release();
 	for (CarWrapper car : server.GetCars())
 	{
 		PriWrapper player = car.GetPRI();
@@ -516,14 +543,11 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
 		netPosition.X / 100.0f, netPosition.Y / 100.0f, netPosition.Z / 100.0f);
 
-	unsigned long long playerId = car.GetPRI().GetUniqueIdWrapper().GetUID();
-	ZeroMemory(self->netcodeOutBuf, SM64_NETCODE_BUF_LEN);
-	memcpy(self->netcodeOutBuf, &playerId, sizeof(playerId));
+
 	marioInstance->sema.acquire();
-	memcpy(self->netcodeOutBuf + sizeof(unsigned long long), &marioInstance->marioBodyState, sizeof(struct SM64MarioBodyState));
+	memcpy(self->netcodeOutBuf, &marioInstance->marioBodyState, sizeof(struct SM64MarioBodyState));
 	marioInstance->sema.release();
-	auto sizeSent = sizeof(unsigned long long) + sizeof(struct SM64MarioBodyState);
-	Networking::SendBytes(self->netcodeOutBuf, sizeSent);
+	Networking::SendBytes(self->netcodeOutBuf, sizeof(struct SM64MarioBodyState));
 
 }
 
@@ -531,6 +555,38 @@ void loadBallMesh()
 {
 	self->utils.ParseObjFile(self->utils.GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj", &self->ballVertices);
 	self->loadMeshesThreadFinished = true;
+}
+
+inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
+{
+	if (marioInstance == nullptr) return;
+
+	if (marioInstance->mesh != nullptr)
+	{
+		for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
+		{
+			auto position = &marioInstance->marioGeometry.position[i * 3];
+			auto color = &marioInstance->marioGeometry.color[i * 3];
+			auto uv = &marioInstance->marioGeometry.uv[i * 2];
+			auto normal = &marioInstance->marioGeometry.normal[i * 3];
+
+			auto currentVertex = &marioInstance->mesh->Vertices[i];
+			// Unreal engine swaps x and y coords for 3d model
+			currentVertex->pos.x = position[0];
+			currentVertex->pos.y = position[2];
+			currentVertex->pos.z = position[1];
+			currentVertex->color.x = color[0];
+			currentVertex->color.y = color[1];
+			currentVertex->color.z = color[2];
+			currentVertex->color.w = i >= (WINGCAP_VERTEX_INDEX * 3) ? 0.0f : 1.0f;
+			currentVertex->texCoord.x = uv[0];
+			currentVertex->texCoord.y = uv[1];
+			currentVertex->normal.x = normal[0];
+			currentVertex->normal.y = normal[2];
+			currentVertex->normal.z = normal[1];
+		}
+		marioInstance->mesh->RenderUpdateVertices(marioInstance->marioGeometry.numTrianglesUsed, &camera);
+	}
 }
 
 void SM64::OnRender(CanvasWrapper canvas)
@@ -561,18 +617,11 @@ void SM64::OnRender(CanvasWrapper canvas)
 	}
 
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay();
-	if ((!inGame && isActive))
+	isInSm64GameSema.acquire();
+	bool inSm64Game = isInSm64Game;
+	isInSm64GameSema.release();
+	if (!inGame || !isInSm64Game)
 	{
-		if(localMario.mesh != nullptr)
-			localMario.mesh->RenderUpdateVertices(0, nullptr);
-		for (const auto& remoteMario : remoteMarios)
-		{
-			SM64MarioInstance* marioInstance = remoteMario.second;
-			if (marioInstance->mesh != nullptr)
-			{
-				marioInstance->mesh->RenderUpdateVertices(0, nullptr);
-			}
-		}
 		return;
 	}
 
@@ -588,47 +637,55 @@ void SM64::OnRender(CanvasWrapper canvas)
 	if (server.IsNull()) return;
 
 	auto localCar = gameWrapper->GetLocalCar();
-	unsigned long long localPlayerId = 0;
+	std::string localPlayerName = "";
 	if (!localCar.IsNull())
 	{
 		auto localPlayer = localCar.GetPRI();
 		if (!localPlayer.IsNull())
 		{
-			localPlayerId = localPlayer.GetUniqueIdWrapper().GetUID();
+			localPlayerName = localPlayer.GetPlayerName().ToString();
 		}
 	}
 
+	// Render local mario
 	for (CarWrapper car : server.GetCars())
 	{
 		auto player = car.GetPRI();
 		if (player.IsNull()) continue;
-		auto playerId = player.GetUniqueIdWrapper().GetUID();
+		auto playerName = player.GetPlayerName().ToString();
 
-		SM64MarioInstance* marioInstance = nullptr;
-
-		bool isLocalPlayer = false;
-		if (playerId == localPlayerId)
+		if (playerName != localPlayerName)
 		{
-			// This is the local player - use that mario
-			marioInstance = &localMario;
-			isLocalPlayer = true;
-		}
-		else
-		{
-			// Not the local player. See if we have this player already
-			if (remoteMarios.count(playerId) > 0)
-			{
-				marioInstance = remoteMarios[playerId];
-			}
-			else
-			{
-				// There is no mario initialized for this player
-				continue;
-			}
+			continue;
 		}
 
-		if (marioInstance == nullptr) continue;
+		SM64MarioInstance* marioInstance = &localMario;
 
+		if (marioInstance->marioId < 0)
+		{
+			if (isHost)
+			{
+				break; // We create the host's mario in onTick()
+			}
+			carLocation = car.GetLocation();
+			auto x = (int16_t)(carLocation.X);
+			auto y = (int16_t)(carLocation.Y);
+			auto z = (int16_t)(carLocation.Z);
+			marioInstance->marioId = sm64_mario_create(x, z, y);
+		}
+
+		if(!isHost)
+		{
+			tickMarioInstance(marioInstance, car, this);
+		}
+
+		renderMario(marioInstance, camera);
+	}
+
+	// Loop through remote marios and render
+	remoteMariosSema.acquire();
+	for (auto const& [playerId, marioInstance] : remoteMarios)
+	{
 		if (marioInstance->mesh == nullptr)
 		{
 			// Initialize the mesh
@@ -642,71 +699,27 @@ void SM64::OnRender(CanvasWrapper canvas)
 			continue;
 		}
 
-		if (marioInstance->marioId < 0 && !isLocalPlayer)
+		marioInstance->sema.acquire();
+		if (marioInstance->marioId < 0)
 		{
-			marioInstance->sema.acquire();
 			marioInstance->marioId = sm64_mario_create((int16_t)marioInstance->marioState.posX,
 				(int16_t)marioInstance->marioState.posY,
 				(int16_t)marioInstance->marioState.posZ);
-			marioInstance->sema.release();
-		}
-		else if (marioInstance->marioId < 0 && isLocalPlayer)
-		{
-			carLocation = car.GetLocation();
-			auto x = (int16_t)(carLocation.X);
-			auto y = (int16_t)(carLocation.Y);
-			auto z = (int16_t)(carLocation.Z);
-			marioInstance->marioId = sm64_mario_create(x, z, y);
 		}
 
-		if (!isLocalPlayer)
-		{
-			marioInstance->sema.acquire();
-			sm64_mario_tick(marioInstance->marioId,
-				&marioInstance->marioInputs,
-				&marioInstance->marioBodyState.marioState,
-				&marioInstance->marioGeometry,
-				&marioInstance->marioBodyState,
-				false,
-				false);
-			marioInstance->sema.release();
-		}
-		else if(!isHost)
-		{
-			tickMarioInstance(marioInstance, car, this);
-		}
+		sm64_mario_tick(marioInstance->marioId,
+			&marioInstance->marioInputs,
+			&marioInstance->marioBodyState.marioState,
+			&marioInstance->marioGeometry,
+			&marioInstance->marioBodyState,
+			false,
+			false);
+		marioInstance->sema.release();
 
-		if (marioInstance->mesh != nullptr)
-		{
-			for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
-			{
-				auto position = &marioInstance->marioGeometry.position[i * 3];
-				auto color = &marioInstance->marioGeometry.color[i * 3];
-				auto uv = &marioInstance->marioGeometry.uv[i * 2];
-				auto normal = &marioInstance->marioGeometry.normal[i * 3];
-
-				auto currentVertex = &marioInstance->mesh->Vertices[i];
-				// Unreal engine swaps x and y coords for 3d model
-				currentVertex->pos.x = position[0];
-				currentVertex->pos.y = position[2];
-				currentVertex->pos.z = position[1];
-				currentVertex->color.x = color[0];
-				currentVertex->color.y = color[1];
-				currentVertex->color.z = color[2];
-				currentVertex->color.w = i >= (WINGCAP_VERTEX_INDEX * 3) ? 0.0f : 1.0f;
-				currentVertex->texCoord.x = uv[0];
-				currentVertex->texCoord.y = uv[1];
-				currentVertex->normal.x = normal[0];
-				currentVertex->normal.y = normal[2];
-				currentVertex->normal.z = normal[1];
-			}
-			marioInstance->mesh->RenderUpdateVertices(marioInstance->marioGeometry.numTrianglesUsed, &camera);
-		}
-		else
-		{
-
-		}
+		renderMario(marioInstance, camera);
 	}
+	remoteMariosSema.release();
+
 
 	if (ballMesh != nullptr)
 	{

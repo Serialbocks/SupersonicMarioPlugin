@@ -99,6 +99,7 @@ public:
     /* SM64 Members */
     uint8_t* texture;
     std::map<int, SM64MarioInstance*> remoteMarios;
+    std::counting_semaphore<1> remoteMariosSema{ 1 };
     SM64MarioInstance localMario;
     vec3 cameraPos;
     float cameraRot;
@@ -112,7 +113,8 @@ public:
     bool renderLocalMario = false;
     bool renderRemoteMario = false;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
-
+    std::counting_semaphore<1> isInSm64GameSema{ 1 };
+    bool isInSm64Game = false;
     bool isHost = false;
 
 };
