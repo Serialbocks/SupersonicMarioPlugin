@@ -11,6 +11,7 @@
 #include <string>
 #include <sstream>
 #include <thread>
+#include <semaphore>
 
 #pragma comment (lib, "ws2_32.lib")
 
@@ -54,6 +55,9 @@ namespace Networking
     std::error_code GetExternalIPAddress(const std::string& host, std::string* ipAddr, bool threaded = false);
 
     bool PingHost(const std::string& host, unsigned short port, HostStatus* result = nullptr, bool threaded = false);
+
+    void RegisterCallback(void (*clbk)(char* buf, int len));
+    void SendBytes(char* buf, int len);
 }
 
 // Singleton server used for communicating custom netcode without exploiting RL's in-game chat
@@ -69,6 +73,7 @@ public:
     void StartServer(int inPort);
     void StopServer();
     void RegisterMessageCallback(void (*clbk)(char* buf, int len));
+    void SendBytes(char* buf, int len);
 
 private:
     TcpServer();
@@ -78,6 +83,9 @@ public:
     int port = 7778;
     fd_set master;
     SOCKET stopServerSocket = INVALID_SOCKET;
+    std::counting_semaphore<1> masterSetSema{ 1 };
+    SOCKET serverExitSocket;
+    SOCKET listening;
 
 public:
     TcpServer(TcpServer const&) = delete;
@@ -97,6 +105,7 @@ public:
     void DisconnectFromServer();
     void RegisterMessageCallback(void (*clbk)(char* buf, int len));
     void (*msgReceivedClbk)(char* buf, int len) = nullptr;
+    void SendBytes(char* buf, int len);
 
 private:
     TcpClient();

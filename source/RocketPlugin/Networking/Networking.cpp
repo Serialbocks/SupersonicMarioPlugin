@@ -460,3 +460,19 @@ bool Networking::PingHost(const std::string& host, unsigned short port, HostStat
 
     return true;
 }
+
+// Registers a callback for when generic data is received from a client or the server
+// On a TCP connection. This is used for SM64 Netcode.
+void Networking::RegisterCallback(void (*clbk)(char* buf, int len))
+{
+    TcpClient::getInstance().RegisterMessageCallback(clbk);
+    TcpServer::getInstance().RegisterMessageCallback(clbk);
+}
+
+// Send generic data to players in custom lan match.
+// Used for SM64 Netcode.
+void Networking::SendBytes(char* buf, int len)
+{
+    TcpClient::getInstance().SendBytes(buf, len);
+    TcpServer::getInstance().SendBytes(buf, len);
+}

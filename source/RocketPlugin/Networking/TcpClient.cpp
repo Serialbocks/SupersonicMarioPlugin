@@ -111,3 +111,12 @@ void TcpClient::RegisterMessageCallback(void (*clbk)(char* buf, int len))
 {
 	msgReceivedClbk = clbk;
 }
+
+void TcpClient::SendBytes(char* buf, int len)
+{
+	if (sock == INVALID_SOCKET)
+	{
+		return;
+	}
+	send(sock, buf, len, 0);
+}

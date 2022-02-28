@@ -49,8 +49,8 @@ void serverThread()
 	}
 
 	// Create listening socket
-	SOCKET listening = socket(AF_INET, SOCK_STREAM, 0);
-	if (listening == INVALID_SOCKET)
+	instance->listening = socket(AF_INET, SOCK_STREAM, 0);
+	if (instance->listening == INVALID_SOCKET)
 	{
 		BM_LOG("Can't create a socket!");
 		WSACleanup();
@@ -62,7 +62,7 @@ void serverThread()
 	hint.sin_port = htons(instance->port);
 	hint.sin_addr.S_un.S_addr = INADDR_ANY;
 
-	int bindResult = bind(listening, (sockaddr*)&hint, sizeof(hint));
+	int bindResult = bind(instance->listening, (sockaddr*)&hint, sizeof(hint));
 	if(bindResult == SOCKET_ERROR)
 	{
 		std::stringstream errStrStream;
@@ -71,7 +71,7 @@ void serverThread()
 	}
 
 	// Tell winsock the socket is for listening
-	int listenResult = listen(listening, SOMAXCONN);
+	int listenResult = listen(instance->listening, SOMAXCONN);
 
 	if (listenResult != 0)
 	{
@@ -80,9 +80,10 @@ void serverThread()
 		BM_LOG(errStrStream.str());
 	}
 
+	instance->masterSetSema.acquire();
 	FD_ZERO(&instance->master);
-
-	FD_SET(listening, &instance->master);
+	FD_SET(instance->listening, &instance->master);
+	instance->masterSetSema.release();
 
 	// Create a socket used solely to notify we should close the server
 	sockaddr_in closeHint;
@@ -103,8 +104,8 @@ void serverThread()
 	}
 
 	// Accept the exit socket
-	SOCKET serverExitSocket = accept(listening, nullptr, nullptr);
-	if (serverExitSocket == INVALID_SOCKET || instance->stopServerSocket == INVALID_SOCKET)
+	instance->serverExitSocket = accept(instance->listening, nullptr, nullptr);
+	if (instance->serverExitSocket == INVALID_SOCKET || instance->stopServerSocket == INVALID_SOCKET)
 	{
 		std::stringstream errStrStream;
 		errStrStream << "Can't accept close sock to server. Error#" << WSAGetLastError();
@@ -114,7 +115,9 @@ void serverThread()
 		WSACleanup();
 		return;
 	}
-	FD_SET(serverExitSocket, &instance->master);
+	instance->masterSetSema.acquire();
+	FD_SET(instance->serverExitSocket, &instance->master);
+	instance->masterSetSema.release();
 
 	BM_LOG("Server started and listening");
 
@@ -133,10 +136,10 @@ void serverThread()
 		for (int i = 0; i < socketCount; i++)
 		{
 			SOCKET sock = setCopy.fd_array[i];
-			if (sock == listening)
+			if (sock == instance->listening)
 			{
 				// Accept a new connection
-				SOCKET client = accept(listening, nullptr, nullptr);
+				SOCKET client = accept(instance->listening, nullptr, nullptr);
 
 				if (client == INVALID_SOCKET)
 				{
@@ -145,9 +148,11 @@ void serverThread()
 				}
 
 				// Add new connection to list of connected clients
+				instance->masterSetSema.acquire();
 				FD_SET(client, &instance->master);
+				instance->masterSetSema.release();
 			}
-			else if (sock == serverExitSocket)
+			else if (sock == instance->serverExitSocket)
 			{
 				instance->stopServerSocket = INVALID_SOCKET;
 				break;
@@ -162,15 +167,17 @@ void serverThread()
 				{
 					// Drop the client
 					closesocket(sock);
+					instance->masterSetSema.acquire();
 					FD_CLR(sock, &instance->master);
+					instance->masterSetSema.release();
 				}
-				else if(bytesIn > 1) // We use the first byte as message type
+				else
 				{
 					// Send message to other clients, and definitely NOT the listening socket
 					for (int k = 0; k < instance->master.fd_count; k++)
 					{
 						SOCKET outSock = instance->master.fd_array[k];
-						if (outSock != listening && outSock != sock)
+						if (outSock != instance->listening && outSock != sock && outSock != instance->serverExitSocket)
 						{
 							send(outSock, buf, bytesIn, 0);
 						}
@@ -190,7 +197,7 @@ void serverThread()
 	}
 
 	// Close all open sockets
-	closesocket(listening);
+	closesocket(instance->listening);
 	instance->stopServerSocket = INVALID_SOCKET;
 
 	// Cleanup winsock
@@ -226,4 +233,24 @@ void TcpServer::StopServer()
 void TcpServer::RegisterMessageCallback(void (*clbk)(char* buf, int len))
 {
 	msgReceivedClbk = clbk;
+}
+
+void TcpServer::SendBytes(char* buf, int len)
+{
+	if (stopServerSocket == INVALID_SOCKET)
+	{
+		return;
+	}
+	masterSetSema.acquire();
+	fd_set setCopy = master;
+	masterSetSema.release();
+
+	for (int k = 0; k < instance->master.fd_count; k++)
+	{
+		SOCKET outSock = instance->master.fd_array[k];
+		if (outSock != listening && outSock != serverExitSocket)
+		{
+			send(outSock, buf, len, 0);
+		}
+	}
 }
