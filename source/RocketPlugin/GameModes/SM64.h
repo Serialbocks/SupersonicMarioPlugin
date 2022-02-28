@@ -7,6 +7,7 @@
 #include <fstream>
 #include <semaphore>
 #include <iostream>
+#include <sstream>
 #include <tchar.h>
 #include <shlwapi.h>
 #include <stdlib.h>
@@ -22,8 +23,8 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_additions.h"
 #include "GameModes/RocketGameMode.h"
-#include "../../External/NetcodeManager/NetcodeManager.h"
 #include "../../External/BakkesModSDK/include/bakkesmod/wrappers/PluginManagerWrapper.h"
+#include "Networking/Networking.h"
 
 extern "C" {
     #include "libsm64.h"
@@ -31,6 +32,7 @@ extern "C" {
 
 #include "../Graphics/level.h"
 
+#define SM64_NETCODE_BUF_LEN 1024
 
 class SM64MarioInstance
 {
@@ -82,7 +84,6 @@ public:
     std::shared_ptr<GameWrapper> gameWrapper;
     Vector cameraLoc = Vector(0, 0, 0);
     ControllerInput playerInputs;
-    std::shared_ptr<NetcodeManager> Netcode;
     gainput::InputManager InputManager;
     gainput::InputMap* InputMap = nullptr;
     bool inputManagerInitialized = false;
@@ -92,11 +93,12 @@ public:
     bool loadMeshesThreadFinished = false;
     Utils utils;
     Rotator carRotation;
+    char netcodeOutBuf[SM64_NETCODE_BUF_LEN];
 
 private:
     /* SM64 Members */
     uint8_t* texture;
-    std::map<std::string, SM64MarioInstance*> remoteMarios;
+    std::map<int, SM64MarioInstance*> remoteMarios;
     SM64MarioInstance localMario;
     vec3 cameraPos;
     float cameraRot;

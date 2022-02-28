@@ -16,6 +16,8 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
 	SM64* instance);
 
+void MessageReceived(char* buf, int len);
+
 enum Button
 {
 	ButtonA,
@@ -64,8 +66,6 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	using namespace std::placeholders;
 	gameWrapper = gw;
 	cvarManager = cm;
-	//Netcode = std::make_shared<NetcodeManager>(cvarManager, gameWrapper, exports,
-	//	std::bind(&SM64::OnMessageReceived, this, _1, _2));
 
 	// Init button mappings
 	gainput::DeviceId mouseId = InputManager.CreateDevice<gainput::InputDeviceMouse>();
@@ -94,6 +94,9 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	gameWrapper->HookEvent("Function TAGame.Replay_TA.StartPlaybackAtTimeSeconds", bind(&SM64::StopRenderMario, this, _1));
 	gameWrapper->HookEvent("Function TAGame.GameEvent_Soccer_TA.ReplayPlayback.BeginState", bind(&SM64::StopRenderMario, this, _1));
 	gameWrapper->HookEvent("Function TAGame.GameEvent_TA.OnCarSpawned", bind(&SM64::OnCarSpawned, this, _1));
+
+	// Register callback to receiving TCP data from server/clients
+	Networking::RegisterCallback(MessageReceived);
 
 	// Hook into the main window's GetMessage function to process input messages through ginput
 	if (g_hhkCallMsgProc == NULL)
@@ -155,6 +158,13 @@ void SM64::OnCarSpawned(std::string eventName)
 
 }
 
+void MessageReceived(char* buf, int len)
+{
+	std::stringstream logMsg;
+	logMsg << "Received " << len << " bytes";
+	BM_LOG(logMsg.str());
+}
+
 void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
 {
 	if (sender.IsNull() || sender.IsLocalPlayerPRI())
@@ -162,18 +172,18 @@ void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
 		return;
 	}
 
-	auto playerName = sender.GetPlayerName().ToString();
-	auto marioIterator = remoteMarios.find(playerName);
+	auto playerId = sender.GetPlayerID();
+	auto marioIterator = remoteMarios.find(playerId);
 	SM64MarioInstance* marioInstance = nullptr;
-	if (remoteMarios.count(playerName) == 0)
+	if (remoteMarios.count(playerId) == 0)
 	{
 		// Initialize mario for this player
 		marioInstance = new SM64MarioInstance();
-		remoteMarios[playerName] = marioInstance;
+		remoteMarios[playerId] = marioInstance;
 	}
 	else
 	{
-		marioInstance = remoteMarios[playerName];
+		marioInstance = remoteMarios[playerId];
 	}
 
 	if (marioInstance == nullptr) return;
@@ -340,9 +350,7 @@ void SM64::onVehicleTick(CarWrapper car, void* params)
 	if (player.IsNull()) return;
 	auto isLocalPlayer = player.IsLocalPlayerPRI();
 
-	auto playerNamePtr = player.GetPlayerName();
-	if (playerNamePtr.IsNull()) return;
-	auto playerName = playerNamePtr.ToString();
+	auto playerId = player.GetPlayerID();
 
 	if (isHost)
 	{
@@ -351,9 +359,9 @@ void SM64::onVehicleTick(CarWrapper car, void* params)
 		{
 			marioInstance = &localMario;
 		}
-		else if (remoteMarios.count(playerName) > 0)
+		else if (remoteMarios.count(playerId) > 0)
 		{
-			marioInstance = remoteMarios[playerName];
+			marioInstance = remoteMarios[playerId];
 		}
 
 		if (marioInstance == nullptr) return;
@@ -475,6 +483,11 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
 		netPosition.X / 100.0f, netPosition.Y / 100.0f, netPosition.Z / 100.0f);
 
+	int playerId = car.GetPRI().GetPlayerID();
+	ZeroMemory(self->netcodeOutBuf, SM64_NETCODE_BUF_LEN);
+	memcpy(self->netcodeOutBuf, &playerId, sizeof(playerId));
+	memcpy(self->netcodeOutBuf + sizeof(playerId), &marioInstance->marioBodyState, sizeof(marioInstance->marioBodyState));
+	Networking::SendBytes(self->netcodeOutBuf, sizeof(playerId) + sizeof(marioInstance->marioBodyState));
 	//if (marioInstance->marioGeometry.numTrianglesUsed > 0)
 	//{
 	//	unsigned char* bodyStateBytes = (unsigned char*)&marioInstance->marioBodyState;
@@ -556,13 +569,13 @@ void SM64::OnRender(CanvasWrapper canvas)
 	if (server.IsNull()) return;
 
 	auto localCar = gameWrapper->GetLocalCar();
-	std::string localPlayerName = "";
+	int localPlayerId = -1;
 	if (!localCar.IsNull())
 	{
 		auto localPlayer = localCar.GetPRI();
 		if (!localPlayer.IsNull())
 		{
-			localPlayerName = localPlayer.GetPlayerName().ToString();
+			localPlayerId = localPlayer.GetPlayerID();
 		}
 	}
 
@@ -570,14 +583,12 @@ void SM64::OnRender(CanvasWrapper canvas)
 	{
 		auto player = car.GetPRI();
 		if (player.IsNull()) continue;
-		auto playerNamePtr = player.GetPlayerName();
-		if (playerNamePtr.IsNull()) continue;
-		auto playerName = playerNamePtr.ToString();
+		auto playerId = player.GetPlayerID();
 
 		SM64MarioInstance* marioInstance = nullptr;
 
 		bool isLocalPlayer = false;
-		if (playerName == localPlayerName)
+		if (playerId == localPlayerId)
 		{
 			// This is the local player - use that mario
 			marioInstance = &localMario;
@@ -586,9 +597,9 @@ void SM64::OnRender(CanvasWrapper canvas)
 		else
 		{
 			// Not the local player. See if we have this player already
-			if (remoteMarios.count(playerName) > 0)
+			if (remoteMarios.count(playerId) > 0)
 			{
-				marioInstance = remoteMarios[playerName];
+				marioInstance = remoteMarios[playerId];
 			}
 			else
 			{
