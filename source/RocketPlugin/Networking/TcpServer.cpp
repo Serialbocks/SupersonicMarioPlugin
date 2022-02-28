@@ -194,7 +194,7 @@ void serverThread()
 					// Handle the message ourselves too if a callback is set
 					if (instance != nullptr && instance->msgReceivedClbk != nullptr)
 					{
-						instance->msgReceivedClbk(buf + sizeof(int), bytesIn);
+						instance->msgReceivedClbk(buf + sizeof(int), bytesIn, playerId);
 					}
 
 
@@ -242,7 +242,7 @@ void TcpServer::StopServer()
 	int sendResult = send(stopServerSocket, emptyStr.c_str(), 1, 0);
 }
 
-void TcpServer::RegisterMessageCallback(void (*clbk)(char* buf, int len))
+void TcpServer::RegisterMessageCallback(void (*clbk)(char* buf, int len, int playerId))
 {
 	msgReceivedClbk = clbk;
 }

@@ -65,13 +65,14 @@ void clientThread()
 	{
 		ZeroMemory(buf, TCP_BUF_SIZE);
 		int bytesReceived = recv(instance->sock, buf, TCP_BUF_SIZE, 0);
-		if (bytesReceived <= 0)
+		if (bytesReceived <= sizeof(int))
 		{
 			break;
 		}
+		int playerId = *((int*)buf);
 		if (instance != nullptr && instance->msgReceivedClbk != nullptr)
 		{
-			instance->msgReceivedClbk(buf, bytesReceived);
+			instance->msgReceivedClbk(buf + sizeof(int), bytesReceived - sizeof(int), playerId);
 		}
 	}
 
@@ -107,7 +108,7 @@ void TcpClient::DisconnectFromServer()
 	WSACleanup();
 }
 
-void TcpClient::RegisterMessageCallback(void (*clbk)(char* buf, int len))
+void TcpClient::RegisterMessageCallback(void (*clbk)(char* buf, int len, int playerId))
 {
 	msgReceivedClbk = clbk;
 }

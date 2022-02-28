@@ -16,7 +16,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
 	SM64* instance);
 
-void MessageReceived(char* buf, int len);
+void MessageReceived(char* buf, int len, int playerId);
 
 enum Button
 {
@@ -177,9 +177,9 @@ void SM64::OnCarSpawned(std::string eventName)
 
 }
 
-void MessageReceived(char* buf, int len)
+void MessageReceived(char* buf, int len, int playerId)
 {
-	auto targetLen = sizeof(int) + sizeof(struct SM64MarioBodyState);
+	auto targetLen = sizeof(struct SM64MarioBodyState);
 	uint8_t* targetData = (uint8_t*)buf;
 	if (len < targetLen)
 	{
@@ -189,9 +189,6 @@ void MessageReceived(char* buf, int len)
 	{
 		targetData = (uint8_t*)(buf + len - targetLen);
 	}
-
-	int playerId = (int)(*targetData);
-	struct SM64MarioBodyState* bodyStateData = (struct SM64MarioBodyState*)(targetData + sizeof(playerId));
 
 	SM64MarioInstance* marioInstance = nullptr;
 	self->remoteMariosSema.acquire();
@@ -210,7 +207,7 @@ void MessageReceived(char* buf, int len)
 	if (marioInstance == nullptr) return;
 
 	marioInstance->sema.acquire();
-	memcpy(&marioInstance->marioBodyState, targetData, len - sizeof(int));
+	memcpy(&marioInstance->marioBodyState, targetData, len);
 	marioInstance->sema.release();
 	self->isInSm64GameSema.acquire();
 	self->isInSm64Game = true;

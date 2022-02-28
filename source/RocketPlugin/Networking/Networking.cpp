@@ -463,7 +463,7 @@ bool Networking::PingHost(const std::string& host, unsigned short port, HostStat
 
 // Registers a callback for when generic data is received from a client or the server
 // On a TCP connection. This is used for SM64 Netcode.
-void Networking::RegisterCallback(void (*clbk)(char* buf, int len))
+void Networking::RegisterCallback(void (*clbk)(char* buf, int len, int playerId))
 {
     TcpClient::getInstance().RegisterMessageCallback(clbk);
     TcpServer::getInstance().RegisterMessageCallback(clbk);
