@@ -171,8 +171,8 @@ void MessageReceived(char* buf, int len)
 		targetData = (uint8_t*)(buf + len - targetLen);
 	}
 
-	int playerId = (int)(*targetData);
-	struct SM64MarioBodyState* bodyStateData = (struct SM64MarioBodyState*)(targetData + sizeof(int));
+	unsigned long long playerId = (unsigned long long)(*targetData);
+	struct SM64MarioBodyState* bodyStateData = (struct SM64MarioBodyState*)(targetData + sizeof(unsigned long long));
 
 	SM64MarioInstance* marioInstance = nullptr;
 	if (self->remoteMarios.count(playerId) == 0)
@@ -188,19 +188,12 @@ void MessageReceived(char* buf, int len)
 
 	if (marioInstance == nullptr) return;
 
-	if (marioInstance->mesh == nullptr)
+	if (!marioInstance->sema.try_acquire())
 	{
-		// Initialize the mesh
-		auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
-		memcpy(tmpTexture, self->texture, SM64_TEXTURE_SIZE);
-		marioInstance->mesh = self->renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
-			tmpTexture,
-			4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
-			SM64_TEXTURE_WIDTH,
-			SM64_TEXTURE_HEIGHT);
+		return;
 	}
-
 	memcpy(&marioInstance->marioBodyState, targetData, len - sizeof(int));
+	marioInstance->sema.release();
 }
 
 void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
@@ -503,6 +496,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - instance->cameraLoc.X;
 	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - instance->cameraLoc.Y;
 
+	marioInstance->sema.acquire();
 	sm64_mario_tick(marioInstance->marioId,
 		&marioInstance->marioInputs,
 		&marioInstance->marioState,
@@ -510,6 +504,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		&marioInstance->marioBodyState,
 		true,
 		true);
+	marioInstance->sema.release();
 
 	auto carVelocity = car.GetVelocity();
 	auto netVelocity = Vector(marioInstance->marioState.velX,// -carVelocity.X,
@@ -521,30 +516,15 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
 		netPosition.X / 100.0f, netPosition.Y / 100.0f, netPosition.Z / 100.0f);
 
-	int playerId = car.GetPRI().GetPlayerID();
+	unsigned long long playerId = car.GetPRI().GetUniqueIdWrapper().GetUID();
 	ZeroMemory(self->netcodeOutBuf, SM64_NETCODE_BUF_LEN);
 	memcpy(self->netcodeOutBuf, &playerId, sizeof(playerId));
-	memcpy(self->netcodeOutBuf + sizeof(int), &marioInstance->marioBodyState, sizeof(struct SM64MarioBodyState));
-	auto sizeSent = sizeof(int) + sizeof(struct SM64MarioBodyState);
+	marioInstance->sema.acquire();
+	memcpy(self->netcodeOutBuf + sizeof(unsigned long long), &marioInstance->marioBodyState, sizeof(struct SM64MarioBodyState));
+	marioInstance->sema.release();
+	auto sizeSent = sizeof(unsigned long long) + sizeof(struct SM64MarioBodyState);
 	Networking::SendBytes(self->netcodeOutBuf, sizeSent);
-	//if (marioInstance->marioGeometry.numTrianglesUsed > 0)
-	//{
-	//	unsigned char* bodyStateBytes = (unsigned char*)&marioInstance->marioBodyState;
-	//	unsigned char* marioStateBytes = (unsigned char*)&marioInstance->marioBodyState.marioState;
-	//	std::string bodyStateStr = "B";
-	//	bodyStateStr += instance->bytesToHex(bodyStateBytes, sizeof(struct SM64MarioBodyState) - sizeof(struct SM64MarioState));
-	//	std::string marioStateStr = "M";
-	//	marioStateStr += instance->bytesToHex(marioStateBytes, sizeof(struct SM64MarioState));
-	//
-	//	if (bodyStateStr.length() < 110)
-	//	{
-	//		instance->Netcode->SendNewMessage(bodyStateStr);
-	//	}
-	//	if (marioStateStr.length() < 110)
-	//	{
-	//		instance->Netcode->SendNewMessage(marioStateStr);
-	//	}
-	//}
+
 }
 
 void loadBallMesh()
@@ -581,7 +561,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 	}
 
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay();
-	if ((!renderLocalMario && !renderRemoteMario) || (!inGame && isActive))
+	if ((!inGame && isActive))
 	{
 		if(localMario.mesh != nullptr)
 			localMario.mesh->RenderUpdateVertices(0, nullptr);
@@ -608,13 +588,13 @@ void SM64::OnRender(CanvasWrapper canvas)
 	if (server.IsNull()) return;
 
 	auto localCar = gameWrapper->GetLocalCar();
-	int localPlayerId = -1;
+	unsigned long long localPlayerId = 0;
 	if (!localCar.IsNull())
 	{
 		auto localPlayer = localCar.GetPRI();
 		if (!localPlayer.IsNull())
 		{
-			localPlayerId = localPlayer.GetPlayerID();
+			localPlayerId = localPlayer.GetUniqueIdWrapper().GetUID();
 		}
 	}
 
@@ -622,7 +602,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 	{
 		auto player = car.GetPRI();
 		if (player.IsNull()) continue;
-		auto playerId = player.GetPlayerID();
+		auto playerId = player.GetUniqueIdWrapper().GetUID();
 
 		SM64MarioInstance* marioInstance = nullptr;
 
@@ -649,6 +629,19 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		if (marioInstance == nullptr) continue;
 
+		if (marioInstance->mesh == nullptr)
+		{
+			// Initialize the mesh
+			auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
+			memcpy(tmpTexture, self->texture, SM64_TEXTURE_SIZE);
+			marioInstance->mesh = self->renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
+				tmpTexture,
+				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
+				SM64_TEXTURE_WIDTH,
+				SM64_TEXTURE_HEIGHT);
+			continue;
+		}
+
 		if (marioInstance->marioId < 0 && !isLocalPlayer)
 		{
 			marioInstance->sema.acquire();
@@ -666,9 +659,9 @@ void SM64::OnRender(CanvasWrapper canvas)
 			marioInstance->marioId = sm64_mario_create(x, z, y);
 		}
 
-		marioInstance->sema.acquire();
 		if (!isLocalPlayer)
 		{
+			marioInstance->sema.acquire();
 			sm64_mario_tick(marioInstance->marioId,
 				&marioInstance->marioInputs,
 				&marioInstance->marioBodyState.marioState,
@@ -676,6 +669,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 				&marioInstance->marioBodyState,
 				false,
 				false);
+			marioInstance->sema.release();
 		}
 		else if(!isHost)
 		{
@@ -712,7 +706,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 		{
 
 		}
-		marioInstance->sema.release();
 	}
 
 	if (ballMesh != nullptr)
