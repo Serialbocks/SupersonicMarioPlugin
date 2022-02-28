@@ -27,6 +27,18 @@ void clientThread()
 		return;
 	}
 
+	// Create socket
+	instance->sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (instance->sock == INVALID_SOCKET)
+	{
+		std::stringstream errMsg;
+		errMsg << "Can't create socket, Err#" << WSAGetLastError();
+		BM_LOG(errMsg.str());
+		instance->sock = INVALID_SOCKET;
+		WSACleanup();
+		return;
+	}
+
 	// Fill in a hint structure
 	sockaddr_in hint;
 	hint.sin_family = AF_INET;
@@ -46,13 +58,14 @@ void clientThread()
 		return;
 	}
 
+	BM_LOG("Connected to server");
 	char buf[TCP_BUF_SIZE];
 
 	while (true)
 	{
 		ZeroMemory(buf, TCP_BUF_SIZE);
 		int bytesReceived = recv(instance->sock, buf, TCP_BUF_SIZE, 0);
-		if (bytesReceived == 0)
+		if (bytesReceived <= 0)
 		{
 			break;
 		}
@@ -65,6 +78,7 @@ void clientThread()
 	closesocket(instance->sock);
 	instance->sock = INVALID_SOCKET;
 	WSACleanup();
+	BM_LOG("Disconnected from server");
 }
 
 void TcpClient::ConnectToServer(std::string inIpAddress, int inPort)

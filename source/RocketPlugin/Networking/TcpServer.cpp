@@ -116,6 +116,8 @@ void serverThread()
 	}
 	FD_SET(serverExitSocket, &instance->master);
 
+	BM_LOG("Server started and listening");
+
 	// Main server loop
 	char buf[TCP_BUF_SIZE];
 	while (true)
@@ -193,6 +195,7 @@ void serverThread()
 
 	// Cleanup winsock
 	WSACleanup();
+	BM_LOG("Server stopped");
 }
 
 void TcpServer::StartServer(int inPort)
