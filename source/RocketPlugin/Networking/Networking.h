@@ -14,6 +14,7 @@
 
 #pragma comment (lib, "ws2_32.lib")
 
+#define TCP_BUF_SIZE 4096
 
 namespace Networking
 {
@@ -67,17 +68,45 @@ public:
 
     void StartServer(int inPort);
     void StopServer();
-    void RegisterMessageCallback(void (*clbk)(char* buf, int len, std::string playerName));
-    void (*msgReceivedClbk)(char* buf, int len, std::string playerName) = nullptr;
+    void RegisterMessageCallback(void (*clbk)(char* buf, int len));
+
 private:
     TcpServer();
 
 public:
-    std::map<SOCKET, std::string> playerSockMap;
+    void (*msgReceivedClbk)(char* buf, int len) = nullptr;
+    int port = 7778;
+    fd_set master;
+    SOCKET stopServerSocket = INVALID_SOCKET;
 
 public:
     TcpServer(TcpServer const&) = delete;
     void operator=(TcpServer const&) = delete;
+};
+
+class TcpClient
+{
+public:
+    static TcpClient& getInstance()
+    {
+        static TcpClient instance;
+        return instance;
+    }
+
+    void ConnectToServer(std::string inIpAddress, int inPort);
+    void DisconnectFromServer();
+    void RegisterMessageCallback(void (*clbk)(char* buf, int len));
+    void (*msgReceivedClbk)(char* buf, int len) = nullptr;
+
+private:
+    TcpClient();
+
+public:
+    TcpClient(TcpServer const&) = delete;
+    void operator=(TcpClient const&) = delete;
+    std::string serverIp = "127.0.0.1";
+    int serverPort = 7778;
+    SOCKET sock = INVALID_SOCKET;
 };
 
 // Predefine types without including them.

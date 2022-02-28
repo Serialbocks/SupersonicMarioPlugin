@@ -767,6 +767,7 @@ void RocketPlugin::JoinGame(const char* pswd)
         }
     }
 
+    TcpClient::getInstance().ConnectToServer(*joinIP, *sm64HostPort);
     gameWrapper->ExecuteUnrealCommand(fmt::format("start {:s}:{:d}/?Lan?Password={:s}", *joinIP, *joinPort, pswd));
 }
 
@@ -1150,6 +1151,7 @@ void RocketPlugin::registerHooks()
     HookEventWithCaller<PlayerControllerWrapper>("Function Engine.PlayerController.NotifyDisconnect",
         [this](const PlayerControllerWrapper& caller, void*, const std::string&) {
             TcpServer::getInstance().StopServer();
+            TcpClient::getInstance().DisconnectFromServer();
         });
 }
 
