@@ -15,7 +15,7 @@
 
 #pragma comment (lib, "ws2_32.lib")
 
-#define TCP_BUF_SIZE 4096
+#define TCP_BUF_SIZE 4080
 
 namespace Networking
 {

@@ -95,7 +95,7 @@ public:
     Rotator carRotation;
     char netcodeOutBuf[SM64_NETCODE_BUF_LEN];
 
-private:
+public:
     /* SM64 Members */
     uint8_t* texture;
     std::map<int, SM64MarioInstance*> remoteMarios;

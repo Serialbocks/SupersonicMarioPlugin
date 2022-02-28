@@ -160,9 +160,47 @@ void SM64::OnCarSpawned(std::string eventName)
 
 void MessageReceived(char* buf, int len)
 {
-	std::stringstream logMsg;
-	logMsg << "Received " << len << " bytes";
-	BM_LOG(logMsg.str());
+	auto targetLen = sizeof(int) + sizeof(struct SM64MarioBodyState);
+	uint8_t* targetData = (uint8_t*)buf;
+	if (len < targetLen)
+	{
+		return;
+	}
+	else if (len > targetLen)
+	{
+		targetData = (uint8_t*)(buf + len - targetLen);
+	}
+
+	int playerId = (int)(*targetData);
+	struct SM64MarioBodyState* bodyStateData = (struct SM64MarioBodyState*)(targetData + sizeof(int));
+
+	SM64MarioInstance* marioInstance = nullptr;
+	if (self->remoteMarios.count(playerId) == 0)
+	{
+		// Initialize mario for this player
+		marioInstance = new SM64MarioInstance();
+		self->remoteMarios[playerId] = marioInstance;
+	}
+	else
+	{
+		marioInstance = self->remoteMarios[playerId];
+	}
+
+	if (marioInstance == nullptr) return;
+
+	if (marioInstance->mesh == nullptr)
+	{
+		// Initialize the mesh
+		auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
+		memcpy(tmpTexture, self->texture, SM64_TEXTURE_SIZE);
+		marioInstance->mesh = self->renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
+			tmpTexture,
+			4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
+			SM64_TEXTURE_WIDTH,
+			SM64_TEXTURE_HEIGHT);
+	}
+
+	memcpy(&marioInstance->marioBodyState, targetData, len - sizeof(int));
 }
 
 void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
@@ -487,7 +525,8 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	ZeroMemory(self->netcodeOutBuf, SM64_NETCODE_BUF_LEN);
 	memcpy(self->netcodeOutBuf, &playerId, sizeof(playerId));
 	memcpy(self->netcodeOutBuf + sizeof(int), &marioInstance->marioBodyState, sizeof(struct SM64MarioBodyState));
-	Networking::SendBytes(self->netcodeOutBuf, sizeof(int) + sizeof(struct SM64MarioBodyState));
+	auto sizeSent = sizeof(int) + sizeof(struct SM64MarioBodyState);
+	Networking::SendBytes(self->netcodeOutBuf, sizeSent);
 	//if (marioInstance->marioGeometry.numTrianglesUsed > 0)
 	//{
 	//	unsigned char* bodyStateBytes = (unsigned char*)&marioInstance->marioBodyState;
