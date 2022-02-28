@@ -62,8 +62,6 @@ public:
     bool IsActive() override;
     void Activate(bool active) override;
     std::string GetGameModeName() override;
-    void StopRenderMario(std::string eventName);
-    void OnCarSpawned(std::string eventName);
 
     void InitSM64();
     void DestroySM64();

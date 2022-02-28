@@ -91,9 +91,6 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	InputMap->MapFloat(StickX, padId, gainput::PadButtonLeftStickX);
 	InputMap->MapFloat(StickY, padId, gainput::PadButtonLeftStickY);
 
-	gameWrapper->HookEvent("Function TAGame.Replay_TA.StartPlaybackAtTimeSeconds", bind(&SM64::StopRenderMario, this, _1));
-	gameWrapper->HookEvent("Function TAGame.GameEvent_Soccer_TA.ReplayPlayback.BeginState", bind(&SM64::StopRenderMario, this, _1));
-	gameWrapper->HookEvent("Function TAGame.GameEvent_TA.OnCarSpawned", bind(&SM64::OnCarSpawned, this, _1));
 	HookEventWithCaller<PlayerControllerWrapper>("Function Engine.PlayerController.NotifyDisconnect",
 		[this](const PlayerControllerWrapper& caller, void*, const std::string&) {
 			// Cleanup after a game session has been left
@@ -159,22 +156,6 @@ SM64::~SM64()
 	delete InputMap;
 	DestroySM64();
 	UnhookEvent("Function TAGame.Car_TA.SetVehicleInput");
-}
-
-void SM64::StopRenderMario(std::string eventName)
-{
-	if (localMario.marioId >= 0 && renderLocalMario)
-	{
-		sm64_mario_delete(localMario.marioId);
-		localMario.marioId = -1;
-	}
-	renderLocalMario = false;
-	renderRemoteMario = false;
-}
-
-void SM64::OnCarSpawned(std::string eventName)
-{
-
 }
 
 void MessageReceived(char* buf, int len, int playerId)
