@@ -335,6 +335,19 @@ void RocketPlugin::renderMultiplayerTabHost()
             }
         }
         else {
+            ImGui::TextUnformatted("SM64 Netcode Port:");
+            if (!Networking::IsValidPort(*sm64HostPort)) {
+                ImGui::BeginErrorBorder();
+                ImGui::InputScalar("##sm64_port_host", ImGuiDataType_U16, sm64HostPort.get());
+                ImGui::EndErrorBorder();
+                if (ImGui::IsItemHovered()) {
+                    ImGui::SetTooltip("Invalid port");
+                }
+            }
+            else {
+                ImGui::InputScalar("##sm64_port_host", ImGuiDataType_U16, sm64HostPort.get());
+            }
+
             if (ImGui::Button("Host")) {
                 Execute([this](GameWrapper*) {
                     HostGame();
@@ -851,6 +864,18 @@ void RocketPlugin::renderMultiplayerTabJoin()
             if (ImGui::InputScalar("##port_join", ImGuiDataType_U16, joinPort.get())) {
                 cvarManager->getCvar("mp_port").setValue(*joinPort);
             }
+        }
+        ImGui::TextUnformatted("SM64 Netcode Port:");
+        if (!Networking::IsValidPort(*sm64JoinPort)) {
+            ImGui::BeginErrorBorder();
+            ImGui::InputScalar("##sm64_port_join", ImGuiDataType_U16, sm64JoinPort.get());
+            ImGui::EndErrorBorder();
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("Invalid port");
+            }
+        }
+        else {
+            ImGui::InputScalar("##sm64_port_join", ImGuiDataType_U16, sm64JoinPort.get());
         }
         ImGui::TextUnformatted(" Password: (optional)");
         static char pswdBuf[64] = "";

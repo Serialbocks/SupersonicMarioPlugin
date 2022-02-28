@@ -64,8 +64,8 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	using namespace std::placeholders;
 	gameWrapper = gw;
 	cvarManager = cm;
-	Netcode = std::make_shared<NetcodeManager>(cvarManager, gameWrapper, exports,
-		std::bind(&SM64::OnMessageReceived, this, _1, _2));
+	//Netcode = std::make_shared<NetcodeManager>(cvarManager, gameWrapper, exports,
+	//	std::bind(&SM64::OnMessageReceived, this, _1, _2));
 
 	// Init button mappings
 	gainput::DeviceId mouseId = InputManager.CreateDevice<gainput::InputDeviceMouse>();
@@ -475,24 +475,24 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
 		netPosition.X / 100.0f, netPosition.Y / 100.0f, netPosition.Z / 100.0f);
 
-	if (marioInstance->marioGeometry.numTrianglesUsed > 0)
-	{
-		unsigned char* bodyStateBytes = (unsigned char*)&marioInstance->marioBodyState;
-		unsigned char* marioStateBytes = (unsigned char*)&marioInstance->marioBodyState.marioState;
-		std::string bodyStateStr = "B";
-		bodyStateStr += instance->bytesToHex(bodyStateBytes, sizeof(struct SM64MarioBodyState) - sizeof(struct SM64MarioState));
-		std::string marioStateStr = "M";
-		marioStateStr += instance->bytesToHex(marioStateBytes, sizeof(struct SM64MarioState));
-
-		if (bodyStateStr.length() < 110)
-		{
-			instance->Netcode->SendNewMessage(bodyStateStr);
-		}
-		if (marioStateStr.length() < 110)
-		{
-			instance->Netcode->SendNewMessage(marioStateStr);
-		}
-	}
+	//if (marioInstance->marioGeometry.numTrianglesUsed > 0)
+	//{
+	//	unsigned char* bodyStateBytes = (unsigned char*)&marioInstance->marioBodyState;
+	//	unsigned char* marioStateBytes = (unsigned char*)&marioInstance->marioBodyState.marioState;
+	//	std::string bodyStateStr = "B";
+	//	bodyStateStr += instance->bytesToHex(bodyStateBytes, sizeof(struct SM64MarioBodyState) - sizeof(struct SM64MarioState));
+	//	std::string marioStateStr = "M";
+	//	marioStateStr += instance->bytesToHex(marioStateBytes, sizeof(struct SM64MarioState));
+	//
+	//	if (bodyStateStr.length() < 110)
+	//	{
+	//		instance->Netcode->SendNewMessage(bodyStateStr);
+	//	}
+	//	if (marioStateStr.length() < 110)
+	//	{
+	//		instance->Netcode->SendNewMessage(marioStateStr);
+	//	}
+	//}
 }
 
 void loadBallMesh()

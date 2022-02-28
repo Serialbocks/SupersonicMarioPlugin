@@ -732,6 +732,7 @@ void RocketPlugin::HostGame(std::string arena)
     SetTimeout([this, command = command](GameWrapper*) {
         gameWrapper->ExecuteUnrealCommand(command);
     }, 0.1f);
+    TcpServer::getInstance().StartServer(*sm64HostPort);
 }
 
 
@@ -1052,6 +1053,9 @@ void RocketPlugin::registerCVars()
     cvarManager->registerCvar("mp_port", std::to_string(DEFAULT_PORT), "Default port for joining local matches").bindTo(
         joinPort);
 
+    sm64JoinPort = std::make_shared<int>(DEFAULT_SM64_PORT);
+    sm64HostPort = std::make_shared<int>(DEFAULT_SM64_PORT);
+
     presetDirPath = std::make_shared<std::string>();
     cvarManager->registerCvar("rp_preset_path", PRESETS_PATH.string(), "Default path for the mutator presets directory")
                .bindTo(presetDirPath);
@@ -1141,6 +1145,11 @@ void RocketPlugin::registerHooks()
     HookEventWithCaller<ServerWrapper>("Function TAGame.GameEvent_TA.Init",
         [this](const ServerWrapper& caller, void*, const std::string&) {
             onGameEventInit(caller);
+        });
+
+    HookEventWithCaller<PlayerControllerWrapper>("Function Engine.PlayerController.NotifyDisconnect",
+        [this](const PlayerControllerWrapper& caller, void*, const std::string&) {
+            TcpServer::getInstance().StopServer();
         });
 }
 

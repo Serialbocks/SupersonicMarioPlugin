@@ -257,6 +257,8 @@
     <ClCompile Include="Graphics\Lighting.cpp" />
     <ClCompile Include="Modules\MarioAudio.cpp" />
     <ClCompile Include="Modules\Utils.cpp" />
+    <ClCompile Include="Networking\TcpClient.cpp" />
+    <ClCompile Include="Networking\TcpServer.cpp" />
     <ClCompile Include="RPConfig.cpp" />
     <ClCompile Include="GameModes\BoostShare.cpp" />
     <ClCompile Include="GameModes\RumbleItems\RumbleItems.cpp" />

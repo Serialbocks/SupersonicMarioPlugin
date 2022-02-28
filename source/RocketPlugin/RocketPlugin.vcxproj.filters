@@ -470,6 +470,12 @@
     <ClCompile Include="..\External\soloud\src\backend\winmm\soloud_winmm.cpp">
       <Filter>External\soloud</Filter>
     </ClCompile>
+    <ClCompile Include="Networking\TcpClient.cpp">
+      <Filter>Networking</Filter>
+    </ClCompile>
+    <ClCompile Include="Networking\TcpServer.cpp">
+      <Filter>Networking</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="RLConstants.inc">

@@ -6,6 +6,15 @@
     cls& operator=(cls&&) = delete
 
 
+#include <iostream>
+#include <WS2tcpip.h>
+#include <string>
+#include <sstream>
+#include <thread>
+
+#pragma comment (lib, "ws2_32.lib")
+
+
 namespace Networking
 {
     enum class DestAddrType
@@ -46,6 +55,30 @@ namespace Networking
     bool PingHost(const std::string& host, unsigned short port, HostStatus* result = nullptr, bool threaded = false);
 }
 
+// Singleton server used for communicating custom netcode without exploiting RL's in-game chat
+class TcpServer
+{
+public:
+    static TcpServer& getInstance()
+    {
+        static TcpServer instance;
+        return instance;
+    }
+
+    void StartServer(int inPort);
+    void StopServer();
+    void RegisterMessageCallback(void (*clbk)(char* buf, int len, std::string playerName));
+    void (*msgReceivedClbk)(char* buf, int len, std::string playerName) = nullptr;
+private:
+    TcpServer();
+
+public:
+    std::map<SOCKET, std::string> playerSockMap;
+
+public:
+    TcpServer(TcpServer const&) = delete;
+    void operator=(TcpServer const&) = delete;
+};
 
 // Predefine types without including them.
 struct IUPnPService;

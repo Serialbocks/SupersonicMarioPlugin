@@ -18,6 +18,7 @@ constexpr const char* NAT_PUNCH_ADDR = "3.3.3.3";
 constexpr const char* DEFAULT_GUI_KEYBIND = "Home";
 constexpr const char* DEFAULT_CONSTANTS_CONFIG_URL = "https://stanbroek.github.io/RocketPlugin-config/";
 constexpr unsigned short DEFAULT_PORT = 7777;
+constexpr unsigned short DEFAULT_SM64_PORT = 7778;
 
 extern std::filesystem::path BakkesModConfigFolder;
 extern std::filesystem::path RocketPluginDataFolder;
@@ -256,6 +257,8 @@ private:
     int joiningPartyPort = DEFAULT_PORT;
     std::shared_ptr<std::string> joinIP;
     std::shared_ptr<int> joinPort;
+    std::shared_ptr<int> sm64HostPort;
+    std::shared_ptr<int> sm64JoinPort;
     bool joinCustomMap = false;
     bool refreshJoinableMaps = true;
     // joinableMaps key.
