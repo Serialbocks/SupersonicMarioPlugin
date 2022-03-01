@@ -148,12 +148,22 @@ void SM64::OnGameLeft()
 	isInSm64GameSema.release();
 	if (localMario.mesh != nullptr)
 		localMario.mesh->RenderUpdateVertices(0, nullptr);
+	if (localMario.marioId >= 0)
+	{
+		sm64_mario_delete(localMario.marioId);
+		localMario.marioId = -2;
+	}
 	for (const auto& remoteMario : remoteMarios)
 	{
 		SM64MarioInstance* marioInstance = remoteMario.second;
 		if (marioInstance->mesh != nullptr)
 		{
 			marioInstance->mesh->RenderUpdateVertices(0, nullptr);
+		}
+		if (marioInstance->marioId >= 0)
+		{
+			sm64_mario_delete(marioInstance->marioId);
+			marioInstance->marioId = -2;
 		}
 	}
 	remoteMarios.clear();
