@@ -194,6 +194,17 @@ void MessageReceived(char* buf, int len, int playerId)
 	{
 		marioInstance = self->remoteMarios[playerId];
 	}
+	if (marioInstance->mesh == nullptr)
+	{
+		// Initialize the mesh
+		auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
+		memcpy(tmpTexture, self->texture, SM64_TEXTURE_SIZE);
+		marioInstance->mesh = self->renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
+			tmpTexture,
+			4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
+			SM64_TEXTURE_WIDTH,
+			SM64_TEXTURE_HEIGHT);
+	}
 	self->remoteMariosSema.release();
 
 	if (marioInstance == nullptr) return;
@@ -671,14 +682,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 	{
 		if (marioInstance->mesh == nullptr)
 		{
-			// Initialize the mesh
-			auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
-			memcpy(tmpTexture, self->texture, SM64_TEXTURE_SIZE);
-			marioInstance->mesh = self->renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
-				tmpTexture,
-				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
-				SM64_TEXTURE_WIDTH,
-				SM64_TEXTURE_HEIGHT);
 			continue;
 		}
 
