@@ -199,7 +199,7 @@ void MessageReceived(char* buf, int len, int playerId)
 	if (marioInstance == nullptr) return;
 
 	marioInstance->sema.acquire();
-	memcpy(&marioInstance->marioBodyState, targetData, len);
+	memcpy(&marioInstance->marioBodyState, targetData, targetLen);
 	marioInstance->sema.release();
 	self->isInSm64GameSema.acquire();
 	self->isInSm64Game = true;
@@ -603,7 +603,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		meshesInitialized = true;
 	}
 
-	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay();
+	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame();
 	isInSm64GameSema.acquire();
 	bool inSm64Game = isInSm64Game;
 	isInSm64GameSema.release();
