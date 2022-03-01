@@ -29,7 +29,7 @@ void serverThread()
 	}
 
 	// Create listening socket
-	instance->listening = socket(AF_INET, SOCK_STREAM, 0);
+	instance->listening = socket(AF_INET, SOCK_DGRAM, 0);
 	if (instance->listening == INVALID_SOCKET)
 	{
 		BM_LOG("Can't create a socket!");

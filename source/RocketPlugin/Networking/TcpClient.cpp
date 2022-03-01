@@ -28,7 +28,7 @@ void clientThread()
 	}
 
 	// Create socket
-	instance->sock = socket(AF_INET, SOCK_STREAM, 0);
+	instance->sock = socket(AF_INET, SOCK_DGRAM, 0);
 	if (instance->sock == INVALID_SOCKET)
 	{
 		std::stringstream errMsg;
