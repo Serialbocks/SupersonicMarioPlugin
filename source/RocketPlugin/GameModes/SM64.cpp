@@ -412,12 +412,15 @@ void SM64::onVehicleTick(CarWrapper car, void* params)
 		{
 			marioInstance = &localMario;
 		}
-		remoteMariosSema.acquire();
-		if (remoteMarios.count(playerId) > 0)
+		else
 		{
-			marioInstance = remoteMarios[playerId];
+			remoteMariosSema.acquire();
+			if (remoteMarios.count(playerId) > 0)
+			{
+				marioInstance = remoteMarios[playerId];
+			}
+			remoteMariosSema.release();
 		}
-		remoteMariosSema.release();
 
 		if (marioInstance == nullptr) return;
 
@@ -642,11 +645,16 @@ void SM64::OnRender(CanvasWrapper canvas)
 	}
 
 	// Render local mario
+	static volatile int carPlayerId = -1;
+	static volatile unsigned long long carUniqueId = 0;
 	for (CarWrapper car : server.GetCars())
 	{
 		auto player = car.GetPRI();
 		if (player.IsNull()) continue;
 		auto playerName = player.GetPlayerName().ToString();
+
+		carPlayerId = player.GetPlayerID();
+		carUniqueId = player.GetUniqueIdWrapper().GetUID();
 
 		if (playerName != localPlayerName)
 		{
