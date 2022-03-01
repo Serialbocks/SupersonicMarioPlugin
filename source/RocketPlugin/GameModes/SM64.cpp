@@ -543,7 +543,9 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
 		netPosition.X / 100.0f, netPosition.Y / 100.0f, netPosition.Z / 100.0f);
 
-	memcpy(self->netcodeOutBuf, &marioInstance->marioBodyState, sizeof(struct SM64MarioBodyState));
+	int playerId = car.GetPRI().GetPlayerID();
+	memcpy(self->netcodeOutBuf, &playerId, sizeof(int));
+	memcpy(self->netcodeOutBuf + sizeof(int), &marioInstance->marioBodyState, sizeof(struct SM64MarioBodyState));
 	Networking::SendBytes(self->netcodeOutBuf, sizeof(struct SM64MarioBodyState));
 	marioInstance->sema.release();
 }

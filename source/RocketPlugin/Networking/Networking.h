@@ -72,14 +72,14 @@ public:
 
     void StartServer(int inPort);
     void StopServer();
-    void RegisterMessageCallback(void (*clbk)(char* buf, int len, int playerId));
+    void RegisterMessageCallback(void (*clbk)(char* buf, int len));
     void SendBytes(char* buf, int len);
 
 private:
     TcpServer();
 
 public:
-    void (*msgReceivedClbk)(char* buf, int len, int playerId) = nullptr;
+    void (*msgReceivedClbk)(char* buf, int len) = nullptr;
     int port = 7778;
     fd_set master;
     SOCKET stopServerSocket = INVALID_SOCKET;
@@ -105,8 +105,8 @@ public:
 
     void ConnectToServer(std::string inIpAddress, int inPort);
     void DisconnectFromServer();
-    void RegisterMessageCallback(void (*clbk)(char* buf, int len, int playerId));
-    void (*msgReceivedClbk)(char* buf, int len, int playerId) = nullptr;
+    void RegisterMessageCallback(void (*clbk)(char* buf, int len));
+    void (*msgReceivedClbk)(char* buf, int len) = nullptr;
     void SendBytes(char* buf, int len);
 
 private:

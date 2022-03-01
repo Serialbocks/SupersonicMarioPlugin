@@ -72,10 +72,9 @@ void clientThread()
 		{
 			break;
 		}
-		int playerId = *((int*)buf);
 		if (instance != nullptr && instance->msgReceivedClbk != nullptr)
 		{
-			instance->msgReceivedClbk(buf + sizeof(int), bytesReceived - sizeof(int), playerId);
+			instance->msgReceivedClbk(buf, bytesReceived);
 		}
 	}
 
@@ -111,7 +110,7 @@ void TcpClient::DisconnectFromServer()
 	WSACleanup();
 }
 
-void TcpClient::RegisterMessageCallback(void (*clbk)(char* buf, int len, int playerId))
+void TcpClient::RegisterMessageCallback(void (*clbk)(char* buf, int len))
 {
 	msgReceivedClbk = clbk;
 }

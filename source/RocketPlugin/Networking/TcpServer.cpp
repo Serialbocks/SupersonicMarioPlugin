@@ -1,8 +1,5 @@
 #include "Networking.h"
 
-#define MSG_TYPE_ID 0x01
-#define MSG_TYPE_DATA 0x02
-
 TcpServer* instance = nullptr;
 
 TcpServer::TcpServer()
@@ -144,7 +141,7 @@ void serverThread()
 				ZeroMemory(buf, TCP_BUF_SIZE);
 
 				// Receive message
-				int bytesIn = recv(sock, buf + sizeof(int), TCP_BUF_SIZE - sizeof(int), 0);
+				int bytesIn = recv(sock, buf, TCP_BUF_SIZE, 0);
 				if (bytesIn <= 0)
 				{
 					// Drop the client
@@ -155,28 +152,20 @@ void serverThread()
 				}
 				else
 				{
-					if (instance->playerIdMap.count(sock) == 0)
-					{
-						instance->playerIdMap[sock] = instance->nextPlayerId++;
-					}
-					int playerId = instance->playerIdMap[sock];
-
-					*((int*)buf) = playerId;
-					
 					// Send message to other clients, and definitely NOT the listening socket
 					for (int k = 0; k < instance->master.fd_count; k++)
 					{
 						SOCKET outSock = instance->master.fd_array[k];
 						if (outSock != instance->listening && outSock != sock && outSock != instance->serverExitSocket)
 						{
-							send(outSock, buf + sizeof(int), bytesIn, 0);
+							send(outSock, buf, bytesIn, 0);
 						}
 					}
 
 					// Handle the message ourselves too if a callback is set
 					if (instance != nullptr && instance->msgReceivedClbk != nullptr)
 					{
-						instance->msgReceivedClbk(buf + sizeof(int), bytesIn, playerId);
+						instance->msgReceivedClbk(buf, bytesIn);
 					}
 
 
@@ -224,7 +213,7 @@ void TcpServer::StopServer()
 	int sendResult = send(stopServerSocket, emptyStr.c_str(), 1, 0);
 }
 
-void TcpServer::RegisterMessageCallback(void (*clbk)(char* buf, int len, int playerId))
+void TcpServer::RegisterMessageCallback(void (*clbk)(char* buf, int len))
 {
 	msgReceivedClbk = clbk;
 }
