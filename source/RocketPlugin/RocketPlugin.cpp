@@ -22,7 +22,6 @@
 #include "GameModes/SM64.h"
 
 
-
 BAKKESMOD_PLUGIN(RocketPlugin, "Rocket Plugin", PLUGIN_VERSION, PLUGINTYPE_ALL)
 
 std::filesystem::path BakkesModConfigFolder;
@@ -35,6 +34,7 @@ std::thread::id RenderThreadId;
 
 std::shared_ptr<int> LogLevel;
 std::shared_ptr<CVarManagerWrapperDebug> GlobalCVarManager;
+std::shared_ptr<SM64> sm64 = nullptr;
 
 
 /*
@@ -1032,7 +1032,8 @@ void RocketPlugin::OnLoad()
     customGameModes.push_back(std::make_shared<BoostMod>());
     customGameModes.push_back(std::make_shared<BoostShare>());
     customGameModes.push_back(std::make_shared<SacredGround>());
-    customGameModes.push_back(std::make_shared<SM64>(gameWrapper, cvarManager, exports));
+    sm64 = std::make_shared<SM64>(gameWrapper, cvarManager, exports);
+    customGameModes.push_back(sm64);
 }
 
 
@@ -1152,6 +1153,7 @@ void RocketPlugin::registerHooks()
         [this](const PlayerControllerWrapper& caller, void*, const std::string&) {
             TcpServer::getInstance().StopServer();
             TcpClient::getInstance().DisconnectFromServer();
+            sm64.get()->OnGameLeft();
         });
 }
 

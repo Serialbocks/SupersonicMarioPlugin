@@ -68,6 +68,8 @@ public:
     void OnMessageReceived(const std::string& message, PriWrapper sender);
     void OnRender(CanvasWrapper canvas);
 
+    void OnGameLeft();
+
     std::string bytesToHex(unsigned char* data, unsigned int len);
 
 private:

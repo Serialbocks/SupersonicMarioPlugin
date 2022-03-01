@@ -91,26 +91,6 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	InputMap->MapFloat(StickX, padId, gainput::PadButtonLeftStickX);
 	InputMap->MapFloat(StickY, padId, gainput::PadButtonLeftStickY);
 
-	HookEventWithCaller<PlayerControllerWrapper>("Function Engine.PlayerController.NotifyDisconnect",
-		[this](const PlayerControllerWrapper& caller, void*, const std::string&) {
-			// Cleanup after a game session has been left
-			isHost = false;
-			isInSm64GameSema.acquire();
-			isInSm64Game = false;
-			isInSm64GameSema.release();
-			if (localMario.mesh != nullptr)
-				localMario.mesh->RenderUpdateVertices(0, nullptr);
-			for (const auto& remoteMario : remoteMarios)
-			{
-				SM64MarioInstance* marioInstance = remoteMario.second;
-				if (marioInstance->mesh != nullptr)
-				{
-					marioInstance->mesh->RenderUpdateVertices(0, nullptr);
-				}
-			}
-			remoteMarios.clear();
-		});
-
 	// Register callback to receiving TCP data from server/clients
 	Networking::RegisterCallback(MessageReceived);
 
@@ -146,6 +126,7 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 		[this](const CarWrapper& caller, void* params, const std::string&) {
 			onVehicleTick(caller, params);
 		});
+
 	self = this;
 
 }
@@ -156,6 +137,26 @@ SM64::~SM64()
 	delete InputMap;
 	DestroySM64();
 	UnhookEvent("Function TAGame.Car_TA.SetVehicleInput");
+}
+
+void SM64::OnGameLeft()
+{
+	// Cleanup after a game session has been left
+	isHost = false;
+	isInSm64GameSema.acquire();
+	isInSm64Game = false;
+	isInSm64GameSema.release();
+	if (localMario.mesh != nullptr)
+		localMario.mesh->RenderUpdateVertices(0, nullptr);
+	for (const auto& remoteMario : remoteMarios)
+	{
+		SM64MarioInstance* marioInstance = remoteMario.second;
+		if (marioInstance->mesh != nullptr)
+		{
+			marioInstance->mesh->RenderUpdateVertices(0, nullptr);
+		}
+	}
+	remoteMarios.clear();
 }
 
 void MessageReceived(char* buf, int len, int playerId)
@@ -437,9 +438,7 @@ void SM64::onTick(ServerWrapper server)
 		if (player.IsNull()) continue;
 		if (player.IsLocalPlayerPRI())
 		{
-			localMario.sema.acquire();
 			tickMarioInstance(&localMario, car, this);
-			localMario.sema.release();
 			renderLocalMario = true;
 		}
 		
