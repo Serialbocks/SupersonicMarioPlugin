@@ -28,26 +28,6 @@ void serverThread()
 		return;
 	}
 
-	// Bind the ip address and port to a socket
-	struct addrinfo* result = NULL;
-	struct addrinfo hints;
-
-	ZeroMemory(&hints, sizeof(hints));
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-	hints.ai_flags = AI_PASSIVE;
-	std::stringstream portStr;
-	portStr << "" << instance->port;
-	int iResult = getaddrinfo(NULL, portStr.str().c_str(), &hints, &result);
-	if (iResult != 0) {
-		std::stringstream errStrStream;
-		errStrStream << "getaddrinfo failed with error: " << iResult;
-		BM_LOG(errStrStream.str());
-		WSACleanup();
-		return;
-	}
-
 	// Create listening socket
 	instance->listening = socket(AF_INET, SOCK_STREAM, 0);
 	if (instance->listening == INVALID_SOCKET)
