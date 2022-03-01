@@ -39,6 +39,9 @@ void clientThread()
 		return;
 	}
 
+	int flags = 1;
+	setsockopt(instance->sock, IPPROTO_TCP, TCP_NODELAY, (const char*)&flags, sizeof(flags));
+
 	// Fill in a hint structure
 	sockaddr_in hint;
 	hint.sin_family = AF_INET;

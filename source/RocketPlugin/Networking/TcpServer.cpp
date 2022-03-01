@@ -128,6 +128,8 @@ void serverThread()
 				}
 
 				// Add new connection to list of connected clients
+				int flags = 1;
+				setsockopt(client, IPPROTO_TCP, TCP_NODELAY, (const char*)&flags, sizeof(flags));
 				instance->masterSetSema.acquire();
 				FD_SET(client, &instance->master);
 				instance->masterSetSema.release();
