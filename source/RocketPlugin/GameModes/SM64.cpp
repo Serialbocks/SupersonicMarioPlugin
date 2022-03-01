@@ -518,7 +518,6 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		&marioInstance->marioBodyState,
 		true,
 		true);
-	marioInstance->sema.release();
 
 	auto carVelocity = car.GetVelocity();
 	auto netVelocity = Vector(marioInstance->marioState.velX,// -carVelocity.X,
@@ -530,12 +529,9 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
 		netPosition.X / 100.0f, netPosition.Y / 100.0f, netPosition.Z / 100.0f);
 
-
-	marioInstance->sema.acquire();
 	memcpy(self->netcodeOutBuf, &marioInstance->marioBodyState, sizeof(struct SM64MarioBodyState));
-	marioInstance->sema.release();
 	Networking::SendBytes(self->netcodeOutBuf, sizeof(struct SM64MarioBodyState));
-
+	marioInstance->sema.release();
 }
 
 void loadBallMesh()
