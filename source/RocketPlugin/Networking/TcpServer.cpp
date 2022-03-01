@@ -267,7 +267,7 @@ void TcpServer::SendBytes(char* buf, int len)
 		SOCKET outSock = instance->master.fd_array[k];
 		if (outSock != listening && outSock != serverExitSocket)
 		{
-			send(outSock, outBuf, len, 0);
+			send(outSock, outBuf, outBufSize, 0);
 		}
 	}
 
