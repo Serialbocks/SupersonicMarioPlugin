@@ -118,6 +118,7 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 
 	InitSM64();
 	gameWrapper->RegisterDrawable(std::bind(&SM64::OnRender, this, _1));
+	gameWrapper->HookEvent("Function ProjectX.Camera_X.UpdateCamera", bind(&SM64::onCameraTick, this, _1));
 
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
 
@@ -167,6 +168,50 @@ void SM64::OnGameLeft()
 		}
 	}
 	remoteMarios.clear();
+}
+
+void SM64::onCameraTick(std::string eventName)
+{
+	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame();
+	isInSm64GameSema.acquire();
+	bool inSm64Game = isInSm64Game;
+	isInSm64GameSema.release();
+	if (!inGame || !isInSm64Game)
+	{
+		return;
+	}
+
+	auto camera = gameWrapper->GetCamera();
+	if (camera.IsNull()) return;
+
+	auto server = gameWrapper->GetGameEventAsServer();
+	if (server.IsNull())
+	{
+		server = gameWrapper->GetCurrentGameState();
+	}
+
+	if (server.IsNull()) return;
+
+	auto car = gameWrapper->GetLocalCar();
+	if (car.IsNull()) return;
+
+	if (localMario.mesh == nullptr) return;
+
+	auto marioInstance = &localMario;
+
+	marioInstance->sema.acquire();
+
+	auto marioState = &marioInstance->marioBodyState.marioState;
+	auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+	auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+	car.SetLocation(carPosition);
+	car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+	auto carRot = car.GetRotation();
+	carRot.Yaw = marioYaw;
+	carRot.Roll = carRotation.Roll;
+	carRot.Pitch = carRotation.Pitch;
+	car.SetRotation(carRot);
+	marioInstance->sema.release();
 }
 
 void MessageReceived(char* buf, int len)
