@@ -118,7 +118,7 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 
 	InitSM64();
 	gameWrapper->RegisterDrawable(std::bind(&SM64::OnRender, this, _1));
-	gameWrapper->HookEvent("Function ProjectX.Camera_X.UpdateCamera", bind(&SM64::onCameraTick, this, _1));
+	//gameWrapper->HookEvent("Function ProjectX.Camera_X.UpdateCamera", bind(&SM64::onCameraTick, this, _1));
 
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
 
@@ -388,6 +388,7 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 	PriWrapper player = car.GetPRI();
 	if (player.IsNull()) return;
 	auto isLocalPlayer = player.IsLocalPlayerPRI();
+	player.SetbMatchAdmin(true);
 
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame();
 	isInSm64GameSema.acquire();
@@ -410,12 +411,12 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 		}
 		else
 		{
-			remoteMariosSema.acquire();
-			if (remoteMarios.count(playerId) > 0)
-			{
-				marioInstance = remoteMarios[playerId];
-			}
-			remoteMariosSema.release();
+			//remoteMariosSema.acquire();
+			//if (remoteMarios.count(playerId) > 0)
+			//{
+			//	marioInstance = remoteMarios[playerId];
+			//}
+			//remoteMariosSema.release();
 		}
 
 		if (marioInstance == nullptr) return;
