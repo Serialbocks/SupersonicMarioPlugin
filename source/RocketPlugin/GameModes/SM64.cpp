@@ -487,7 +487,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	int playerId = car.GetPRI().GetPlayerID();
 	memcpy(self->netcodeOutBuf, &playerId, sizeof(int));
 	memcpy(self->netcodeOutBuf + sizeof(int), &marioInstance->marioBodyState, sizeof(struct SM64MarioBodyState));
-	Networking::SendBytes(self->netcodeOutBuf, sizeof(struct SM64MarioBodyState));
+	Networking::SendBytes(self->netcodeOutBuf, sizeof(struct SM64MarioBodyState) + sizeof(int));
 	marioInstance->sema.release();
 }
 
