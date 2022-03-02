@@ -228,19 +228,13 @@ void TcpServer::SendBytes(char* buf, int len)
 	fd_set setCopy = master;
 	masterSetSema.release();
 
-	int outBufSize = len + sizeof(int);
-	char* outBuf = (char*)malloc(len + sizeof(int));
-	ZeroMemory(outBuf, outBufSize);
-	memcpy(outBuf + sizeof(int), buf, len);
-
 	for (int k = 0; k < instance->master.fd_count; k++)
 	{
 		SOCKET outSock = instance->master.fd_array[k];
 		if (outSock != listening && outSock != serverExitSocket)
 		{
-			send(outSock, outBuf, outBufSize, 0);
+			send(outSock, buf, len, 0);
 		}
 	}
 
-	free(outBuf);
 }

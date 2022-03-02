@@ -65,7 +65,6 @@ public:
 
     void InitSM64();
     void DestroySM64();
-    void OnMessageReceived(const std::string& message, PriWrapper sender);
     void OnRender(CanvasWrapper canvas);
 
     void OnGameLeft();
@@ -110,8 +109,6 @@ public:
     bool sm64Initialized = false;
     bool meshesInitialized = false;
     struct SM64MarioBodyState marioBodyStateIn;
-    bool renderLocalMario = false;
-    bool renderRemoteMario = false;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
     std::counting_semaphore<1> isInSm64GameSema{ 1 };
     bool isInSm64Game = false;

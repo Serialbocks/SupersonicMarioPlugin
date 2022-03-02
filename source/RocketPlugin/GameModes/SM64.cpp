@@ -16,7 +16,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
 	SM64* instance);
 
-void MessageReceived(char* buf, int len, int playerId);
+void MessageReceived(char* buf, int len);
 
 enum Button
 {
@@ -169,9 +169,9 @@ void SM64::OnGameLeft()
 	remoteMarios.clear();
 }
 
-void MessageReceived(char* buf, int len, int playerId)
+void MessageReceived(char* buf, int len)
 {
-	auto targetLen = sizeof(struct SM64MarioBodyState);
+	auto targetLen = sizeof(struct SM64MarioBodyState) + sizeof(int);
 	uint8_t* targetData = (uint8_t*)buf;
 	if (len < targetLen)
 	{
@@ -181,6 +181,8 @@ void MessageReceived(char* buf, int len, int playerId)
 	{
 		targetData = (uint8_t*)(buf + len - targetLen);
 	}
+
+	int playerId = *((int*)buf);
 
 	SM64MarioInstance* marioInstance = nullptr;
 	self->remoteMariosSema.acquire();
@@ -210,71 +212,11 @@ void MessageReceived(char* buf, int len, int playerId)
 	if (marioInstance == nullptr) return;
 
 	marioInstance->sema.acquire();
-	memcpy(&marioInstance->marioBodyState, targetData, targetLen);
+	memcpy(&marioInstance->marioBodyState, targetData + sizeof(int), targetLen - sizeof(int));
 	marioInstance->sema.release();
 	self->isInSm64GameSema.acquire();
 	self->isInSm64Game = true;
 	self->isInSm64GameSema.release();
-}
-
-void SM64::OnMessageReceived(const std::string& message, PriWrapper sender)
-{
-	if (sender.IsNull() || sender.IsLocalPlayerPRI())
-	{
-		return;
-	}
-
-	auto playerId = sender.GetPlayerID();
-	auto marioIterator = remoteMarios.find(playerId);
-	SM64MarioInstance* marioInstance = nullptr;
-	if (remoteMarios.count(playerId) == 0)
-	{
-		// Initialize mario for this player
-		marioInstance = new SM64MarioInstance();
-		remoteMarios[playerId] = marioInstance;
-	}
-	else
-	{
-		marioInstance = remoteMarios[playerId];
-	}
-
-	if (marioInstance == nullptr) return;
-
-	char messageType = message[0];
-
-	char* dest = nullptr;
-	if (messageType == 'M')
-	{
-		dest = (char*)&marioInstance->marioBodyState.marioState;
-		if (marioInstance->mesh == nullptr)
-		{
-			// Initialize the mesh
-			auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
-			memcpy(tmpTexture, texture, SM64_TEXTURE_SIZE);
-			marioInstance->mesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
-				tmpTexture,
-				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
-				SM64_TEXTURE_WIDTH,
-				SM64_TEXTURE_HEIGHT);
-		}
-	}
-	else if (messageType == 'B')
-	{
-		dest = (char*)&marioInstance->marioBodyState;
-	}
-
-	if (dest == nullptr)
-	{
-		return;
-	}
-
-	std::string bytesStr = message.substr(1, message.size() - 1);
-	auto bytes = hexToBytes(bytesStr);
-	for (unsigned int i = 0; i < bytes.size(); i++)
-	{
-		dest[i] = bytes[i];
-	}
-	renderRemoteMario = true;
 }
 
 #define MIN_LIGHT_COORD -6000.0f
@@ -463,7 +405,6 @@ void SM64::onTick(ServerWrapper server)
 		if (player.IsLocalPlayerPRI())
 		{
 			tickMarioInstance(&localMario, car, this);
-			renderLocalMario = true;
 		}
 		
 	}

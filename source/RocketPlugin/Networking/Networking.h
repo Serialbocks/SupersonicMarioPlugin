@@ -56,7 +56,7 @@ namespace Networking
 
     bool PingHost(const std::string& host, unsigned short port, HostStatus* result = nullptr, bool threaded = false);
 
-    void RegisterCallback(void (*clbk)(char* buf, int len, int playerId));
+    void RegisterCallback(void (*clbk)(char* buf, int len));
     void SendBytes(char* buf, int len);
 }
 
