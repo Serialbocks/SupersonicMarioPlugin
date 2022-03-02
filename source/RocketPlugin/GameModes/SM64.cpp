@@ -124,7 +124,7 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	HookEventWithCaller<CarWrapper>(
 		"Function TAGame.Car_TA.SetVehicleInput",
 		[this](const CarWrapper& caller, void* params, const std::string&) {
-			onVehicleTick(caller, params);
+			onSetVehicleInput(caller, params);
 		});
 
 	self = this;
@@ -338,7 +338,7 @@ void SM64::DestroySM64()
 	delete marioAudio;
 }
 
-void SM64::onVehicleTick(CarWrapper car, void* params)
+void SM64::onSetVehicleInput(CarWrapper car, void* params)
 {
 	PriWrapper player = car.GetPRI();
 	if (player.IsNull()) return;
