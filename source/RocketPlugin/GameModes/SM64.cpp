@@ -344,6 +344,15 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 	if (player.IsNull()) return;
 	auto isLocalPlayer = player.IsLocalPlayerPRI();
 
+	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame();
+	isInSm64GameSema.acquire();
+	bool inSm64Game = isInSm64Game;
+	isInSm64GameSema.release();
+	if (!inGame || !isInSm64Game)
+	{
+		return;
+	}
+
 	auto playerId = player.GetPlayerID();
 
 	if (isHost)
