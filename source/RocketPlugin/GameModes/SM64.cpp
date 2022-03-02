@@ -388,7 +388,12 @@ void SM64::onVehicleTick(CarWrapper car, void* params)
 		newInput->Pitch = 0;
 		marioInstance->sema.release();
 	}
-
+	ControllerInput* newInput = (ControllerInput*)params;
+	newInput->Jump = 0;
+	newInput->Handbrake = 0;
+	newInput->Throttle = 0;
+	newInput->Steer = 0;
+	newInput->Pitch = 0;
 
 }
 
