@@ -118,7 +118,11 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 
 	InitSM64();
 	gameWrapper->RegisterDrawable(std::bind(&SM64::OnRender, this, _1));
-	gameWrapper->HookEvent("Function ProjectX.Camera_X.UpdateCamera", bind(&SM64::onCameraTick, this, _1));
+	//gameWrapper->HookEvent("Function TAGame.GameObserver_TA.UpdateCarsData", bind(&SM64::moveCarToMario, this, _1));
+	//gameWrapper->HookEvent("Function TAGame.GameObserver_TA.Tick", bind(&SM64::moveCarToMario, this, _1));
+	//gameWrapper->HookEvent("Function ProjectX.Camera_X.UpdateCamera", bind(&SM64::moveCarToMario, this, _1));
+	//gameWrapper->HookEvent("Function ProjectX.Camera_X.UpdateCameraState", bind(&SM64::moveCarToMario, this, _1));
+	//gameWrapper->HookEvent("Function TAGame.NetworkInputBuffer_TA.ServerReceivePacket", bind(&SM64::moveCarToMario, this, _1));
 
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
 
@@ -170,13 +174,13 @@ void SM64::OnGameLeft()
 	remoteMarios.clear();
 }
 
-void SM64::onCameraTick(std::string eventName)
+void SM64::moveCarToMario(std::string eventName)
 {
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame();
 	isInSm64GameSema.acquire();
 	bool inSm64Game = isInSm64Game;
 	isInSm64GameSema.release();
-	if (!inGame || !isInSm64Game)
+	if (!inGame)
 	{
 		return;
 	}
@@ -647,16 +651,11 @@ void SM64::OnRender(CanvasWrapper canvas)
 	}
 
 	// Render local mario
-	static volatile int carPlayerId = -1;
-	static volatile unsigned long long carUniqueId = 0;
 	for (CarWrapper car : server.GetCars())
 	{
 		auto player = car.GetPRI();
 		if (player.IsNull()) continue;
 		auto playerName = player.GetPlayerName().ToString();
-
-		carPlayerId = player.GetPlayerID();
-		carUniqueId = player.GetUniqueIdWrapper().GetUID();
 
 		if (playerName != localPlayerName)
 		{
@@ -665,13 +664,14 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		SM64MarioInstance* marioInstance = &localMario;
 
+		carLocation = car.GetLocation();
 		if (marioInstance->marioId < 0)
 		{
 			if (isHost)
 			{
 				break; // We create the host's mario in onTick()
 			}
-			carLocation = car.GetLocation();
+
 			auto x = (int16_t)(carLocation.X);
 			auto y = (int16_t)(carLocation.Y);
 			auto z = (int16_t)(carLocation.Z);
