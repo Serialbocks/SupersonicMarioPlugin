@@ -404,7 +404,7 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 	auto playerId = player.GetPlayerID();
 
-	if (isHost)
+	if (isHost || isLocalPlayer)
 	{
 		SM64MarioInstance* marioInstance = nullptr;
 
@@ -426,6 +426,7 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 		marioInstance->sema.acquire();
 
+		car.SetbIgnoreSyncing(true);
 		car.SetHidden2(TRUE);
 		car.SetbHiddenSelf(TRUE);
 		auto marioState = &marioInstance->marioBodyState.marioState;
