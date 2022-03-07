@@ -427,6 +427,9 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 		marioInstance->sema.acquire();
 
 		car.SetbIgnoreSyncing(true);
+		car.SetbForceNetUpdate(false);
+		car.SetbForcePacketUpdate(false);
+		car.SetbPendingNetUpdate(false);
 		car.SetHidden2(TRUE);
 		car.SetbHiddenSelf(TRUE);
 		auto marioState = &marioInstance->marioBodyState.marioState;
