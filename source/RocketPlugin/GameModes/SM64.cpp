@@ -118,11 +118,11 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 
 	InitSM64();
 	gameWrapper->RegisterDrawable(std::bind(&SM64::OnRender, this, _1));
-	//gameWrapper->HookEvent("Function TAGame.GameObserver_TA.UpdateCarsData", bind(&SM64::moveCarToMario, this, _1));
-	//gameWrapper->HookEvent("Function TAGame.GameObserver_TA.Tick", bind(&SM64::moveCarToMario, this, _1));
+	gameWrapper->HookEventPost("Function TAGame.GameObserver_TA.UpdateCarsData", bind(&SM64::moveCarToMario, this, _1));
+	gameWrapper->HookEventPost("Function TAGame.GameObserver_TA.Tick", bind(&SM64::moveCarToMario, this, _1));
 	//gameWrapper->HookEvent("Function ProjectX.Camera_X.UpdateCamera", bind(&SM64::moveCarToMario, this, _1));
 	//gameWrapper->HookEvent("Function ProjectX.Camera_X.UpdateCameraState", bind(&SM64::moveCarToMario, this, _1));
-	//gameWrapper->HookEvent("Function TAGame.NetworkInputBuffer_TA.ServerReceivePacket", bind(&SM64::moveCarToMario, this, _1));
+	gameWrapper->HookEventPost("Function TAGame.NetworkInputBuffer_TA.ServerReceivePacket", bind(&SM64::moveCarToMario, this, _1));
 
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
 
@@ -215,6 +215,9 @@ void SM64::moveCarToMario(std::string eventName)
 	carRot.Roll = carRotation.Roll;
 	carRot.Pitch = carRotation.Pitch;
 	car.SetRotation(carRot);
+	auto rbstate = car.GetRBState();
+	rbstate.Location = carPosition;
+	car.SetRBState(rbstate);
 	marioInstance->sema.release();
 }
 
@@ -276,6 +279,19 @@ void SM64::RenderOptions()
 {
 	if (renderer != nullptr)
 	{
+		if (localMario.marioId >= 0)
+		{
+			ImGui::Text("Mario Location");
+			ImGui::Text(std::to_string(localMario.marioState.posX).c_str());
+			ImGui::Text(std::to_string(localMario.marioState.posY).c_str());
+			ImGui::Text(std::to_string(localMario.marioState.posZ).c_str());
+		}
+
+		ImGui::Text("Car Location");
+		ImGui::Text(std::to_string(carLocation.X).c_str());
+		ImGui::Text(std::to_string(carLocation.Z).c_str());
+		ImGui::Text(std::to_string(carLocation.Y).c_str());
+
 		ImGui::Text("Ambient Light");
 		ImGui::SliderFloat("R", &renderer->Lighting.AmbientLightColorR, 0.0f, 1.0f);
 		ImGui::SliderFloat("G", &renderer->Lighting.AmbientLightColorG, 0.0f, 1.0f);
@@ -427,9 +443,6 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 		marioInstance->sema.acquire();
 
 		car.SetbIgnoreSyncing(true);
-		car.SetbForceNetUpdate(false);
-		car.SetbForcePacketUpdate(false);
-		car.SetbPendingNetUpdate(false);
 		car.SetHidden2(TRUE);
 		car.SetbHiddenSelf(TRUE);
 		auto marioState = &marioInstance->marioBodyState.marioState;
@@ -482,10 +495,10 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	SM64* instance)
 {
 	if (car.IsNull()) return;
-	auto carLocation = car.GetLocation();
-	auto x = (int16_t)(carLocation.X);
-	auto y = (int16_t)(carLocation.Y);
-	auto z = (int16_t)(carLocation.Z);
+	instance->carLocation = car.GetLocation();
+	auto x = (int16_t)(instance->carLocation.X);
+	auto y = (int16_t)(instance->carLocation.Y);
+	auto z = (int16_t)(instance->carLocation.Z);
 
 	if (marioInstance->marioId < 0)
 	{
