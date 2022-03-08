@@ -118,11 +118,18 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 
 	InitSM64();
 	gameWrapper->RegisterDrawable(std::bind(&SM64::OnRender, this, _1));
-	gameWrapper->HookEventPost("Function TAGame.GameObserver_TA.UpdateCarsData", bind(&SM64::moveCarToMario, this, _1));
-	gameWrapper->HookEventPost("Function TAGame.GameObserver_TA.Tick", bind(&SM64::moveCarToMario, this, _1));
-	//gameWrapper->HookEvent("Function ProjectX.Camera_X.UpdateCamera", bind(&SM64::moveCarToMario, this, _1));
-	//gameWrapper->HookEvent("Function ProjectX.Camera_X.UpdateCameraState", bind(&SM64::moveCarToMario, this, _1));
-	gameWrapper->HookEventPost("Function TAGame.NetworkInputBuffer_TA.ServerReceivePacket", bind(&SM64::moveCarToMario, this, _1));
+	gameWrapper->HookEventPost("Function TAGame.EngineShare_TA.EventPostPhysicsStep", bind(&SM64::moveCarToMario, this, _1));
+	gameWrapper->HookEventPost("Function TAGame.NetworkInputBuffer_TA.ClientAckFrame", bind(&SM64::moveCarToMario, this, _1));
+	gameWrapper->HookEventPost("Function TAGame.RBActor_TA.PreAsyncTick", bind(&SM64::moveCarToMario, this, _1));
+	//gameWrapper->HookEventPost("Function ProjectX.ActorComponent_X.Tick", bind(&SM64::moveCarToMario, this, _1));
+	//gameWrapper->HookEventPost("Function ProjectX.DynamicValueModifier_X.Tick", bind(&SM64::moveCarToMario, this, _1));
+	//gameWrapper->HookEventPost("Function TAGame.CarDistanceTracker_TA.Tick", bind(&SM64::moveCarToMario, this, _1));
+	//gameWrapper->HookEventPost("Function Engine.PrimitiveComponent.SetRBPosition", bind(&SM64::moveCarToMario, this, _1));
+	//gameWrapper->HookEventPost("Function TAGame.GameObserver_TA.UpdateCarsData", bind(&SM64::moveCarToMario, this, _1));
+	//gameWrapper->HookEventPost("Function TAGame.GameObserver_TA.Tick", bind(&SM64::moveCarToMario, this, _1));
+	//gameWrapper->HookEventPost("Function ProjectX.Camera_X.UpdateCamera", bind(&SM64::moveCarToMario, this, _1));
+	//gameWrapper->HookEventPost("Function ProjectX.Camera_X.UpdateCameraState", bind(&SM64::moveCarToMario, this, _1));
+	//gameWrapper->HookEventPost("Function TAGame.NetworkInputBuffer_TA.ServerReceivePacket", bind(&SM64::moveCarToMario, this, _1));
 
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
 
@@ -131,6 +138,8 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 		[this](const CarWrapper& caller, void* params, const std::string&) {
 			onSetVehicleInput(caller, params);
 		});
+
+
 
 	self = this;
 
@@ -215,9 +224,9 @@ void SM64::moveCarToMario(std::string eventName)
 	carRot.Roll = carRotation.Roll;
 	carRot.Pitch = carRotation.Pitch;
 	car.SetRotation(carRot);
-	auto rbstate = car.GetRBState();
-	rbstate.Location = carPosition;
-	car.SetRBState(rbstate);
+	//auto rbstate = car.GetRBState();
+	//rbstate.Location = carPosition;
+	//car.SetRBState(rbstate);
 	marioInstance->sema.release();
 }
 
