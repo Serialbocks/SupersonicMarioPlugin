@@ -224,9 +224,6 @@ void SM64::moveCarToMario(std::string eventName)
 	carRot.Roll = carRotation.Roll;
 	carRot.Pitch = carRotation.Pitch;
 	car.SetRotation(carRot);
-	//auto rbstate = car.GetRBState();
-	//rbstate.Location = carPosition;
-	//car.SetRBState(rbstate);
 	marioInstance->sema.release();
 }
 
@@ -676,12 +673,24 @@ void SM64::OnRender(CanvasWrapper canvas)
 		}
 	}
 
-	// Render local mario
+	remoteMariosSema.acquire();
+	for (auto const& [playerId, marioInstance] : remoteMarios)
+	{
+		marioInstance->CarActive = false;
+	}
+
+	// Render local mario, and mark which marios no longer exist
 	for (CarWrapper car : server.GetCars())
 	{
 		auto player = car.GetPRI();
 		if (player.IsNull()) continue;
 		auto playerName = player.GetPlayerName().ToString();
+
+		auto playerId = player.GetPlayerID();
+		if (remoteMarios.count(playerId) > 0)
+		{
+			remoteMarios[playerId]->CarActive = true;
+		}
 
 		if (playerName != localPlayerName)
 		{
@@ -713,7 +722,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 	}
 
 	// Loop through remote marios and render
-	remoteMariosSema.acquire();
 	for (auto const& [playerId, marioInstance] : remoteMarios)
 	{
 		if (marioInstance->mesh == nullptr)
@@ -736,6 +744,21 @@ void SM64::OnRender(CanvasWrapper canvas)
 			&marioInstance->marioBodyState,
 			false,
 			false);
+
+		if (!marioInstance->CarActive)
+		{
+			if (marioInstance->marioId >= 0)
+			{
+				sm64_mario_delete(marioInstance->marioId);
+				marioInstance->marioId = -2;
+			}
+			
+			if (marioInstance->mesh != nullptr)
+			{
+				marioInstance->mesh->RenderUpdateVertices(0, nullptr);
+			}
+		}
+
 		marioInstance->sema.release();
 
 		renderMario(marioInstance, camera);
