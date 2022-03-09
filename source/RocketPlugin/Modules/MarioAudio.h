@@ -12,8 +12,10 @@
 #define SOUND_MARIO_HOO				0x00000004
 #define SOUND_MARIO_YAHOO           0x00000008
 #define SOUND_MARIO_HOOHOO          0x00000010
-#define SOUND_MARIO_PUNCH_HOO       0x00000020
-#define SOUND_ACTION_TERRAIN_STEP   0x00000040
+#define SOUND_MARIO_PUNCH_YAH       0x00000020
+#define SOUND_MARIO_PUNCH_WAH       0x00000040
+#define SOUND_MARIO_PUNCH_HOO       0x00000080
+#define SOUND_ACTION_TERRAIN_STEP   0x00000100
 
 struct soxr;
 extern "C" void soxr_delete(soxr*);
@@ -59,8 +61,10 @@ private:
 		{ SOUND_MARIO_HOO,				"sfx_mario/00.wav",					1.08f},
 		{ SOUND_MARIO_YAHOO,			"sfx_mario/04.wav",					1.0f}, // changed file, forgot values
 		{ SOUND_MARIO_HOOHOO,			"sfx_mario_peach/01.wav",			1.0f}, // 1.0f then 1.21f
+		{ SOUND_MARIO_PUNCH_YAH,		"sfx_mario/02.wav",					0.91f}, // 07.wav??
+		{ SOUND_MARIO_PUNCH_WAH,		"sfx_mario/01.wav",					0.85f},
 		{ SOUND_MARIO_PUNCH_HOO,		"sfx_mario_peach/09.wav",			1.05f},
-		{ SOUND_ACTION_TERRAIN_STEP,	"sfx_terrain/00_step_grass.wav",	0.0f}
+		{ SOUND_ACTION_TERRAIN_STEP,	"sfx_terrain/01_step_grass.wav",	0.0f},
 	};
 	Utils utils;
 	soxrHandle soxrHandle;
