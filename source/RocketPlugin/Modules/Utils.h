@@ -11,5 +11,6 @@ public:
 	std::string GetBakkesmodFolderPath();
 	void ParseObjFile(std::string path, std::vector<Vertex> *outVertices);
 	std::vector<std::string> SplitStr(std::string str, char delimiter);
+	Vector GetRelativeVector(Vector from, Vector to, Quat fromQuat);
 
 };

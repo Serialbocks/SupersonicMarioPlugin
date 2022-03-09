@@ -89,3 +89,17 @@ std::vector<std::string> Utils::SplitStr(std::string str, char delimiter)
 	}
 	return seglist;
 }
+
+Vector Utils::GetRelativeVector(Vector from, Vector to, Quat fromQuat)
+{
+	Vector diff(to.X - from.X, to.Y - from.Y, to.Z - from.Z);
+
+	DirectX::XMVECTOR quat = DirectX::XMVectorSet(-fromQuat.X, -fromQuat.Y, -fromQuat.Z, -fromQuat.W);
+	DirectX::XMMATRIX rotationMatrix = DirectX::XMMatrixRotationQuaternion(quat);
+	DirectX::XMVECTOR diffVector = DirectX::XMVectorSet(diff.X, diff.Y, diff.Z, 0.0f);
+	DirectX::XMVECTOR result = DirectX::XMVector3Transform(diffVector, rotationMatrix);
+	DirectX::XMFLOAT4 v2F;
+	DirectX::XMStoreFloat4(&v2F, result);
+	
+	return Vector(v2F.x, v2F.y, v2F.z);
+}

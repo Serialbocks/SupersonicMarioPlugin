@@ -186,10 +186,14 @@ void SM64::OnGameLeft()
 void SM64::moveCarToMario(std::string eventName)
 {
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame();
+	if (!inGame || isHost)
+	{
+		return;
+	}
 	isInSm64GameSema.acquire();
 	bool inSm64Game = isInSm64Game;
 	isInSm64GameSema.release();
-	if (!inGame)
+	if (!inSm64Game)
 	{
 		return;
 	}
@@ -448,19 +452,19 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 		marioInstance->sema.acquire();
 
-		car.SetbIgnoreSyncing(true);
-		car.SetHidden2(TRUE);
-		car.SetbHiddenSelf(TRUE);
-		auto marioState = &marioInstance->marioBodyState.marioState;
-		auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-		auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
-		car.SetLocation(carPosition);
-		car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
-		auto carRot = car.GetRotation();
-		carRot.Yaw = marioYaw;
-		carRot.Roll = carRotation.Roll;
-		carRot.Pitch = carRotation.Pitch;
-		car.SetRotation(carRot);
+		//car.SetbIgnoreSyncing(true);
+		//car.SetHidden2(TRUE);
+		//car.SetbHiddenSelf(TRUE);
+		//auto marioState = &marioInstance->marioBodyState.marioState;
+		//auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+		//auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+		//car.SetLocation(carPosition);
+		//car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+		//auto carRot = car.GetRotation();
+		//carRot.Yaw = marioYaw;
+		//carRot.Roll = carRotation.Roll;
+		//carRot.Pitch = carRotation.Pitch;
+		//car.SetRotation(carRot);
 		ControllerInput* newInput = (ControllerInput*)params;
 		newInput->Jump = 0;
 		newInput->Handbrake = 0;
@@ -560,15 +564,14 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		true,
 		true);
 
-	auto carVelocity = car.GetVelocity();
-	auto netVelocity = Vector(marioInstance->marioState.velX,// -carVelocity.X,
-		marioInstance->marioState.velZ,// - carVelocity.Y,
-		marioInstance->marioState.velY);// - carVelocity.Z);
-	auto netPosition = Vector(marioInstance->marioState.posX,// - carPosition.X,
-		marioInstance->marioState.posZ,// - carPosition.Y,
-		marioInstance->marioState.posY);// - carPosition.Z);
+
+	auto marioVector = Vector(marioInstance->marioState.posY, marioInstance->marioState.posZ, marioInstance->marioState.posX);
+	auto quat = RotatorToQuat(camera.GetRotation());
+	auto cameraVector = camera.GetLocation();
+
+	static volatile Vector netPosition = instance->utils.GetRelativeVector(cameraVector, marioVector, quat);
 	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
-		netPosition.X / 100.0f, netPosition.Y / 100.0f, netPosition.Z / 100.0f);
+		netPosition.X, netPosition.Y, netPosition.Z);
 
 	int playerId = car.GetPRI().GetPlayerID();
 	memcpy(self->netcodeOutBuf, &playerId, sizeof(int));
