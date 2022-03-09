@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "MarioAudio.h"
 
+#define ATTEN_ROLLOFF_FACTOR 0.0003f
+
 static SoLoud::Soloud* soloud = nullptr;
 
 void onExit(void)
@@ -17,7 +19,7 @@ MarioAudio::MarioAudio()
 {
 	atexit(onExit);
 	soloud = new SoLoud::Soloud();
-	soloud->init();
+	soloud->init(SoLoud::Soloud::FLAGS::LEFT_HANDED_3D);
 
 	std::string soundDir = utils.GetBakkesmodFolderPath() + "data\\assets\\sound\\";
 	for (auto i = 0; i < marioSounds.size(); i++)
@@ -25,6 +27,7 @@ MarioAudio::MarioAudio()
 		std::string soundPath = soundDir + marioSounds[i].wavPath;
 		marioSounds[i].wav.load(soundPath.c_str());
 	}
+	soloud->set3dListenerUp(0, 0, 1.0f);
 }
 
 MarioAudio::~MarioAudio()
@@ -34,11 +37,10 @@ MarioAudio::~MarioAudio()
 	soloud = nullptr;
 }
 
-static volatile float playbackSpeed = 1.0f;
 void MarioAudio::UpdateSounds(int soundMask,
-	float aPosX,
-	float aPosY,
-	float aPosZ,
+	Vector sourcePos,
+	Vector listenerPos,
+	Vector listenerAt,
 	float aVelX,
 	float aVelY,
 	float aVelZ)
@@ -50,7 +52,12 @@ void MarioAudio::UpdateSounds(int soundMask,
 		auto marioSound = &marioSounds[i];
 		if (marioSound->mask & soundMask)
 		{
-			int handle = soloud->play3d(marioSound->wav, aPosX, aPosY, aPosZ, aVelX, aVelY, aVelZ, 0.5f);
+			float distance = utils.Distance(sourcePos, listenerPos);
+			float volume = 1.0f - pow(distance * ATTEN_ROLLOFF_FACTOR, 2);
+			volume = volume <= 0.0f ? 0.0f : volume;
+
+			int handle = soloud->play3d(marioSound->wav, sourcePos.X, sourcePos.Y, sourcePos.Z, aVelX, aVelY, aVelZ, volume);
+			
 			auto playbackSpeed = marioSound->playbackSpeed;
 			if (marioSound->playbackSpeed == 0.0f)
 			{
@@ -62,6 +69,9 @@ void MarioAudio::UpdateSounds(int soundMask,
 			soloud->setRelativePlaySpeed(handle, playbackSpeed);
 		}
 	}
+	soloud->set3dListenerPosition(listenerPos.X, listenerPos.Y, listenerPos.Z);
+	soloud->set3dListenerAt(listenerAt.X, listenerAt.Y, listenerAt.Z);
+	soloud->update3dAudio();
 }
 
 

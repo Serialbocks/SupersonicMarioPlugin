@@ -289,19 +289,6 @@ void SM64::RenderOptions()
 {
 	if (renderer != nullptr)
 	{
-		if (localMario.marioId >= 0)
-		{
-			ImGui::Text("Mario Location");
-			ImGui::Text(std::to_string(localMario.marioState.posX).c_str());
-			ImGui::Text(std::to_string(localMario.marioState.posY).c_str());
-			ImGui::Text(std::to_string(localMario.marioState.posZ).c_str());
-		}
-
-		ImGui::Text("Car Location");
-		ImGui::Text(std::to_string(carLocation.X).c_str());
-		ImGui::Text(std::to_string(carLocation.Z).c_str());
-		ImGui::Text(std::to_string(carLocation.Y).c_str());
-
 		ImGui::Text("Ambient Light");
 		ImGui::SliderFloat("R", &renderer->Lighting.AmbientLightColorR, 0.0f, 1.0f);
 		ImGui::SliderFloat("G", &renderer->Lighting.AmbientLightColorG, 0.0f, 1.0f);
@@ -452,19 +439,19 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 		marioInstance->sema.acquire();
 
-		//car.SetbIgnoreSyncing(true);
-		//car.SetHidden2(TRUE);
-		//car.SetbHiddenSelf(TRUE);
-		//auto marioState = &marioInstance->marioBodyState.marioState;
-		//auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-		//auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
-		//car.SetLocation(carPosition);
-		//car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
-		//auto carRot = car.GetRotation();
-		//carRot.Yaw = marioYaw;
-		//carRot.Roll = carRotation.Roll;
-		//carRot.Pitch = carRotation.Pitch;
-		//car.SetRotation(carRot);
+		car.SetbIgnoreSyncing(true);
+		car.SetHidden2(TRUE);
+		car.SetbHiddenSelf(TRUE);
+		auto marioState = &marioInstance->marioBodyState.marioState;
+		auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+		auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+		car.SetLocation(carPosition);
+		car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+		auto carRot = car.GetRotation();
+		carRot.Yaw = marioYaw;
+		carRot.Roll = carRotation.Roll;
+		carRot.Pitch = carRotation.Pitch;
+		car.SetRotation(carRot);
 		ControllerInput* newInput = (ControllerInput*)params;
 		newInput->Jump = 0;
 		newInput->Handbrake = 0;
@@ -473,12 +460,6 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 		newInput->Pitch = 0;
 		marioInstance->sema.release();
 	}
-	ControllerInput* newInput = (ControllerInput*)params;
-	newInput->Jump = 0;
-	newInput->Handbrake = 0;
-	newInput->Throttle = 0;
-	newInput->Steer = 0;
-	newInput->Pitch = 0;
 
 }
 
@@ -565,13 +546,15 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		true);
 
 
-	auto marioVector = Vector(marioInstance->marioState.posY, marioInstance->marioState.posZ, marioInstance->marioState.posX);
+	auto marioVector = Vector(marioInstance->marioState.posX, marioInstance->marioState.posZ, marioInstance->marioState.posY);
 	auto quat = RotatorToQuat(camera.GetRotation());
-	auto cameraVector = camera.GetLocation();
+	instance->cameraLoc = camera.GetLocation();
+	Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 
-	static volatile Vector netPosition = instance->utils.GetRelativeVector(cameraVector, marioVector, quat);
 	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
-		netPosition.X, netPosition.Y, netPosition.Z);
+		marioVector,
+		instance->cameraLoc,
+		cameraAt);
 
 	int playerId = car.GetPRI().GetPlayerID();
 	memcpy(self->netcodeOutBuf, &playerId, sizeof(int));
@@ -825,11 +808,6 @@ SM64MarioInstance::~SM64MarioInstance()
 	free(marioGeometry.color);
 	free(marioGeometry.normal);
 	free(marioGeometry.uv);
-}
-
-float SM64::distance(Vector v1, Vector v2)
-{
-	return (float)sqrt(pow(v2.X - v1.X, 2.0) + pow(v2.Y - v1.Y, 2.0) + pow(v2.Z - v1.Z, 2.0));
 }
 
 std::string SM64::bytesToHex(unsigned char* data, unsigned int len)

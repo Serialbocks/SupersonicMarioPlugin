@@ -73,7 +73,6 @@ public:
     std::string bytesToHex(unsigned char* data, unsigned int len);
 
 private:
-    float distance(Vector v1, Vector v2);
     void onTick(ServerWrapper server);
     void onSetVehicleInput(CarWrapper car, void* params);
     void moveCarToMario(std::string eventName);

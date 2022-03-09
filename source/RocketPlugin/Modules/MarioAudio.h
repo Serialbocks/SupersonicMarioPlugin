@@ -37,9 +37,9 @@ public:
 	MarioAudio();
 	~MarioAudio();
 	void UpdateSounds(int soundMask,
-		float aPosX,
-		float aPosY,
-		float aPosZ,
+		Vector sourcePos,
+		Vector listenerPos,
+		Vector listenerAt,
 		float aVelX = 0.0f,
 		float aVelY = 0.0f,
 		float aVelZ = 0.0f);
