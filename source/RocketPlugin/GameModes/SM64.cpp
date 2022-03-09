@@ -749,6 +749,20 @@ void SM64::OnRender(CanvasWrapper canvas)
 			false,
 			false);
 
+		auto marioVector = Vector(marioInstance->marioBodyState.marioState.posX,
+			marioInstance->marioBodyState.marioState.posZ,
+			marioInstance->marioBodyState.marioState.posY);
+		auto quat = RotatorToQuat(camera.GetRotation());
+		cameraLoc = camera.GetLocation();
+		Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
+		
+		marioAudio->UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
+			marioVector,
+			cameraLoc,
+			cameraAt);
+
+		marioInstance->marioBodyState.marioState.soundMask = 0;
+
 		if (!marioInstance->CarActive)
 		{
 			if (marioInstance->marioId >= 0)
