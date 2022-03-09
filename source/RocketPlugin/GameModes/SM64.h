@@ -49,6 +49,7 @@ public:
     bool CarActive = true;
     Mesh* mesh = nullptr;
     std::counting_semaphore<1> sema{ 1 };
+    int slidingHandle = -1;
 };
 
 class SM64 final : public RocketGameMode
