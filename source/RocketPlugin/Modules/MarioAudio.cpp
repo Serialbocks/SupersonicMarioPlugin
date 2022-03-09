@@ -51,7 +51,15 @@ void MarioAudio::UpdateSounds(int soundMask,
 		if (marioSound->mask & soundMask)
 		{
 			int handle = soloud->play3d(marioSound->wav, aPosX, aPosY, aPosZ, aVelX, aVelY, aVelZ, 0.5f);
-			soloud->setRelativePlaySpeed(handle, marioSound->playbackSpeed);
+			auto playbackSpeed = marioSound->playbackSpeed;
+			if (marioSound->playbackSpeed == 0.0f)
+			{
+				// Pick a random number
+				float randPercentage = (rand() % 101) / 100.0f;
+				float speedChange = 0.07f * randPercentage;
+				playbackSpeed = 1.05f + speedChange;
+			}
+			soloud->setRelativePlaySpeed(handle, playbackSpeed);
 		}
 	}
 }
