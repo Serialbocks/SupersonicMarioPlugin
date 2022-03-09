@@ -551,11 +551,10 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	instance->cameraLoc = camera.GetLocation();
 	Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 
-	marioInstance->slidingHandle = instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
+	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
 		marioVector,
 		instance->cameraLoc,
-		cameraAt,
-		marioInstance->slidingHandle);
+		cameraAt);
 
 	int playerId = car.GetPRI().GetPlayerID();
 	memcpy(self->netcodeOutBuf, &playerId, sizeof(int));
@@ -757,14 +756,12 @@ void SM64::OnRender(CanvasWrapper canvas)
 		cameraLoc = camera.GetLocation();
 		Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 		
-		marioInstance->slidingHandle = marioAudio->UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
+		marioAudio->UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
 			marioVector,
 			cameraLoc,
-			cameraAt,
-			marioInstance->slidingHandle);
+			cameraAt);
 
-		// Clear each sound bit except the sliding bit
-		marioInstance->marioBodyState.marioState.soundMask &= SOUND_MOVING_TERRAIN_SLIDE;
+		marioInstance->marioBodyState.marioState.soundMask = 0;
 
 		if (!marioInstance->CarActive)
 		{

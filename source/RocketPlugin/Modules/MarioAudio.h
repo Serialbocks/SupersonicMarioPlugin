@@ -37,7 +37,6 @@ typedef struct MarioSound_t
 	uint32_t mask;
 	std::string wavPath;
 	float playbackSpeed = 1.0f;
-	float loopbackPosMs = -1.0f;
 	SoLoud::Wav wav;
 	bool playing = false;
 } MarioSound;
@@ -47,11 +46,10 @@ class MarioAudio
 public:
 	MarioAudio();
 	~MarioAudio();
-	int UpdateSounds(int soundMask,
+	void UpdateSounds(int soundMask,
 		Vector sourcePos,
 		Vector listenerPos,
 		Vector listenerAt,
-		int inSlidingHandle,
 		float aVelX = 0.0f,
 		float aVelY = 0.0f,
 		float aVelZ = 0.0f);
@@ -77,11 +75,11 @@ private:
 		{ SOUND_ACTION_TERRAIN_STEP,				"sfx_terrain/01_step_grass.wav",	0.0f},
 		{ SOUND_ACTION_SPIN,						"sfx_1/00_twirl.wav",				1.14f},
 		{ SOUND_ACTION_TERRAIN_HEAVY_LANDING,		"sfx_1/05_heavy_landing.wav",		1.13f},
-		{ SOUND_MARIO_GROUND_POUND_WAH,				"sfx_mario/07.wav",					0.91f},
+		{ SOUND_MARIO_GROUND_POUND_WAH,				"sfx_mario/07.wav",					0.86f},
 		{ SOUND_ACTION_SIDE_FLIP_UNK,				"sfx_1/00_twirl.wav",				1.12f},
 		{ SOUND_MARIO_HAHA,							"sfx_mario/03.wav",					1.0f},
 		{ SOUND_ACTION_TERRAIN_LANDING,				"sfx_terrain/01_step_grass.wav",	1.05f},
-		{ SOUND_MOVING_TERRAIN_SLIDE,				"sfx_4/01.wav",						1.1f,			0.051f},
+		//{ SOUND_MOVING_TERRAIN_SLIDE,				"sfx_4/01.wav",						1.1f,			0.051f},
 		// TODO: SOUND_MOVING_TERRAIN_SLIDE
 	};
 	Utils utils;

@@ -24,15 +24,8 @@ MarioAudio::MarioAudio()
 	std::string soundDir = utils.GetBakkesmodFolderPath() + "data\\assets\\sound\\";
 	for (auto i = 0; i < marioSounds.size(); i++)
 	{
-		auto marioSound = marioSounds[i];
-		std::string soundPath = soundDir + marioSound.wavPath;
-		marioSound.wav.load(soundPath.c_str());
-		if (marioSound.loopbackPosMs >= 0)
-		{
-			marioSound.wav.setLooping(true);
-			marioSound.wav.setLoopPoint(marioSound.loopbackPosMs);
-		}
-
+		std::string soundPath = soundDir + marioSounds[i].wavPath;
+		marioSounds[i].wav.load(soundPath.c_str());
 	}
 	soloud->set3dListenerUp(0, 0, 1.0f);
 }
@@ -44,43 +37,26 @@ MarioAudio::~MarioAudio()
 	soloud = nullptr;
 }
 
-int MarioAudio::UpdateSounds(int soundMask,
+void MarioAudio::UpdateSounds(int soundMask,
 	Vector sourcePos,
 	Vector listenerPos,
 	Vector listenerAt,
-	int inSlidingHandle,
 	float aVelX,
 	float aVelY,
 	float aVelZ)
 {
-
-	int slidingHandle = -1;
-
 	if (soundMask == 0)
-	{
-		return slidingHandle;
-	}
-
+		return;
 	for (auto i = 0; i < marioSounds.size(); i++)
 	{
 		auto marioSound = &marioSounds[i];
 		if (marioSound->mask & soundMask)
 		{
-
 			float distance = utils.Distance(sourcePos, listenerPos);
 			float volume = 1.0f - pow(distance * ATTEN_ROLLOFF_FACTOR, 2);
 			volume = volume <= 0.0f ? 0.0f : volume;
 
-			int handle = -1;
-			// Special case for sliding which loops
-			if (marioSound->mask == SOUND_MOVING_TERRAIN_SLIDE && inSlidingHandle >= 0)
-			{
-				slidingHandle = inSlidingHandle;
-			}
-			else
-			{
-				handle = soloud->play3d(marioSound->wav, sourcePos.X, sourcePos.Y, sourcePos.Z, aVelX, aVelY, aVelZ, volume);
-			}
+			int handle = soloud->play3d(marioSound->wav, sourcePos.X, sourcePos.Y, sourcePos.Z, aVelX, aVelY, aVelZ, volume);
 			
 			auto playbackSpeed = marioSound->playbackSpeed;
 			if (marioSound->playbackSpeed == 0.0f)
@@ -90,26 +66,12 @@ int MarioAudio::UpdateSounds(int soundMask,
 				float speedChange = 0.07f * randPercentage;
 				playbackSpeed = 1.05f + speedChange;
 			}
-
-			if (marioSound->mask == SOUND_MOVING_TERRAIN_SLIDE && slidingHandle < 0)
-			{
-				slidingHandle = handle;
-			}
-
 			soloud->setRelativePlaySpeed(handle, playbackSpeed);
 		}
 	}
-
-	if (slidingHandle < 0 && inSlidingHandle >= 0)
-	{
-		soloud->setAutoStop(inSlidingHandle, true);
-	}
-
 	soloud->set3dListenerPosition(listenerPos.X, listenerPos.Y, listenerPos.Z);
 	soloud->set3dListenerAt(listenerAt.X, listenerAt.Y, listenerAt.Z);
 	soloud->update3dAudio();
-
-	return slidingHandle;
 }
 
 
