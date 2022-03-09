@@ -679,6 +679,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 		marioInstance->CarActive = false;
 	}
 
+	localMario.CarActive = false;
+
 	// Render local mario, and mark which marios no longer exist
 	for (CarWrapper car : server.GetCars())
 	{
@@ -696,6 +698,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 		{
 			continue;
 		}
+
+		localMario.CarActive = true;
 
 		SM64MarioInstance* marioInstance = &localMario;
 
@@ -719,6 +723,20 @@ void SM64::OnRender(CanvasWrapper canvas)
 		}
 
 		renderMario(marioInstance, camera);
+	}
+
+	if (!localMario.CarActive)
+	{
+		if (localMario.marioId >= 0)
+		{
+			sm64_mario_delete(localMario.marioId);
+			localMario.marioId = -2;
+		}
+
+		if (localMario.mesh != nullptr)
+		{
+			localMario.mesh->RenderUpdateVertices(0, nullptr);
+		}
 	}
 
 	// Loop through remote marios and render
