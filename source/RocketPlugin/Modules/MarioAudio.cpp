@@ -37,16 +37,16 @@ MarioAudio::~MarioAudio()
 	soloud = nullptr;
 }
 
-void MarioAudio::UpdateSounds(int soundMask,
+static volatile float speedPlaybackFactor = 0.01f;
+int MarioAudio::UpdateSounds(int soundMask,
 	Vector sourcePos,
+	Vector sourceVel,
 	Vector listenerPos,
 	Vector listenerAt,
-	float aVelX,
-	float aVelY,
-	float aVelZ)
+	int inSlideHandle)
 {
-	if (soundMask == 0)
-		return;
+
+	int slideHandle = -1;
 	for (auto i = 0; i < marioSounds.size(); i++)
 	{
 		auto marioSound = &marioSounds[i];
@@ -56,22 +56,56 @@ void MarioAudio::UpdateSounds(int soundMask,
 			float volume = 1.0f - pow(distance * ATTEN_ROLLOFF_FACTOR, 2);
 			volume = volume <= 0.0f ? 0.0f : volume;
 
-			int handle = soloud->play3d(marioSound->wav, sourcePos.X, sourcePos.Y, sourcePos.Z, aVelX, aVelY, aVelZ, volume);
-			
-			auto playbackSpeed = marioSound->playbackSpeed;
-			if (marioSound->playbackSpeed == 0.0f)
+			if (marioSound->mask == SOUND_MOVING_TERRAIN_SLIDE)
 			{
-				// Pick a random number
-				float randPercentage = (rand() % 101) / 100.0f;
-				float speedChange = 0.07f * randPercentage;
-				playbackSpeed = 1.05f + speedChange;
+				// Handle sliding as a special case since it loops
+				if (inSlideHandle < 0)
+				{
+					volume *= 0.65f;
+					slideHandle = soloud->play3d(marioSound->wav, sourcePos.X, sourcePos.Y, sourcePos.Z, 0, 0, 0, volume);
+				}
+				else
+				{
+					slideHandle = inSlideHandle;
+				}
+
+				float speed = sqrt(sourceVel.X * sourceVel.X +
+					sourceVel.Y * sourceVel.Y +
+					sourceVel.Z * sourceVel.Z);
+				auto playbackSpeed = marioSound->playbackSpeed;
+				playbackSpeed += (speed * speedPlaybackFactor);
+				soloud->setRelativePlaySpeed(slideHandle, marioSound->playbackSpeed);
+
 			}
-			soloud->setRelativePlaySpeed(handle, playbackSpeed);
+			else
+			{
+				int handle = soloud->play3d(marioSound->wav, sourcePos.X, sourcePos.Y, sourcePos.Z, 0, 0, 0, volume);
+
+				auto playbackSpeed = marioSound->playbackSpeed;
+				if (marioSound->playbackSpeed == 0.0f)
+				{
+					// Pick a random number
+					float randPercentage = (rand() % 101) / 100.0f;
+					float speedChange = 0.07f * randPercentage;
+					playbackSpeed = 1.05f + speedChange;
+				}
+
+				soloud->setRelativePlaySpeed(handle, playbackSpeed);
+			}
+
 		}
 	}
+
+	if (inSlideHandle >= 0 && slideHandle < 0)
+	{
+		soloud->stop(inSlideHandle);
+	}
+
 	soloud->set3dListenerPosition(listenerPos.X, listenerPos.Y, listenerPos.Z);
 	soloud->set3dListenerAt(listenerAt.X, listenerAt.Y, listenerAt.Z);
 	soloud->update3dAudio();
+
+	return slideHandle;
 }
 
 

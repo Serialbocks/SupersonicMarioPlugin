@@ -547,14 +547,17 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 
 
 	auto marioVector = Vector(marioInstance->marioState.posX, marioInstance->marioState.posZ, marioInstance->marioState.posY);
+	auto marioVel = Vector(marioInstance->marioState.velX, marioInstance->marioState.velZ, marioInstance->marioState.velY);
 	auto quat = RotatorToQuat(camera.GetRotation());
 	instance->cameraLoc = camera.GetLocation();
 	Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 
-	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
+	marioInstance->slidingHandle = instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
 		marioVector,
+		marioVel,
 		instance->cameraLoc,
-		cameraAt);
+		cameraAt,
+		marioInstance->slidingHandle);
 
 	int playerId = car.GetPRI().GetPlayerID();
 	memcpy(self->netcodeOutBuf, &playerId, sizeof(int));
@@ -752,14 +755,19 @@ void SM64::OnRender(CanvasWrapper canvas)
 		auto marioVector = Vector(marioInstance->marioBodyState.marioState.posX,
 			marioInstance->marioBodyState.marioState.posZ,
 			marioInstance->marioBodyState.marioState.posY);
+		auto marioVel = Vector(marioInstance->marioBodyState.marioState.velX,
+			marioInstance->marioBodyState.marioState.velZ,
+			marioInstance->marioBodyState.marioState.velY);
 		auto quat = RotatorToQuat(camera.GetRotation());
 		cameraLoc = camera.GetLocation();
 		Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 		
 		marioAudio->UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
 			marioVector,
+			marioVel,
 			cameraLoc,
-			cameraAt);
+			cameraAt,
+			-1);
 
 		marioInstance->marioBodyState.marioState.soundMask = 0;
 
