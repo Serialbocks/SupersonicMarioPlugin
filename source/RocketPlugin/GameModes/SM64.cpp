@@ -120,6 +120,7 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	gameWrapper->RegisterDrawable(std::bind(&SM64::OnRender, this, _1));
 	gameWrapper->HookEventPost("Function TAGame.EngineShare_TA.EventPostPhysicsStep", bind(&SM64::moveCarToMario, this, _1));
 	gameWrapper->HookEventPost("Function TAGame.NetworkInputBuffer_TA.ClientAckFrame", bind(&SM64::moveCarToMario, this, _1));
+	gameWrapper->HookEventPost("Function GameEvent_Soccar_TA.PostGoalScored.Tick", bind(&SM64::onGoalScored, this, _1));
 	//gameWrapper->HookEventPost("Function TAGame.RBActor_TA.PreAsyncTick", bind(&SM64::moveCarToMario, this, _1));
 	//gameWrapper->HookEventPost("Function ProjectX.ActorComponent_X.Tick", bind(&SM64::moveCarToMario, this, _1));
 	//gameWrapper->HookEventPost("Function ProjectX.DynamicValueModifier_X.Tick", bind(&SM64::moveCarToMario, this, _1));
@@ -229,6 +230,17 @@ void SM64::moveCarToMario(std::string eventName)
 	carRot.Pitch = carRotation.Pitch;
 	car.SetRotation(carRot);
 	marioInstance->sema.release();
+}
+
+void SM64::onGoalScored(std::string eventName)
+{
+	isInSm64GameSema.acquire();
+	bool inSm64Game = isInSm64Game;
+	isInSm64GameSema.release();
+	if (isInSm64Game)
+	{
+		OnGameLeft();
+	}
 }
 
 void MessageReceived(char* buf, int len)
