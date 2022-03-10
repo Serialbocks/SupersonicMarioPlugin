@@ -693,7 +693,15 @@ void SM64::OnRender(CanvasWrapper canvas)
 		auto playerId = player.GetPlayerID();
 		if (remoteMarios.count(playerId) > 0)
 		{
-			remoteMarios[playerId]->CarActive = true;
+			SM64MarioInstance* remoteMario = remoteMarios[playerId];
+			remoteMario->CarActive = true;
+			if (remoteMario->marioId < 0)
+			{
+				auto currentCarLoc = car.GetLocation();
+				remoteMario->marioState.posX = currentCarLoc.X;
+				remoteMario->marioState.posY = currentCarLoc.Z;
+				remoteMario->marioState.posZ = currentCarLoc.Y;
+			}
 		}
 
 		if (playerName != localPlayerName)
@@ -755,6 +763,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 			marioInstance->marioId = sm64_mario_create((int16_t)marioInstance->marioState.posX,
 				(int16_t)marioInstance->marioState.posY,
 				(int16_t)marioInstance->marioState.posZ);
+			marioInstance->sema.release();
+			continue;
 		}
 
 		sm64_mario_tick(marioInstance->marioId,
