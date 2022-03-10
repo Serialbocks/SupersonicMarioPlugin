@@ -213,22 +213,24 @@ void SM64::moveCarToMario(std::string eventName)
 	auto car = gameWrapper->GetLocalCar();
 	if (car.IsNull()) return;
 
-	if (localMario.mesh == nullptr) return;
-
 	auto marioInstance = &localMario;
 
 	marioInstance->sema.acquire();
 
-	auto marioState = &marioInstance->marioBodyState.marioState;
-	auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-	auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
-	car.SetLocation(carPosition);
-	car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
-	auto carRot = car.GetRotation();
-	carRot.Yaw = marioYaw;
-	carRot.Roll = carRotation.Roll;
-	carRot.Pitch = carRotation.Pitch;
-	car.SetRotation(carRot);
+	if (marioInstance->marioId >= 0)
+	{
+		auto marioState = &marioInstance->marioBodyState.marioState;
+		auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+		auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+		car.SetLocation(carPosition);
+		car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+		auto carRot = car.GetRotation();
+		carRot.Yaw = marioYaw;
+		carRot.Roll = carRotation.Roll;
+		carRot.Pitch = carRotation.Pitch;
+		car.SetRotation(carRot);
+	}
+
 	marioInstance->sema.release();
 }
 
@@ -270,6 +272,9 @@ void MessageReceived(char* buf, int len)
 	{
 		marioInstance = self->remoteMarios[playerId];
 	}
+	self->remoteMariosSema.release();
+
+	marioInstance->sema.acquire();
 	if (marioInstance->mesh == nullptr)
 	{
 		// Initialize the mesh
@@ -280,14 +285,12 @@ void MessageReceived(char* buf, int len)
 			4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
 			SM64_TEXTURE_WIDTH,
 			SM64_TEXTURE_HEIGHT);
+		marioInstance->sema.release();
+		return;
 	}
-	self->remoteMariosSema.release();
-
-	if (marioInstance == nullptr) return;
-
-	marioInstance->sema.acquire();
 	memcpy(&marioInstance->marioBodyState, targetData + sizeof(int), targetLen - sizeof(int));
 	marioInstance->sema.release();
+
 	self->isInSm64GameSema.acquire();
 	self->isInSm64Game = true;
 	self->isInSm64GameSema.release();
@@ -451,25 +454,29 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 		marioInstance->sema.acquire();
 
-		car.SetbIgnoreSyncing(true);
-		car.SetHidden2(TRUE);
-		car.SetbHiddenSelf(TRUE);
-		auto marioState = &marioInstance->marioBodyState.marioState;
-		auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-		auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
-		car.SetLocation(carPosition);
-		car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
-		auto carRot = car.GetRotation();
-		carRot.Yaw = marioYaw;
-		carRot.Roll = carRotation.Roll;
-		carRot.Pitch = carRotation.Pitch;
-		car.SetRotation(carRot);
-		ControllerInput* newInput = (ControllerInput*)params;
-		newInput->Jump = 0;
-		newInput->Handbrake = 0;
-		newInput->Throttle = 0;
-		newInput->Steer = 0;
-		newInput->Pitch = 0;
+		if (marioInstance->marioId >= 0)
+		{
+			car.SetbIgnoreSyncing(true);
+			car.SetHidden2(TRUE);
+			car.SetbHiddenSelf(TRUE);
+			auto marioState = &marioInstance->marioBodyState.marioState;
+			auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+			auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+			car.SetLocation(carPosition);
+			car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+			auto carRot = car.GetRotation();
+			carRot.Yaw = marioYaw;
+			carRot.Roll = carRotation.Roll;
+			carRot.Pitch = carRotation.Pitch;
+			car.SetRotation(carRot);
+			ControllerInput* newInput = (ControllerInput*)params;
+			newInput->Jump = 0;
+			newInput->Handbrake = 0;
+			newInput->Throttle = 0;
+			newInput->Steer = 0;
+			newInput->Pitch = 0;
+		}
+
 		marioInstance->sema.release();
 	}
 
@@ -503,6 +510,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	auto y = (int16_t)(instance->carLocation.Y);
 	auto z = (int16_t)(instance->carLocation.Z);
 
+	marioInstance->sema.acquire();
 	if (marioInstance->marioId < 0)
 	{
 		// Unreal swaps coords
@@ -548,7 +556,6 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - instance->cameraLoc.X;
 	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - instance->cameraLoc.Y;
 
-	marioInstance->sema.acquire();
 	sm64_mario_tick(marioInstance->marioId,
 		&marioInstance->marioInputs,
 		&marioInstance->marioState,
@@ -589,6 +596,7 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 {
 	if (marioInstance == nullptr) return;
 
+	marioInstance->sema.acquire();
 	if (marioInstance->mesh != nullptr)
 	{
 		for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
@@ -615,6 +623,7 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 		}
 		marioInstance->mesh->RenderUpdateVertices(marioInstance->marioGeometry.numTrianglesUsed, &camera);
 	}
+	marioInstance->sema.release();
 }
 
 void SM64::OnRender(CanvasWrapper canvas)
@@ -706,18 +715,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 		SM64MarioInstance* marioInstance = &localMario;
 
 		carLocation = car.GetLocation();
-		if (marioInstance->marioId < 0)
-		{
-			if (isHost)
-			{
-				break; // We create the host's mario in onTick()
-			}
-
-			auto x = (int16_t)(carLocation.X);
-			auto y = (int16_t)(carLocation.Y);
-			auto z = (int16_t)(carLocation.Z);
-			marioInstance->marioId = sm64_mario_create(x, z, y);
-		}
 
 		if(!isHost)
 		{
