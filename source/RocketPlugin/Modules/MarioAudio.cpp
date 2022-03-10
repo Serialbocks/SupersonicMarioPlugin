@@ -43,8 +43,14 @@ int MarioAudio::UpdateSounds(int soundMask,
 	Vector sourceVel,
 	Vector listenerPos,
 	Vector listenerAt,
-	int inSlideHandle)
+	int inSlideHandle,
+	uint32_t marioAction)
 {
+	if (marioAction == ACT_WALL_KICK_AIR)
+	{
+		marioSounds[SOUND_MARIO_UH_INDEX].wav.stop();
+		marioSounds[SOUND_MARIO_DOH_INDEX].wav.stop();
+	}
 
 	int slideHandle = -1;
 	for (auto i = 0; i < marioSounds.size(); i++)
@@ -53,7 +59,7 @@ int MarioAudio::UpdateSounds(int soundMask,
 		if (marioSound->mask & soundMask)
 		{
 			float distance = utils.Distance(sourcePos, listenerPos);
-			float volume = 1.0f - pow(distance * ATTEN_ROLLOFF_FACTOR, 2);
+			float volume = marioSound->volume - pow(distance * ATTEN_ROLLOFF_FACTOR, 2);
 			volume = volume <= 0.0f ? 0.0f : volume;
 
 			if (marioSound->mask == SOUND_MOVING_TERRAIN_SLIDE)
@@ -61,7 +67,6 @@ int MarioAudio::UpdateSounds(int soundMask,
 				// Handle sliding as a special case since it loops
 				if (inSlideHandle < 0)
 				{
-					volume *= 0.65f;
 					slideHandle = soloud->play3d(marioSound->wav, sourcePos.X, sourcePos.Y, sourcePos.Z, 0, 0, 0, volume);
 				}
 				else
