@@ -162,24 +162,37 @@ void SM64::OnGameLeft()
 	isInSm64Game = false;
 	isInSm64GameSema.release();
 	if (localMario.mesh != nullptr)
+	{
 		localMario.mesh->RenderUpdateVertices(0, nullptr);
+	}
+		
 	if (localMario.marioId >= 0)
 	{
 		sm64_mario_delete(localMario.marioId);
 		localMario.marioId = -2;
+		if (localMario.mesh != nullptr)
+		{
+			localMario.mesh->RenderUpdateVertices(0, nullptr);
+			addMeshToPool(localMario.mesh);
+			localMario.mesh = nullptr;
+		}
 	}
 	for (const auto& remoteMario : remoteMarios)
 	{
 		SM64MarioInstance* marioInstance = remoteMario.second;
+		marioInstance->sema.acquire();
 		if (marioInstance->mesh != nullptr)
 		{
 			marioInstance->mesh->RenderUpdateVertices(0, nullptr);
+			addMeshToPool(marioInstance->mesh);
+			marioInstance->mesh = nullptr;
 		}
 		if (marioInstance->marioId >= 0)
 		{
 			sm64_mario_delete(marioInstance->marioId);
 			marioInstance->marioId = -2;
 		}
+		marioInstance->sema.release();
 	}
 	remoteMarios.clear();
 }
@@ -275,19 +288,6 @@ void MessageReceived(char* buf, int len)
 	self->remoteMariosSema.release();
 
 	marioInstance->sema.acquire();
-	if (marioInstance->mesh == nullptr)
-	{
-		// Initialize the mesh
-		auto tmpTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
-		memcpy(tmpTexture, self->texture, SM64_TEXTURE_SIZE);
-		marioInstance->mesh = self->renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
-			tmpTexture,
-			4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
-			SM64_TEXTURE_WIDTH,
-			SM64_TEXTURE_HEIGHT);
-		marioInstance->sema.release();
-		return;
-	}
 	memcpy(&marioInstance->marioBodyState, targetData + sizeof(int), targetLen - sizeof(int));
 	marioInstance->sema.release();
 
@@ -645,11 +645,17 @@ void SM64::OnRender(CanvasWrapper canvas)
 	{
 		ballMesh = renderer->CreateMesh(&ballVertices);
 
-		localMario.mesh = renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
-			texture,
-			4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
-			SM64_TEXTURE_WIDTH,
-			SM64_TEXTURE_HEIGHT);
+		marioMeshPoolSema.acquire();
+		for (int i = 0; i < MARIO_MESH_POOL_SIZE; i++)
+		{
+			marioMeshPool.push_back(renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
+				texture,
+				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
+				SM64_TEXTURE_WIDTH,
+				SM64_TEXTURE_HEIGHT));
+		}
+		marioMeshPoolSema.release();
+
 		meshesInitialized = true;
 	}
 
@@ -716,6 +722,11 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		carLocation = car.GetLocation();
 
+		if (marioInstance->mesh == nullptr)
+		{
+			marioInstance->mesh = getMeshFromPool();
+		}
+
 		if(!isHost)
 		{
 			tickMarioInstance(marioInstance, car, this);
@@ -744,7 +755,12 @@ void SM64::OnRender(CanvasWrapper canvas)
 		marioInstance->sema.acquire();
 		if (marioInstance->mesh == nullptr)
 		{
-			continue;
+			marioInstance->mesh = getMeshFromPool();
+			if (marioInstance->mesh == nullptr)
+			{
+				marioInstance->sema.release();
+				continue;
+			}
 		}
 		if (marioInstance->marioId < 0)
 		{
@@ -792,6 +808,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 			if (marioInstance->mesh != nullptr)
 			{
 				marioInstance->mesh->RenderUpdateVertices(0, nullptr);
+				addMeshToPool(marioInstance->mesh);
+				marioInstance->mesh = nullptr;
 			}
 		}
 
@@ -852,6 +870,28 @@ std::string SM64::bytesToHex(unsigned char* data, unsigned int len)
 	return ss.str();
 }
 
+Mesh* SM64::getMeshFromPool()
+{
+	Mesh* mesh = nullptr;
+	marioMeshPoolSema.acquire();
+	if (marioMeshPool.size() > 0)
+	{
+		mesh = marioMeshPool[0];
+		marioMeshPool.erase(marioMeshPool.begin());
+	}
+	marioMeshPoolSema.release();
+	return mesh;
+}
+
+void SM64::addMeshToPool(Mesh* mesh)
+{
+	if (mesh != nullptr)
+	{
+		marioMeshPoolSema.acquire();
+		marioMeshPool.push_back(mesh);
+		marioMeshPoolSema.release();
+	}
+}
 
 std::vector<char> SM64::hexToBytes(const std::string& hex) {
 	std::vector<char> bytes;

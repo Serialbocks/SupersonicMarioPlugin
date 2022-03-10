@@ -33,6 +33,7 @@ extern "C" {
 #include "../Graphics/level.h"
 
 #define SM64_NETCODE_BUF_LEN 1024
+#define MARIO_MESH_POOL_SIZE 10
 
 class SM64MarioInstance
 {
@@ -80,6 +81,8 @@ private:
     void onGoalScored(std::string eventName);
     std::vector<char> hexToBytes(const std::string& hex);
     uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
+    Mesh* getMeshFromPool();
+    void addMeshToPool(Mesh*);
 
 public:
     MarioAudio* marioAudio = nullptr;
@@ -96,6 +99,8 @@ public:
     Utils utils;
     Rotator carRotation;
     char netcodeOutBuf[SM64_NETCODE_BUF_LEN];
+    std::vector<Mesh*> marioMeshPool;
+    std::counting_semaphore<1> marioMeshPoolSema{ 1 };
 
 public:
     /* SM64 Members */
