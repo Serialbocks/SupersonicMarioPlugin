@@ -741,12 +741,11 @@ void SM64::OnRender(CanvasWrapper canvas)
 	// Loop through remote marios and render
 	for (auto const& [playerId, marioInstance] : remoteMarios)
 	{
+		marioInstance->sema.acquire();
 		if (marioInstance->mesh == nullptr)
 		{
 			continue;
 		}
-
-		marioInstance->sema.acquire();
 		if (marioInstance->marioId < 0)
 		{
 			marioInstance->marioId = sm64_mario_create((int16_t)marioInstance->marioState.posX,
