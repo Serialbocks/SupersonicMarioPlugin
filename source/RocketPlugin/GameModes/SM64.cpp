@@ -529,34 +529,45 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		instance->cameraLoc = camera.GetLocation();
 	}
 
-	instance->InputManager.Update();
-	marioInstance->marioInputs.buttonA = instance->InputMap->GetBool(ButtonA);
-	marioInstance->marioInputs.buttonB = instance->InputMap->GetBool(ButtonB);
-	marioInstance->marioInputs.buttonZ = instance->InputMap->GetBool(ButtonZ);
-	if (instance->InputMap->GetBool(KeyboardS))
+	//instance->InputManager.Update();
+	//marioInstance->marioInputs.buttonA = instance->InputMap->GetBool(ButtonA);
+	//marioInstance->marioInputs.buttonB = instance->InputMap->GetBool(ButtonB);
+	//marioInstance->marioInputs.buttonZ = instance->InputMap->GetBool(ButtonZ);
+	//if (instance->InputMap->GetBool(KeyboardS))
+	//{
+	//	marioInstance->marioInputs.stickY = 1.0f;
+	//}
+	//else if (instance->InputMap->GetBool(KeyboardW))
+	//{
+	//	marioInstance->marioInputs.stickY = -1.0f;
+	//}
+	//else
+	//{
+	//	marioInstance->marioInputs.stickY = -instance->InputMap->GetFloat(StickY);
+	//}
+	//if (instance->InputMap->GetBool(KeyboardD))
+	//{
+	//	marioInstance->marioInputs.stickX = 1.0f;
+	//}
+	//else if (instance->InputMap->GetBool(KeyboardA))
+	//{
+	//	marioInstance->marioInputs.stickX = -1.0f;
+	//}
+	//else
+	//{
+	//	marioInstance->marioInputs.stickX = instance->InputMap->GetFloat(StickX);
+	//}
+	auto playerController = car.GetPlayerController();
+	if (!playerController.IsNull())
 	{
-		marioInstance->marioInputs.stickY = 1.0f;
+		auto playerInputs = playerController.GetVehicleInput();
+		marioInstance->marioInputs.buttonA = playerInputs.Jump;
+		marioInstance->marioInputs.buttonB = playerInputs.Handbrake;
+		marioInstance->marioInputs.buttonZ = playerInputs.Throttle < 0;
+		marioInstance->marioInputs.stickX = playerInputs.Steer;
+		marioInstance->marioInputs.stickY = playerInputs.Pitch;
 	}
-	else if (instance->InputMap->GetBool(KeyboardW))
-	{
-		marioInstance->marioInputs.stickY = -1.0f;
-	}
-	else
-	{
-		marioInstance->marioInputs.stickY = -instance->InputMap->GetFloat(StickY);
-	}
-	if (instance->InputMap->GetBool(KeyboardD))
-	{
-		marioInstance->marioInputs.stickX = 1.0f;
-	}
-	else if (instance->InputMap->GetBool(KeyboardA))
-	{
-		marioInstance->marioInputs.stickX = -1.0f;
-	}
-	else
-	{
-		marioInstance->marioInputs.stickX = instance->InputMap->GetFloat(StickX);
-	}
+
 	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - instance->cameraLoc.X;
 	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - instance->cameraLoc.Y;
 
