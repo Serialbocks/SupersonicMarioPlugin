@@ -101,6 +101,7 @@ public:
     char netcodeOutBuf[SM64_NETCODE_BUF_LEN];
     std::vector<Mesh*> marioMeshPool;
     std::counting_semaphore<1> marioMeshPoolSema{ 1 };
+    float currentBoostAount = 0.33f;
 
 public:
     /* SM64 Members */

@@ -85,7 +85,6 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	// Map controller
 	InputMap->MapBool(ButtonA, padId, gainput::PadButtonA);
 	InputMap->MapBool(ButtonB, padId, gainput::PadButtonX);
-	InputMap->MapBool(ButtonB, padId, gainput::PadButtonB);
 	InputMap->MapBool(ButtonZ, padId, gainput::PadButtonL1);
 	InputMap->MapBool(ButtonZ, padId, gainput::PadButtonL2);
 	InputMap->MapFloat(StickX, padId, gainput::PadButtonLeftStickX);
@@ -439,6 +438,11 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 		if (isLocalPlayer)
 		{
 			marioInstance = &localMario;
+			auto boostComponent = car.GetBoostComponent();
+			if (!boostComponent.IsNull())
+			{
+				currentBoostAount = car.GetBoostComponent().GetCurrentBoostAmount();
+			}
 		}
 		else
 		{
@@ -556,13 +560,16 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - instance->cameraLoc.X;
 	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - instance->cameraLoc.Y;
 
+	auto controllerInput = car.GetPlayerController().GetVehicleInput();
+	auto isboosting = controllerInput.HoldingBoost && instance->currentBoostAount >= 0.01f;
 	sm64_mario_tick(marioInstance->marioId,
 		&marioInstance->marioInputs,
 		&marioInstance->marioState,
 		&marioInstance->marioGeometry,
 		&marioInstance->marioBodyState,
 		true,
-		true);
+		true,
+		isboosting);
 
 
 	auto marioVector = Vector(marioInstance->marioState.posX, marioInstance->marioState.posZ, marioInstance->marioState.posY);
@@ -774,6 +781,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 			&marioInstance->marioBodyState.marioState,
 			&marioInstance->marioGeometry,
 			&marioInstance->marioBodyState,
+			false,
 			false,
 			false);
 
