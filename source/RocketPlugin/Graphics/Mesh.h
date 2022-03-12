@@ -40,6 +40,7 @@ public:
 	void SetScale(float x, float y, float z);
 	void SetRotation(float roll, float pitch, float yaw);
 	void SetRotationQuat(float x, float y, float z, float w);
+	void SetColorIndex(int index);
 
 private:
 	void init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
@@ -66,6 +67,7 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexConstantBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> TextureResourceView = nullptr;
+	int ColorIndex = 0;
 	bool render = false;
 
 private:

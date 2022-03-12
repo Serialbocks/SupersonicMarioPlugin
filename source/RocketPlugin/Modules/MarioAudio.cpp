@@ -61,6 +61,7 @@ int MarioAudio::UpdateSounds(int soundMask,
 			float distance = utils.Distance(sourcePos, listenerPos);
 			float volume = marioSound->volume - pow(distance * ATTEN_ROLLOFF_FACTOR, 2);
 			volume = volume <= 0.0f ? 0.0f : volume;
+			volume *= 0.7f;
 
 			if (marioSound->mask == SOUND_MOVING_TERRAIN_SLIDE)
 			{

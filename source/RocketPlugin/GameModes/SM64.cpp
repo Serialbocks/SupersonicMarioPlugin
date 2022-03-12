@@ -723,10 +723,23 @@ void SM64::OnRender(CanvasWrapper canvas)
 		if (player.IsNull()) continue;
 		auto playerName = player.GetPlayerName().ToString();
 
+		int teamIndex = -1;
+
+		auto team = player.GetTeam();
+		if (!team.IsNull())
+		{
+			teamIndex = team.GetTeamIndex();
+		}
+
 		auto playerId = player.GetPlayerID();
 		if (remoteMarios.count(playerId) > 0)
 		{
-			remoteMarios[playerId]->CarActive = true;
+			auto remoteMario = remoteMarios[playerId];
+			remoteMario->CarActive = true;
+			if (remoteMario->mesh != nullptr)
+			{
+				remoteMario->mesh->SetColorIndex(teamIndex);
+			}
 		}
 
 		if (playerName != localPlayerName)
@@ -738,11 +751,16 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		SM64MarioInstance* marioInstance = &localMario;
 
+
 		carLocation = car.GetLocation();
 
 		if (marioInstance->mesh == nullptr)
 		{
 			marioInstance->mesh = getMeshFromPool();
+		}
+		else
+		{
+			marioInstance->mesh->SetColorIndex(teamIndex);
 		}
 
 		if(!isHost)

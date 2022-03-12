@@ -111,6 +111,11 @@ void Mesh::SetRotationQuat(float x, float y, float z, float w)
 	quatW = w;
 }
 
+void Mesh::SetColorIndex(int index)
+{
+	ColorIndex = index;
+}
+
 void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	int inWindowWidth,
 	int inWindowHeight,

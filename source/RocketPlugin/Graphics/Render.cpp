@@ -300,11 +300,6 @@ void Renderer::DrawRenderedMesh()
 	context->OMSetBlendState(blendState.Get(), NULL, 0xFFFFFFFF);
 
 	Lighting.UpdateLights(&PixelConstBufferData);
-	// Map the pixel constant buffer
-	D3D11_MAPPED_SUBRESOURCE mappedResource;
-	context->Map(pixelConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-	memcpy(mappedResource.pData, &PixelConstBufferData, sizeof(PS_ConstantBufferData));
-	context->Unmap(pixelConstantBuffer.Get(), 0);
 
 	context->UpdateSubresource(pixelConstantBuffer.Get(), 0, 0, &PixelConstBufferData, 0, 0);
 	context->PSSetConstantBuffers(0, 1, pixelConstantBuffer.GetAddressOf());
@@ -320,6 +315,14 @@ void Renderer::DrawRenderedMesh()
 			mesh->UpdateVertices = false;
 			continue;
 		};
+
+		PixelConstBufferData.colorIndex = mesh->ColorIndex;
+
+		// Map the pixel constant buffer
+		D3D11_MAPPED_SUBRESOURCE mappedResource;
+		context->Map(pixelConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+		memcpy(mappedResource.pData, &PixelConstBufferData, sizeof(PS_ConstantBufferData));
+		context->Unmap(pixelConstantBuffer.Get(), 0);
 
 		// Map the vertex constant buffer on the GPU
 		context->Map(mesh->VertexConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);

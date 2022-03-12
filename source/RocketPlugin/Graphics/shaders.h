@@ -48,6 +48,7 @@ cbuffer PS_constantBuffer
 
     float4 dynamicLightColorStrengths[numLights];
     float4 dynamicLightPositions[numLights];
+    int colorIndex;
 };
 
 float4 PSTex(VS_Output input) : SV_Target
@@ -59,6 +60,13 @@ float4 PSTex(VS_Output input) : SV_Target
     {
         discard;
     }
+
+    if(colorIndex == 0 && input.color.x >= 0.99f && input.color.y <= 0.01f && input.color.z <= 0.01f)
+    {
+        input.color.x = 0.0f;
+        input.color.y = 1.0f;
+    }
+
     float4 mixedColor = lerp(input.color, textureColor, textureColor.w < 0.3f ? 0.0f : textureColor.w);
 
     if(input.color.w > 0.0f)
