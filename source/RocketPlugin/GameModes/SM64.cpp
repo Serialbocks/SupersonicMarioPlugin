@@ -18,48 +18,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 
 void MessageReceived(char* buf, int len);
 
-enum Button
-{
-	ButtonA,
-	ButtonB,
-	ButtonZ,
-	StickX,
-	StickY,
-	KeyboardW,
-	KeyboardA,
-	KeyboardS,
-	KeyboardD
-};
-
 SM64* self = nullptr;
-
-// Hook into the main window's GetMessage function to process input messages through ginput
-HHOOK g_hhkCallMsgProc = NULL;
-LRESULT CALLBACK CallMsgProc(int nCode, WPARAM wParam, LPARAM lParam)
-{
-	MSG* lpmsg = (MSG*)lParam;
-	switch (lpmsg->message)
-	{
-	case WM_CHAR:
-	case WM_KEYDOWN:
-	case WM_KEYUP:
-	case WM_SYSKEYDOWN:
-	case WM_SYSKEYUP:
-	case WM_LBUTTONDOWN:
-	case WM_LBUTTONUP:
-	case WM_RBUTTONDOWN:
-	case WM_RBUTTONUP:
-		if (self != nullptr && self->InputMap != nullptr)
-		{
-			self->InputManager.HandleMessage(*lpmsg);
-		}
-		break;
-	default:
-		break;
-	}
-
-	return CallNextHookEx(g_hhkCallMsgProc, nCode, wParam, lParam);
-}
 
 SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, BakkesMod::Plugin::PluginInfo exports)
 {
@@ -67,53 +26,8 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	gameWrapper = gw;
 	cvarManager = cm;
 
-	// Init button mappings
-	gainput::DeviceId mouseId = InputManager.CreateDevice<gainput::InputDeviceMouse>();
-	gainput::DeviceId keyboardId = InputManager.CreateDevice<gainput::InputDeviceKeyboard>();
-	gainput::DeviceId padId = InputManager.CreateDevice<gainput::InputDevicePad>();
-	InputMap = new gainput::InputMap(InputManager);
-	
-	// Map keyboard
-	InputMap->MapBool(ButtonA, mouseId, gainput::MouseButtonRight);
-	InputMap->MapBool(ButtonB, mouseId, gainput::MouseButtonLeft);
-	InputMap->MapBool(ButtonZ, keyboardId, gainput::KeyShiftL);
-	InputMap->MapBool(KeyboardW, keyboardId, gainput::KeyW);
-	InputMap->MapBool(KeyboardA, keyboardId, gainput::KeyA);
-	InputMap->MapBool(KeyboardS, keyboardId, gainput::KeyS);
-	InputMap->MapBool(KeyboardD, keyboardId, gainput::KeyD);
-
-	// Map controller
-	InputMap->MapBool(ButtonA, padId, gainput::PadButtonA);
-	InputMap->MapBool(ButtonB, padId, gainput::PadButtonX);
-	InputMap->MapBool(ButtonZ, padId, gainput::PadButtonL1);
-	InputMap->MapBool(ButtonZ, padId, gainput::PadButtonL2);
-	InputMap->MapFloat(StickX, padId, gainput::PadButtonLeftStickX);
-	InputMap->MapFloat(StickY, padId, gainput::PadButtonLeftStickY);
-
 	// Register callback to receiving TCP data from server/clients
 	Networking::RegisterCallback(MessageReceived);
-
-	// Hook into the main window's GetMessage function to process input messages through ginput
-	if (g_hhkCallMsgProc == NULL)
-	{
-		PluginManagerWrapper PluginManager = gameWrapper->GetPluginManager();
-		if (PluginManager.memory_address != NULL)
-		{
-			auto* PluginList = PluginManager.GetLoadedPlugins();
-			for (const auto& ThisPlugin : *PluginList)
-			{
-				if (std::string(ThisPlugin->_details->className) == "RocketPlugin")
-				{
-					g_hhkCallMsgProc = SetWindowsHookEx(WH_GETMESSAGE,
-						CallMsgProc,
-						ThisPlugin->_instance,
-						0);
-				}
-			}
-		}
-
-		inputManagerInitialized = true;
-	}
 
 	InitSM64();
 	gameWrapper->RegisterDrawable(std::bind(&SM64::OnRender, this, _1));
@@ -148,7 +62,6 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 SM64::~SM64()
 {
 	gameWrapper->UnregisterDrawables();
-	delete InputMap;
 	DestroySM64();
 	UnhookEvent("Function TAGame.Car_TA.SetVehicleInput");
 }
@@ -646,7 +559,6 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 
 void SM64::OnRender(CanvasWrapper canvas)
 {
-	InputManager.SetDisplaySize(canvas.GetSize().X, canvas.GetSize().Y);
 	if (renderer == nullptr) return;
 	if (!loadMeshesThreadStarted)
 	{

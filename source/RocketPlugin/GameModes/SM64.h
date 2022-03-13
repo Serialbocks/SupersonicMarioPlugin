@@ -2,7 +2,6 @@
 
 #pragma comment(lib, "sm64.lib")
 #pragma comment(lib,"shlwapi.lib")
-#pragma comment(lib, "gainput.lib")
 
 #include <fstream>
 #include <semaphore>
@@ -13,7 +12,6 @@
 #include <stdlib.h>
 
 #include "shlobj.h"
-#include "gainput/gainput.h"
 
 #include "../Graphics/Renderer.h"
 #include "../Graphics/Mesh.h"
@@ -89,8 +87,6 @@ public:
     std::shared_ptr<GameWrapper> gameWrapper;
     Vector cameraLoc = Vector(0, 0, 0);
     ControllerInput playerInputs;
-    gainput::InputManager InputManager;
-    gainput::InputMap* InputMap = nullptr;
     bool inputManagerInitialized = false;
     Renderer* renderer = nullptr;
     std::vector<Vertex> ballVertices;
