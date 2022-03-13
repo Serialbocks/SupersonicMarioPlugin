@@ -35,6 +35,7 @@
 #define SOUND_MARIO_DOH                         0x00040000
 #define SOUND_MARIO_OOOF                        0x00080000
 #define SOUND_ACTION_TERRAIN_BODY_HIT_GROUND    0x00100000
+#define SOUND_MARIO_ATTACKED                    0x00200000
 
 struct soxr;
 extern "C" void soxr_delete(soxr*);
@@ -96,7 +97,8 @@ private:
 		{ SOUND_MARIO_UH,							"sfx_mario/05.wav",					1.0f},
 		{ SOUND_MARIO_DOH,							"sfx_mario/10.wav",					1.09f},
 		{ SOUND_MARIO_OOOF,							"sfx_mario/0B.wav",					1.0f}, // -9% pitch
-		{ SOUND_ACTION_TERRAIN_BODY_HIT_GROUND,		"sfx_terrain/01_land_grass.wav",	1.0f,		0.55f} // duplicated 01_step_grass.wav and resampled
+		{ SOUND_ACTION_TERRAIN_BODY_HIT_GROUND,		"sfx_terrain/01_land_grass.wav",	1.0f,		0.55f}, // duplicated 01_step_grass.wav and resampled
+		{ SOUND_MARIO_ATTACKED,						"sfx_mario/0A.wav",					1.0f},
 	};
 	Utils utils;
 	soxrHandle soxrHandle;

@@ -373,6 +373,7 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 		if (marioInstance->marioId >= 0)
 		{
+
 			car.SetbIgnoreSyncing(true);
 			car.SetHidden2(TRUE);
 			car.SetbHiddenSelf(TRUE);
@@ -392,9 +393,27 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 			newInput->Throttle = 0;
 			newInput->Steer = 0;
 			newInput->Pitch = 0;
+
+			auto boostComponent = car.GetBoostComponent();
+			if (marioInstance->marioBodyState.marioState.attacked && !boostComponent.IsNull())
+			{
+				marioInstance->marioBodyState.marioState.attacked = false;
+				float curBoostAmt = boostComponent.GetCurrentBoostAmount();
+				if (curBoostAmt >= 0.01f)
+				{
+					curBoostAmt -= 0.20f;
+					curBoostAmt = curBoostAmt < 0 ? 0 : curBoostAmt;
+				}
+				boostComponent.SetCurrentBoostAmount(curBoostAmt);
+				if (curBoostAmt < 0.01f)
+				{
+					car.Demolish();
+				}
+			}
 		}
 
 		marioInstance->sema.release();
+
 	}
 
 }
@@ -442,34 +461,6 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		instance->cameraLoc = camera.GetLocation();
 	}
 
-	//instance->InputManager.Update();
-	//marioInstance->marioInputs.buttonA = instance->InputMap->GetBool(ButtonA);
-	//marioInstance->marioInputs.buttonB = instance->InputMap->GetBool(ButtonB);
-	//marioInstance->marioInputs.buttonZ = instance->InputMap->GetBool(ButtonZ);
-	//if (instance->InputMap->GetBool(KeyboardS))
-	//{
-	//	marioInstance->marioInputs.stickY = 1.0f;
-	//}
-	//else if (instance->InputMap->GetBool(KeyboardW))
-	//{
-	//	marioInstance->marioInputs.stickY = -1.0f;
-	//}
-	//else
-	//{
-	//	marioInstance->marioInputs.stickY = -instance->InputMap->GetFloat(StickY);
-	//}
-	//if (instance->InputMap->GetBool(KeyboardD))
-	//{
-	//	marioInstance->marioInputs.stickX = 1.0f;
-	//}
-	//else if (instance->InputMap->GetBool(KeyboardA))
-	//{
-	//	marioInstance->marioInputs.stickX = -1.0f;
-	//}
-	//else
-	//{
-	//	marioInstance->marioInputs.stickX = instance->InputMap->GetFloat(StickX);
-	//}
 	auto playerController = car.GetPlayerController();
 	if (!playerController.IsNull())
 	{
@@ -486,6 +477,41 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 
 	auto controllerInput = car.GetPlayerController().GetVehicleInput();
 	auto isboosting = controllerInput.HoldingBoost && instance->currentBoostAount >= 0.01f;
+
+	// Determine interaction between other marios
+	bool isAttacked = false;
+	Vector attackedFromFector(0, 0, 0);
+	if (marioInstance->marioId >= 0)
+	{
+		Vector localMarioVector(marioInstance->marioState.posX,
+			marioInstance->marioState.posY,
+			marioInstance->marioState.posZ);
+		instance->remoteMariosSema.acquire();
+		for (auto const& [playerId, remoteMarioInstance] : instance->remoteMarios)
+		{
+			if (isAttacked)
+				break;
+
+			if (remoteMarioInstance->marioId < 0)
+				continue;
+
+			remoteMarioInstance->sema.acquire();
+
+			Vector remoteMarioVector(remoteMarioInstance->marioBodyState.marioState.posX,
+				remoteMarioInstance->marioBodyState.marioState.posY,
+				remoteMarioInstance->marioBodyState.marioState.posZ);
+
+			auto distance = instance->utils.Distance(localMarioVector, remoteMarioVector);
+			if (distance < 100.0f && remoteMarioInstance->marioBodyState.action & ACT_FLAG_ATTACKING) // TODO if in our direction
+			{
+				isAttacked = true;
+				attackedFromFector = remoteMarioVector;
+			}
+			remoteMarioInstance->sema.release();
+		}
+		instance->remoteMariosSema.release();
+	}
+
 	sm64_mario_tick(marioInstance->marioId,
 		&marioInstance->marioInputs,
 		&marioInstance->marioState,
@@ -493,7 +519,11 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		&marioInstance->marioBodyState,
 		true,
 		true,
-		isboosting);
+		isboosting,
+		isAttacked,
+		attackedFromFector.X,
+		attackedFromFector.Y,
+		attackedFromFector.Z);
 
 
 	auto marioVector = Vector(marioInstance->marioState.posX, marioInstance->marioState.posZ, marioInstance->marioState.posY);
@@ -724,7 +754,11 @@ void SM64::OnRender(CanvasWrapper canvas)
 			&marioInstance->marioBodyState,
 			false,
 			false,
-			false);
+			false,
+			false,
+			0,
+			0,
+			0);
 
 		auto marioVector = Vector(marioInstance->marioBodyState.marioState.posX,
 			marioInstance->marioBodyState.marioState.posZ,

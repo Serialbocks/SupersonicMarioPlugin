@@ -1,7 +1,8 @@
 #include "pch.h"
 #include "MarioAudio.h"
 
-#define ATTEN_ROLLOFF_FACTOR 0.0003f
+#define ATTEN_ROLLOFF_FACTOR_EXP 0.0003f
+#define ATTEN_ROLLOFF_FACTOR_LIN 0
 
 static SoLoud::Soloud* soloud = nullptr;
 
@@ -59,7 +60,7 @@ int MarioAudio::UpdateSounds(int soundMask,
 		if (marioSound->mask & soundMask)
 		{
 			float distance = utils.Distance(sourcePos, listenerPos);
-			float volume = marioSound->volume - pow(distance * ATTEN_ROLLOFF_FACTOR, 2);
+			float volume = marioSound->volume - (distance * ATTEN_ROLLOFF_FACTOR_LIN) - pow(distance * ATTEN_ROLLOFF_FACTOR_EXP, 2);
 			volume = volume <= 0.0f ? 0.0f : volume;
 			volume *= 0.7f;
 
