@@ -373,8 +373,6 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 		if (marioInstance->marioId >= 0)
 		{
-
-			car.SetbIgnoreSyncing(true);
 			car.SetHidden2(TRUE);
 			car.SetbHiddenSelf(TRUE);
 			auto marioState = &marioInstance->marioBodyState.marioState;
@@ -394,23 +392,20 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 			newInput->Steer = 0;
 			newInput->Pitch = 0;
 
-			if (isHost)
+			auto boostComponent = car.GetBoostComponent();
+			if (marioInstance->marioBodyState.marioState.attacked && !boostComponent.IsNull())
 			{
-				auto boostComponent = car.GetBoostComponent();
-				if (marioInstance->marioBodyState.marioState.attacked && !boostComponent.IsNull())
+				marioInstance->marioBodyState.marioState.attacked = false;
+				float curBoostAmt = boostComponent.GetCurrentBoostAmount();
+				if (curBoostAmt >= 0.01f)
 				{
-					marioInstance->marioBodyState.marioState.attacked = false;
-					float curBoostAmt = boostComponent.GetCurrentBoostAmount();
-					if (curBoostAmt >= 0.01f)
-					{
-						curBoostAmt -= 0.20f;
-						curBoostAmt = curBoostAmt < 0 ? 0 : curBoostAmt;
-					}
-					boostComponent.SetCurrentBoostAmount(curBoostAmt);
-					if (curBoostAmt < 0.01f)
-					{
-						car.Demolish();
-					}
+					curBoostAmt -= 0.10f;
+					curBoostAmt = curBoostAmt < 0 ? 0 : curBoostAmt;
+				}
+				boostComponent.SetCurrentBoostAmount(curBoostAmt);
+				if (curBoostAmt < 0.01f)
+				{
+					car.Demolish();
 				}
 			}
 
