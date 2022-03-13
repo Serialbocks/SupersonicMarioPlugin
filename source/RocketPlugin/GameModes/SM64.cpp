@@ -394,22 +394,26 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 			newInput->Steer = 0;
 			newInput->Pitch = 0;
 
-			auto boostComponent = car.GetBoostComponent();
-			if (marioInstance->marioBodyState.marioState.attacked && !boostComponent.IsNull())
+			if (isHost)
 			{
-				marioInstance->marioBodyState.marioState.attacked = false;
-				float curBoostAmt = boostComponent.GetCurrentBoostAmount();
-				if (curBoostAmt >= 0.01f)
+				auto boostComponent = car.GetBoostComponent();
+				if (marioInstance->marioBodyState.marioState.attacked && !boostComponent.IsNull())
 				{
-					curBoostAmt -= 0.20f;
-					curBoostAmt = curBoostAmt < 0 ? 0 : curBoostAmt;
-				}
-				boostComponent.SetCurrentBoostAmount(curBoostAmt);
-				if (curBoostAmt < 0.01f)
-				{
-					car.Demolish();
+					marioInstance->marioBodyState.marioState.attacked = false;
+					float curBoostAmt = boostComponent.GetCurrentBoostAmount();
+					if (curBoostAmt >= 0.01f)
+					{
+						curBoostAmt -= 0.20f;
+						curBoostAmt = curBoostAmt < 0 ? 0 : curBoostAmt;
+					}
+					boostComponent.SetCurrentBoostAmount(curBoostAmt);
+					if (curBoostAmt < 0.01f)
+					{
+						car.Demolish();
+					}
 				}
 			}
+
 		}
 
 		marioInstance->sema.release();
@@ -430,7 +434,9 @@ void SM64::onTick(ServerWrapper server)
 		if (player.IsNull()) continue;
 		if (player.IsLocalPlayerPRI())
 		{
+			remoteMariosSema.acquire();
 			tickMarioInstance(&localMario, car, this);
+			remoteMariosSema.release();
 		}
 		
 	}
@@ -486,7 +492,6 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		Vector localMarioVector(marioInstance->marioState.posX,
 			marioInstance->marioState.posY,
 			marioInstance->marioState.posZ);
-		instance->remoteMariosSema.acquire();
 		for (auto const& [playerId, remoteMarioInstance] : instance->remoteMarios)
 		{
 			if (isAttacked)
@@ -509,7 +514,6 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 			}
 			remoteMarioInstance->sema.release();
 		}
-		instance->remoteMariosSema.release();
 	}
 
 	sm64_mario_tick(marioInstance->marioId,
