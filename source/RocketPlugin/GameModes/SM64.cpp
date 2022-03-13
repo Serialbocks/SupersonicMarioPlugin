@@ -11,6 +11,7 @@
 #define BALL_MODEL_SCALE 5.35f
 #define SM64_TEXTURE_SIZE (4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT)
 #define WINGCAP_VERTEX_INDEX 750
+#define ATTACK_BOOST_DAMAGE 0.12f
 
 inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
@@ -399,7 +400,7 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 				float curBoostAmt = boostComponent.GetCurrentBoostAmount();
 				if (curBoostAmt >= 0.01f)
 				{
-					curBoostAmt -= 0.10f;
+					curBoostAmt -= ATTACK_BOOST_DAMAGE;
 					curBoostAmt = curBoostAmt < 0 ? 0 : curBoostAmt;
 				}
 				boostComponent.SetCurrentBoostAmount(curBoostAmt);
