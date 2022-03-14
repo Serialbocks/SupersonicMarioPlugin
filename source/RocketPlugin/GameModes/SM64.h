@@ -125,4 +125,5 @@ public:
     float kickBallVelVert;
     float punchBallVelHoriz;
     float punchBallVelVert;
+    float attackBoostDamage;
 };

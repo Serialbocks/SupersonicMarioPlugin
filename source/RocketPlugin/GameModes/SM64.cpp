@@ -11,7 +11,7 @@
 #define BALL_MODEL_SCALE 5.35f
 #define SM64_TEXTURE_SIZE (4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT)
 #define WINGCAP_VERTEX_INDEX 750
-#define ATTACK_BOOST_DAMAGE 0.12f
+#define ATTACK_BOOST_DAMAGE 0.20f
 #define GROUND_POUND_BALL_RADIUS 200.0f
 #define GROUND_POUND_PINCH_VELOCITY 1458.0f
 #define ATTACK_BALL_RADIUS 253.0f
@@ -42,6 +42,8 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	gameWrapper->HookEventPost("Function TAGame.EngineShare_TA.EventPostPhysicsStep", bind(&SM64::moveCarToMario, this, _1));
 	gameWrapper->HookEventPost("Function TAGame.NetworkInputBuffer_TA.ClientAckFrame", bind(&SM64::moveCarToMario, this, _1));
 	gameWrapper->HookEventPost("Function GameEvent_Soccar_TA.PostGoalScored.Tick", bind(&SM64::onGoalScored, this, _1));
+
+	attackBoostDamage = ATTACK_BOOST_DAMAGE;
 
 	groundPoundPinchVel = GROUND_POUND_PINCH_VELOCITY;
 	attackBallRadius = ATTACK_BALL_RADIUS;
@@ -221,6 +223,8 @@ void SM64::RenderOptions()
 {
 	if (renderer != nullptr)
 	{
+		ImGui::SliderFloat("Attack Boost Damage", &attackBoostDamage, 0.0f, 1.0f);
+
 		ImGui::SliderFloat("Ground Pound Pinch Velocity", &groundPoundPinchVel, 0.0f, 15000.0f);
 		ImGui::SliderFloat("Attack Ball Radius", &attackBallRadius, 0.0f, 600.0f);
 
@@ -414,7 +418,7 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 				float curBoostAmt = boostComponent.GetCurrentBoostAmount();
 				if (curBoostAmt >= 0.01f)
 				{
-					curBoostAmt -= ATTACK_BOOST_DAMAGE;
+					curBoostAmt -= attackBoostDamage;
 					curBoostAmt = curBoostAmt < 0 ? 0 : curBoostAmt;
 				}
 				boostComponent.SetCurrentBoostAmount(curBoostAmt);
