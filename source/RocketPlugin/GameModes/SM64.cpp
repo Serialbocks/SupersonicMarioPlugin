@@ -12,6 +12,13 @@
 #define SM64_TEXTURE_SIZE (4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT)
 #define WINGCAP_VERTEX_INDEX 750
 #define ATTACK_BOOST_DAMAGE 0.12f
+#define GROUND_POUND_BALL_RADIUS 200.0f
+#define GROUND_POUND_PINCH_VELOCITY 1458.0f
+#define ATTACK_BALL_RADIUS 253.0f
+#define KICK_BALL_VEL_HORIZ 286.0f
+#define KICK_BALL_VEL_VERT 88.0f
+#define PUNCH_BALL_VEL_HORIZ 300.0f
+#define PUNCH_BALL_VEL_VERT 50.0f
 
 inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
@@ -35,16 +42,13 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	gameWrapper->HookEventPost("Function TAGame.EngineShare_TA.EventPostPhysicsStep", bind(&SM64::moveCarToMario, this, _1));
 	gameWrapper->HookEventPost("Function TAGame.NetworkInputBuffer_TA.ClientAckFrame", bind(&SM64::moveCarToMario, this, _1));
 	gameWrapper->HookEventPost("Function GameEvent_Soccar_TA.PostGoalScored.Tick", bind(&SM64::onGoalScored, this, _1));
-	//gameWrapper->HookEventPost("Function TAGame.RBActor_TA.PreAsyncTick", bind(&SM64::moveCarToMario, this, _1));
-	//gameWrapper->HookEventPost("Function ProjectX.ActorComponent_X.Tick", bind(&SM64::moveCarToMario, this, _1));
-	//gameWrapper->HookEventPost("Function ProjectX.DynamicValueModifier_X.Tick", bind(&SM64::moveCarToMario, this, _1));
-	//gameWrapper->HookEventPost("Function TAGame.CarDistanceTracker_TA.Tick", bind(&SM64::moveCarToMario, this, _1));
-	//gameWrapper->HookEventPost("Function Engine.PrimitiveComponent.SetRBPosition", bind(&SM64::moveCarToMario, this, _1));
-	//gameWrapper->HookEventPost("Function TAGame.GameObserver_TA.UpdateCarsData", bind(&SM64::moveCarToMario, this, _1));
-	//gameWrapper->HookEventPost("Function TAGame.GameObserver_TA.Tick", bind(&SM64::moveCarToMario, this, _1));
-	//gameWrapper->HookEventPost("Function ProjectX.Camera_X.UpdateCamera", bind(&SM64::moveCarToMario, this, _1));
-	//gameWrapper->HookEventPost("Function ProjectX.Camera_X.UpdateCameraState", bind(&SM64::moveCarToMario, this, _1));
-	//gameWrapper->HookEventPost("Function TAGame.NetworkInputBuffer_TA.ServerReceivePacket", bind(&SM64::moveCarToMario, this, _1));
+
+	groundPoundPinchVel = GROUND_POUND_PINCH_VELOCITY;
+	attackBallRadius = ATTACK_BALL_RADIUS;
+	kickBallVelHoriz = KICK_BALL_VEL_HORIZ;
+	kickBallVelVert = KICK_BALL_VEL_VERT;
+	punchBallVelHoriz = PUNCH_BALL_VEL_HORIZ;
+	punchBallVelVert = PUNCH_BALL_VEL_VERT;
 
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
 
@@ -217,6 +221,15 @@ void SM64::RenderOptions()
 {
 	if (renderer != nullptr)
 	{
+		ImGui::SliderFloat("Ground Pound Pinch Velocity", &groundPoundPinchVel, 0.0f, 15000.0f);
+		ImGui::SliderFloat("Attack Ball Radius", &attackBallRadius, 0.0f, 600.0f);
+
+		ImGui::SliderFloat("Kick Ball Vel Horiz", &kickBallVelHoriz, 0.0f, 1000.0f);
+		ImGui::SliderFloat("Kick Ball Vel Vert", &kickBallVelVert, 0.0f, 1000.0f);
+
+		ImGui::SliderFloat("Punch Ball Vel Horiz", &punchBallVelHoriz, 0.0f, 1000.0f);
+		ImGui::SliderFloat("Punch Ball Vel Vert", &punchBallVelVert, 0.0f, 1000.0f);
+
 		ImGui::Text("Ambient Light");
 		ImGui::SliderFloat("R", &renderer->Lighting.AmbientLightColorR, 0.0f, 1.0f);
 		ImGui::SliderFloat("G", &renderer->Lighting.AmbientLightColorG, 0.0f, 1.0f);
@@ -393,6 +406,7 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 			newInput->Steer = 0;
 			newInput->Pitch = 0;
 
+			// If attacked flag is set, decrement boost and demo if out of boost
 			auto boostComponent = car.GetBoostComponent();
 			if (marioInstance->marioBodyState.marioState.attacked && !boostComponent.IsNull())
 			{
@@ -408,6 +422,62 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 				{
 					car.Demolish();
 				}
+			}
+
+			// Check if mario attacked ball and set velocity if so
+			if (isHost)
+			{
+				auto server = gameWrapper->GetGameEventAsServer();
+				if (server.IsNull())
+				{
+					server = gameWrapper->GetCurrentGameState();
+				}
+
+				if (!server.IsNull())
+				{
+					auto ball = server.GetBall();
+					if (!ball.IsNull())
+					{
+						Vector marioVector(marioInstance->marioBodyState.marioState.posX,
+							marioInstance->marioBodyState.marioState.posZ,
+							marioInstance->marioBodyState.marioState.posY);
+						Vector ballVector = ball.GetLocation();
+						Vector ballVelocity = ball.GetVelocity();
+						float distance = utils.Distance(marioVector, ballVector);
+
+						float dx = ballVector.X - marioVector.X;
+						float dy = ballVector.Y - marioVector.Y;
+
+						float angleToBall = atan2f(dy, dx);
+						if (distance < GROUND_POUND_BALL_RADIUS &&
+							marioInstance->marioBodyState.action == ACT_GROUND_POUND_LAND)
+						{
+							ballVelocity.X += groundPoundPinchVel * cosf(angleToBall);
+							ballVelocity.Y += groundPoundPinchVel * sinf(angleToBall);
+							ball.SetVelocity(ballVelocity);
+						}
+						else if (marioInstance->marioBodyState.action == ACT_JUMP_KICK &&
+							distance < attackBallRadius)
+						{
+							ballVelocity.X += kickBallVelHoriz * cosf(angleToBall);
+							ballVelocity.Y += kickBallVelHoriz * sinf(angleToBall);
+							ballVelocity.Z += kickBallVelVert;
+							ball.SetVelocity(ballVelocity);
+						}
+						else if (marioInstance->marioBodyState.action == ACT_MOVE_PUNCHING &&
+							distance < attackBallRadius)
+						{
+							ballVelocity.X += punchBallVelHoriz * cosf(angleToBall);
+							ballVelocity.Y += punchBallVelHoriz * sinf(angleToBall);
+							ballVelocity.Z += punchBallVelVert;
+							ball.SetVelocity(ballVelocity);
+						}
+
+
+
+					}
+				}
+
 			}
 
 		}

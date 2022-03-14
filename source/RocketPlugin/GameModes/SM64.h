@@ -10,6 +10,7 @@
 #include <tchar.h>
 #include <shlwapi.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "shlobj.h"
 
@@ -118,5 +119,10 @@ public:
     std::counting_semaphore<1> isInSm64GameSema{ 1 };
     bool isInSm64Game = false;
     bool isHost = false;
-
+    float groundPoundPinchVel;
+    float attackBallRadius;
+    float kickBallVelHoriz;
+    float kickBallVelVert;
+    float punchBallVelHoriz;
+    float punchBallVelVert;
 };
