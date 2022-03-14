@@ -50,6 +50,8 @@ public:
     Mesh* mesh = nullptr;
     std::counting_semaphore<1> sema{ 1 };
     int slidingHandle = -1;
+    unsigned long tickCount = 0;
+    unsigned long lastBallInteraction = 0;
 };
 
 class SM64 final : public RocketGameMode

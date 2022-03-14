@@ -13,12 +13,12 @@
 #define WINGCAP_VERTEX_INDEX 750
 #define ATTACK_BOOST_DAMAGE 0.20f
 #define GROUND_POUND_BALL_RADIUS 200.0f
-#define GROUND_POUND_PINCH_VELOCITY 1458.0f
-#define ATTACK_BALL_RADIUS 253.0f
-#define KICK_BALL_VEL_HORIZ 286.0f
-#define KICK_BALL_VEL_VERT 88.0f
-#define PUNCH_BALL_VEL_HORIZ 300.0f
-#define PUNCH_BALL_VEL_VERT 50.0f
+#define GROUND_POUND_PINCH_VELOCITY 2708.0f
+#define ATTACK_BALL_RADIUS 261.0f
+#define KICK_BALL_VEL_HORIZ 777.0f
+#define KICK_BALL_VEL_VERT 416.0f
+#define PUNCH_BALL_VEL_HORIZ 1861.0f
+#define PUNCH_BALL_VEL_VERT 361.0f
 
 inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
@@ -228,11 +228,11 @@ void SM64::RenderOptions()
 		ImGui::SliderFloat("Ground Pound Pinch Velocity", &groundPoundPinchVel, 0.0f, 15000.0f);
 		ImGui::SliderFloat("Attack Ball Radius", &attackBallRadius, 0.0f, 600.0f);
 
-		ImGui::SliderFloat("Kick Ball Vel Horiz", &kickBallVelHoriz, 0.0f, 1000.0f);
-		ImGui::SliderFloat("Kick Ball Vel Vert", &kickBallVelVert, 0.0f, 1000.0f);
+		ImGui::SliderFloat("Kick Ball Vel Horiz", &kickBallVelHoriz, 0.0f, 10000.0f);
+		ImGui::SliderFloat("Kick Ball Vel Vert", &kickBallVelVert, 0.0f, 10000.0f);
 
-		ImGui::SliderFloat("Punch Ball Vel Horiz", &punchBallVelHoriz, 0.0f, 1000.0f);
-		ImGui::SliderFloat("Punch Ball Vel Vert", &punchBallVelVert, 0.0f, 1000.0f);
+		ImGui::SliderFloat("Punch Ball Vel Horiz", &punchBallVelHoriz, 0.0f, 10000.0f);
+		ImGui::SliderFloat("Punch Ball Vel Vert", &punchBallVelVert, 0.0f, 10000.0f);
 
 		ImGui::Text("Ambient Light");
 		ImGui::SliderFloat("R", &renderer->Lighting.AmbientLightColorR, 0.0f, 1.0f);
@@ -452,13 +452,20 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 						float dx = ballVector.X - marioVector.X;
 						float dy = ballVector.Y - marioVector.Y;
 
+						bool attackedRecently = marioInstance->tickCount - marioInstance->lastBallInteraction < 10;
+
 						float angleToBall = atan2f(dy, dx);
-						if (distance < GROUND_POUND_BALL_RADIUS &&
+						if (attackedRecently)
+						{
+							// do nothing
+						}
+						else if (distance < GROUND_POUND_BALL_RADIUS &&
 							marioInstance->marioBodyState.action == ACT_GROUND_POUND_LAND)
 						{
 							ballVelocity.X += groundPoundPinchVel * cosf(angleToBall);
 							ballVelocity.Y += groundPoundPinchVel * sinf(angleToBall);
 							ball.SetVelocity(ballVelocity);
+							marioInstance->lastBallInteraction = marioInstance->tickCount;
 						}
 						else if (marioInstance->marioBodyState.action == ACT_JUMP_KICK &&
 							distance < attackBallRadius)
@@ -467,6 +474,7 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 							ballVelocity.Y += kickBallVelHoriz * sinf(angleToBall);
 							ballVelocity.Z += kickBallVelVert;
 							ball.SetVelocity(ballVelocity);
+							marioInstance->lastBallInteraction = marioInstance->tickCount;
 						}
 						else if (marioInstance->marioBodyState.action == ACT_MOVE_PUNCHING &&
 							distance < attackBallRadius)
@@ -475,10 +483,11 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 							ballVelocity.Y += punchBallVelHoriz * sinf(angleToBall);
 							ballVelocity.Z += punchBallVelVert;
 							ball.SetVelocity(ballVelocity);
+							marioInstance->lastBallInteraction = marioInstance->tickCount;
 						}
 
 
-
+						marioInstance->tickCount++;
 					}
 				}
 
