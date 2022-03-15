@@ -8,6 +8,7 @@ import os
 import re
 import struct
 import sys
+import traceback
 
 TYPE_CTL = 1
 TYPE_TBL = 2
@@ -486,8 +487,7 @@ def write_aiff(entry, filename, basePath):
         write_aifc(entry, temp)
         temp.flush()
         aifc_decode = os.path.join(basePath, "aifc_decode.exe")
-        print(aifc_decode)
-        subprocess.run([aifc_decode, temp.name, filename], check=True)
+        subprocess.run([aifc_decode, temp.name, filename], check=True, capture_output=False)
 
 
 # Modified from https://stackoverflow.com/a/25935321/1359139, cc by-sa 3.0
@@ -599,20 +599,23 @@ def disassemble_main(inArgs, basePath):
                 entry = sample_bank.entries[offset]
                 index += 1
                 if index in index_to_filename:
-                    print(basePath)
-                    print(index_to_filename[index])
                     filename = os.path.join(basePath, index_to_filename[index])
-                    print(filename)
                     dir = os.path.dirname(filename)
                     if dir not in created_dirs:
                         os.makedirs(dir, exist_ok=True)
                         created_dirs.add(dir)
-                    print(filename)
                     write_aiff(entry, filename, basePath)
 
                     wavFilename = filename[0:len(filename) - 5] + ".wav"
-                    aiffToWav = os.path.join(basePath, "AiffToWav.exe")
-                    subprocess.run([aiffToWav, filename, wavFilename], check=True, capture_output=False)
+                    print(wavFilename)
+                    #aiffToWav = os.path.join(basePath, "AiffToWav.exe")
+                    ffmpegDir = os.path.join(basePath, "ffmpeg")
+                    ffmpeg = os.path.join(ffmpegDir, "ffmpeg.exe")
+                    print(ffmpeg)
+                    try:
+                        subprocess.run([ffmpeg, '-i', filename, wavFilename], check=True, capture_output=False)
+                    except:
+                        traceback.print_exc()
                     os.remove(filename)
         return
 
@@ -799,6 +802,7 @@ def clean_assets(local_asset_file, basePath):
 def main():
     # In case we ever need to change formats of generated files, we keep a
     # revision ID in the local asset file.
+    print('Extracting sounds from Mario 64 ROM...')
     new_version = 6
     basePath = sys.argv[2]
     try:
@@ -928,7 +932,7 @@ def main():
                         "--only-samples",
                     ]
                     for (asset, pos, size, meta) in assets:
-                        print("extracting", asset)
+                        #print("extracting", asset)
                         args.append(asset + ":" + str(pos))
                     try:
                         #subprocess.run(args, check=True)
@@ -941,7 +945,7 @@ def main():
         image = roms[lang]
 
         for (asset, pos, size, meta) in assets:
-            print("extracting", asset)
+            #print("extracting", asset)
             input = image[pos : pos + size]
             os.makedirs(os.path.dirname(asset), exist_ok=True)
             with open(asset, "wb") as f:
