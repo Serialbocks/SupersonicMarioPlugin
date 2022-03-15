@@ -535,7 +535,7 @@ def inst_ifdef_json(bank_index, inst_index):
     return None
 
 
-def disassemble_main(inArgs, basePath):
+def disassemble_main(inArgs, basePath, destPath):
     args = []
     need_help = False
     only_samples = False
@@ -599,7 +599,7 @@ def disassemble_main(inArgs, basePath):
                 entry = sample_bank.entries[offset]
                 index += 1
                 if index in index_to_filename:
-                    filename = os.path.join(basePath, index_to_filename[index])
+                    filename = os.path.join(destPath, index_to_filename[index])
                     dir = os.path.dirname(filename)
                     if dir not in created_dirs:
                         os.makedirs(dir, exist_ok=True)
@@ -607,11 +607,8 @@ def disassemble_main(inArgs, basePath):
                     write_aiff(entry, filename, basePath)
 
                     wavFilename = filename[0:len(filename) - 5] + ".wav"
-                    print(wavFilename)
-                    #aiffToWav = os.path.join(basePath, "AiffToWav.exe")
                     ffmpegDir = os.path.join(basePath, "ffmpeg")
                     ffmpeg = os.path.join(ffmpegDir, "ffmpeg.exe")
-                    print(ffmpeg)
                     try:
                         subprocess.run([ffmpeg, '-i', filename, wavFilename], check=True, capture_output=False)
                     except:
@@ -802,9 +799,21 @@ def clean_assets(local_asset_file, basePath):
 def main():
     # In case we ever need to change formats of generated files, we keep a
     # revision ID in the local asset file.
-    print('Extracting sounds from Mario 64 ROM...')
+    print('Installing assets...')
+
     new_version = 6
-    basePath = sys.argv[2]
+    basePath = sys.argv[1]
+    destPath = sys.argv[2]
+
+    if not os.path.isdir(destPath):
+        print('Could not find bakkesmod installation. Please install bakkesmod.')
+        return
+
+    soundPath = os.path.join(destPath, "sound")
+    if os.path.isdir(soundPath):
+        import shutil
+        shutil.rmtree(soundPath)
+
     try:
         local_asset_file = open(os.path.join(basePath, ".assets-local.txt"))
         local_asset_file.readline()
@@ -817,7 +826,7 @@ def main():
         print("Usage: extract_assets.py version workingDir")
         sys.exit(1)
 
-    langs = [sys.argv[1]]
+    langs = ['us']
 
     if langs == ["--clean"]:
         clean_assets(local_asset_file, basePath)
@@ -936,7 +945,7 @@ def main():
                         args.append(asset + ":" + str(pos))
                     try:
                         #subprocess.run(args, check=True)
-                        disassemble_main(args, basePath)
+                        disassemble_main(args, basePath, destPath)
                     finally:
                         os.unlink(ctl_file.name)
                         os.unlink(tbl_file.name)
@@ -971,5 +980,16 @@ def main():
     with open(os.path.join(basePath, ".assets-local.txt"), "w") as f:
         f.write(output)
 
+    import shutil
+    assetsToCopy = ['baserom.us.z64', 'ROCKETBALL.obj', 'transparent.png']
+    for asset in assetsToCopy:
+        src = os.path.join(basePath, asset)
+        dst = os.path.join(destPath, asset)
+        shutil.copy(src, dst)
+
+
+    print('')
+    print('')
+    print('Assets installed successfully!')
 
 main()
