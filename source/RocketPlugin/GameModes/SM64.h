@@ -128,4 +128,7 @@ public:
     float punchBallVelHoriz;
     float punchBallVelVert;
     float attackBoostDamage;
+    float diveBallVelHoriz;
+    float diveBallVelVert;
+    struct SM64MarioBljConfig bljSetup;
 };

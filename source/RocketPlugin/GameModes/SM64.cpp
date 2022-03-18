@@ -19,6 +19,8 @@
 #define KICK_BALL_VEL_VERT 416.0f
 #define PUNCH_BALL_VEL_HORIZ 1861.0f
 #define PUNCH_BALL_VEL_VERT 361.0f
+#define DIVE_BALL_VEL_HORIZ KICK_BALL_VEL_HORIZ
+#define DIVE_BALL_VEL_VERT KICK_BALL_VEL_VERT
 
 inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
@@ -51,6 +53,11 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	kickBallVelVert = KICK_BALL_VEL_VERT;
 	punchBallVelHoriz = PUNCH_BALL_VEL_HORIZ;
 	punchBallVelVert = PUNCH_BALL_VEL_VERT;
+	diveBallVelHoriz = DIVE_BALL_VEL_HORIZ;
+	diveBallVelVert = DIVE_BALL_VEL_VERT;
+
+	bljSetup.bljState = SM64_BLJ_STATE_DISABLED;
+	bljSetup.bljVel = 0;
 
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
 
@@ -84,7 +91,7 @@ void SM64::OnGameLeft()
 	{
 		localMario.mesh->RenderUpdateVertices(0, nullptr);
 	}
-		
+
 	if (localMario.marioId >= 0)
 	{
 		sm64_mario_delete(localMario.marioId);
@@ -234,6 +241,39 @@ void SM64::RenderOptions()
 		ImGui::SliderFloat("Punch Ball Vel Horiz", &punchBallVelHoriz, 0.0f, 10000.0f);
 		ImGui::SliderFloat("Punch Ball Vel Vert", &punchBallVelVert, 0.0f, 10000.0f);
 
+		ImGui::SliderFloat("Dive Ball Vel Horiz", &diveBallVelHoriz, 0.0f, 10000.0f);
+		ImGui::SliderFloat("Dive Ball Vel Vert", &diveBallVelVert, 0.0f, 10000.0f);
+
+		ImGui::NewLine();
+
+		ImGui::Text("BLJ Configuration");
+		std::string bljLabel[3];
+		bljLabel[0] = "BLJ Disabled";
+		bljLabel[1] = "BLJ Enabled (Press)";
+		bljLabel[2] = "BLJ Enabled (Hold)";
+		std::string currentBljLabel = bljLabel[bljSetup.bljState];
+		if (ImGui::BeginCombo("BLJ Mode Select", currentBljLabel.c_str()))
+		{
+			for (int i = 0; i < 3; i++)
+			{
+				bool isSelected = i == bljSetup.bljState;
+				if (ImGui::Selectable(bljLabel[i].c_str(), isSelected))
+					bljSetup.bljState = (SM64BljState)i;
+				if (isSelected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
+		}
+
+		if( 0 != bljSetup.bljState )
+		{
+			int velocity;
+			ImGui::SliderInt("BLJ Velocity", &velocity, 0, 10);
+			bljSetup.bljVel = (uint8_t)velocity;
+		}
+
+		ImGui::NewLine();
+
 		ImGui::Text("Ambient Light");
 		ImGui::SliderFloat("R", &renderer->Lighting.AmbientLightColorR, 0.0f, 1.0f);
 		ImGui::SliderFloat("G", &renderer->Lighting.AmbientLightColorG, 0.0f, 1.0f);
@@ -310,9 +350,9 @@ void SM64::InitSM64()
 	{
 		return;
 	}
-	
+
 	texture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
-	
+
 	//sm64_global_terminate();
 	if (!sm64Initialized)
 	{
@@ -320,7 +360,7 @@ void SM64::InitSM64()
 		sm64_static_surfaces_load(surfaces, surfaces_count);
 		sm64Initialized = true;
 	}
-	
+
 	cameraPos[0] = 0.0f;
 	cameraPos[1] = 0.0f;
 	cameraPos[2] = 0.0f;
@@ -412,9 +452,9 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 			// If attacked flag is set, decrement boost and demo if out of boost
 			auto boostComponent = car.GetBoostComponent();
-			if (marioInstance->marioBodyState.marioState.attacked && !boostComponent.IsNull())
+			if (marioInstance->marioBodyState.marioState.userState.isAttacked && !boostComponent.IsNull())
 			{
-				marioInstance->marioBodyState.marioState.attacked = false;
+				marioInstance->marioBodyState.marioState.userState.isAttacked = false;
 				float curBoostAmt = boostComponent.GetCurrentBoostAmount();
 				if (curBoostAmt >= 0.01f)
 				{
@@ -485,6 +525,15 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 							ball.SetVelocity(ballVelocity);
 							marioInstance->lastBallInteraction = marioInstance->tickCount;
 						}
+						else if ((marioInstance->marioBodyState.action == ACT_DIVE || marioInstance->marioBodyState.action == ACT_DIVE_SLIDE) &&
+							distance < attackBallRadius)
+						{
+							ballVelocity.X += diveBallVelHoriz * cosf(angleToBall);
+							ballVelocity.Y += diveBallVelHoriz * sinf(angleToBall);
+							ballVelocity.Z += diveBallVelVert;
+							ball.SetVelocity(ballVelocity);
+							marioInstance->lastBallInteraction = marioInstance->tickCount;
+						}
 
 
 						marioInstance->tickCount++;
@@ -517,7 +566,7 @@ void SM64::onTick(ServerWrapper server)
 			tickMarioInstance(&localMario, car, this);
 			remoteMariosSema.release();
 		}
-		
+
 	}
 }
 
@@ -561,10 +610,10 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - instance->cameraLoc.Y;
 
 	auto controllerInput = car.GetPlayerController().GetVehicleInput();
-	auto isboosting = controllerInput.HoldingBoost && instance->currentBoostAount >= 0.01f;
+	marioInstance->marioState.userState.isBoosting = controllerInput.HoldingBoost && instance->currentBoostAount >= 0.01f;
 
 	// Determine interaction between other marios
-	bool isAttacked = false;
+	marioInstance->marioState.userState.isAttacked = false;
 	Vector attackedFromFector(0, 0, 0);
 	if (marioInstance->marioId >= 0)
 	{
@@ -573,7 +622,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 			marioInstance->marioState.posZ);
 		for (auto const& [playerId, remoteMarioInstance] : instance->remoteMarios)
 		{
-			if (isAttacked)
+			if (marioInstance->marioState.userState.isAttacked)
 				break;
 
 			if (remoteMarioInstance->marioId < 0)
@@ -588,12 +637,14 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 			auto distance = instance->utils.Distance(localMarioVector, remoteMarioVector);
 			if (distance < 100.0f && remoteMarioInstance->marioBodyState.action & ACT_FLAG_ATTACKING) // TODO if in our direction
 			{
-				isAttacked = true;
+				marioInstance->marioState.userState.isAttacked = true;
 				attackedFromFector = remoteMarioVector;
 			}
 			remoteMarioInstance->sema.release();
 		}
 	}
+
+	marioInstance->marioState.userState.bljConfig =  instance->bljSetup;
 
 	sm64_mario_tick(marioInstance->marioId,
 		&marioInstance->marioInputs,
@@ -602,8 +653,6 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		&marioInstance->marioBodyState,
 		true,
 		true,
-		isboosting,
-		isAttacked,
 		attackedFromFector.X,
 		attackedFromFector.Y,
 		attackedFromFector.Z);
@@ -837,8 +886,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 			&marioInstance->marioBodyState,
 			false,
 			false,
-			false,
-			false,
 			0,
 			0,
 			0);
@@ -852,7 +899,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		auto quat = RotatorToQuat(camera.GetRotation());
 		cameraLoc = camera.GetLocation();
 		Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
-		
+
 		marioInstance->slidingHandle = marioAudio->UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
 			marioVector,
 			marioVel,
@@ -870,7 +917,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 				sm64_mario_delete(marioInstance->marioId);
 				marioInstance->marioId = -2;
 			}
-			
+
 			if (marioInstance->mesh != nullptr)
 			{
 				marioInstance->mesh->RenderUpdateVertices(0, nullptr);
