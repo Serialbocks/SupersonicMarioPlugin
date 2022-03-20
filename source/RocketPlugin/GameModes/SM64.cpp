@@ -326,23 +326,41 @@ void SM64::Activate(const bool active)
 {
 	if (active && !isActive) {
 		isHost = false;
-		HookEventWithCaller<ServerWrapper>(
-			preGameTickCheck1,
-			[this](const ServerWrapper& caller, void* params, const std::string&) {
-				onPreGameTick(caller);
-			});
 
+		HookEventWithCaller<ServerWrapper>(
+			initialCharacterSpawnCheck,
+			[this](const ServerWrapper& caller, void* params, const std::string&) {
+				onCharacterSpawn(caller);
+			});
+		HookEventWithCaller<ServerWrapper>(
+			CharacterSpawnCheck,
+			[this](const ServerWrapper& caller, void* params, const std::string&) {
+				onCharacterSpawn(caller);
+			});
+		HookEventWithCaller<ServerWrapper>(
+			endPreGameTickCheck,
+			[this](const ServerWrapper& caller, void* params, const std::string&) {
+				onCountdownEnd(caller);
+			});
 		HookEventWithCaller<ServerWrapper>(
 			gameTickCheck,
 			[this](const ServerWrapper& caller, void* params, const std::string&) {
-				onGameTick(caller);
+				onTick(caller);
+			});
+		HookEventWithCaller<ServerWrapper>(
+			overtimeGameCheck,
+			[this](const ServerWrapper& caller, void* params, const std::string&) {
+				onOvertimeStart(caller);
 			});
 	}
 	else if (!active && isActive) {
 		isHost = false;
+		UnhookEvent(initialCharacterSpawnCheck);
+		UnhookEvent(CharacterSpawnCheck);
+		UnhookEvent(preGameTickCheck);
+		UnhookEvent(endPreGameTickCheck);
 		UnhookEvent(gameTickCheck);
-		UnhookEvent(preGameTickCheck1);
-		UnhookEvent(preGameTickCheck2);
+		UnhookEvent(overtimeGameCheck);
 	}
 
 	isActive = active;
@@ -558,30 +576,20 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 }
 
-void SM64::onGameTick(ServerWrapper server)
+void SM64::onCharacterSpawn(ServerWrapper server)
 {
-	if (isPreGame)
-	{
-		UnhookEvent(preGameTickCheck2);
-		isPreGame = false;
-	}
-
-	onTick(server);
+	HookEventWithCaller<ServerWrapper>(
+		preGameTickCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			onTick(caller);
+		});
+	isPreGame = true;
 }
 
-void SM64::onPreGameTick(ServerWrapper server)
+void SM64::onCountdownEnd(ServerWrapper server)
 {
-	if (!isPreGame)
-	{
-		HookEventWithCaller<ServerWrapper>(
-			preGameTickCheck2,
-			[this](const ServerWrapper& caller, void* params, const std::string&) {
-				onPreGameTick(caller);
-			});
-		isPreGame = true;
-	}
-
-	onTick(server);
+	UnhookEvent(preGameTickCheck);
+	isPreGame = false;
 }
 
 void SM64::onTick(ServerWrapper server)
@@ -601,6 +609,17 @@ void SM64::onTick(ServerWrapper server)
 			remoteMariosSema.release();
 		}
 
+	}
+}
+
+void SM64::onOvertimeStart(ServerWrapper server)
+{
+	isInSm64GameSema.acquire();
+	bool inSm64Game = isInSm64Game;
+	isInSm64GameSema.release();
+	if (isInSm64Game)
+	{
+		OnGameLeft();
 	}
 }
 
@@ -638,6 +657,14 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		marioInstance->marioInputs.buttonZ = playerInputs.Throttle < 0;
 		marioInstance->marioInputs.stickX = playerInputs.Steer;
 		marioInstance->marioInputs.stickY = playerInputs.Pitch;
+	}
+	else
+	{
+		marioInstance->marioInputs.buttonA = NULL;
+		marioInstance->marioInputs.buttonB = NULL;
+		marioInstance->marioInputs.buttonZ = NULL;
+		marioInstance->marioInputs.stickX = NULL;
+		marioInstance->marioInputs.stickY = NULL;
 	}
 
 	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - instance->cameraLoc.X;

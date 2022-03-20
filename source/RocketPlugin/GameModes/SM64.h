@@ -76,8 +76,9 @@ public:
     std::string bytesToHex(unsigned char* data, unsigned int len);
 
 private:
-    void onPreGameTick(ServerWrapper server);
-    void onGameTick(ServerWrapper server);
+    void onCharacterSpawn(ServerWrapper server);
+    void onCountdownEnd(ServerWrapper server);
+    void onOvertimeStart(ServerWrapper server);
     void onTick(ServerWrapper server);
     void onSetVehicleInput(CarWrapper car, void* params);
     void moveCarToMario(std::string eventName);
@@ -136,7 +137,10 @@ public:
     struct SM64MarioBljConfig bljSetup;
 
 protected:
-    const std::string preGameTickCheck1 = "Function GameEvent_Soccar_TA.WaitingForPlayers.OnPlayerRestarted";
-    const std::string preGameTickCheck2 = "Function TAGame.GameEvent_Soccar_TA.ShowSeasonIntroScene";
+    const std::string initialCharacterSpawnCheck = "Function GameEvent_Soccar_TA.WaitingForPlayers.OnPlayerRestarted";
+    const std::string CharacterSpawnCheck = "Function GameEvent_TA.Countdown.BeginState"; //.OnPlayerRestarted might also work
+    const std::string preGameTickCheck = "Function TAGame.GameEvent_Soccar_TA.ShowSeasonIntroScene";
+    const std::string endPreGameTickCheck = "Function GameEvent_TA.Countdown.EndState";
     const std::string gameTickCheck = "Function GameEvent_Soccar_TA.Active.Tick";
+    const std::string overtimeGameCheck = "Function TAGame.GameEvent_Soccar_TA.StartOvertime";
 };
