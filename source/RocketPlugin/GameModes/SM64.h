@@ -76,6 +76,8 @@ public:
     std::string bytesToHex(unsigned char* data, unsigned int len);
 
 private:
+    void onPreGameTick(ServerWrapper server);
+    void onGameTick(ServerWrapper server);
     void onTick(ServerWrapper server);
     void onSetVehicleInput(CarWrapper car, void* params);
     void moveCarToMario(std::string eventName);
@@ -119,6 +121,7 @@ public:
     struct SM64MarioBodyState marioBodyStateIn;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
     std::counting_semaphore<1> isInSm64GameSema{ 1 };
+    bool isPreGame = false;
     bool isInSm64Game = false;
     bool isHost = false;
     float groundPoundPinchVel;
@@ -131,4 +134,9 @@ public:
     float diveBallVelHoriz;
     float diveBallVelVert;
     struct SM64MarioBljConfig bljSetup;
+
+protected:
+    const std::string preGameTickCheck1 = "Function GameEvent_Soccar_TA.WaitingForPlayers.OnPlayerRestarted";
+    const std::string preGameTickCheck2 = "Function TAGame.GameEvent_Soccar_TA.ShowSeasonIntroScene";
+    const std::string gameTickCheck = "Function GameEvent_Soccar_TA.Active.Tick";
 };

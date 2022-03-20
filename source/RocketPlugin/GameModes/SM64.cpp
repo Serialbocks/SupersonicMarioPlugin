@@ -327,14 +327,22 @@ void SM64::Activate(const bool active)
 	if (active && !isActive) {
 		isHost = false;
 		HookEventWithCaller<ServerWrapper>(
-			"Function GameEvent_Soccar_TA.Active.Tick",
+			preGameTickCheck1,
 			[this](const ServerWrapper& caller, void* params, const std::string&) {
-				onTick(caller);
+				onPreGameTick(caller);
+			});
+
+		HookEventWithCaller<ServerWrapper>(
+			gameTickCheck,
+			[this](const ServerWrapper& caller, void* params, const std::string&) {
+				onGameTick(caller);
 			});
 	}
 	else if (!active && isActive) {
 		isHost = false;
-		UnhookEvent("Function GameEvent_Soccar_TA.Active.Tick");
+		UnhookEvent(gameTickCheck);
+		UnhookEvent(preGameTickCheck1);
+		UnhookEvent(preGameTickCheck2);
 	}
 
 	isActive = active;
@@ -550,6 +558,32 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 }
 
+void SM64::onGameTick(ServerWrapper server)
+{
+	if (isPreGame)
+	{
+		UnhookEvent(preGameTickCheck2);
+		isPreGame = false;
+	}
+
+	onTick(server);
+}
+
+void SM64::onPreGameTick(ServerWrapper server)
+{
+	if (!isPreGame)
+	{
+		HookEventWithCaller<ServerWrapper>(
+			preGameTickCheck2,
+			[this](const ServerWrapper& caller, void* params, const std::string&) {
+				onPreGameTick(caller);
+			});
+		isPreGame = true;
+	}
+
+	onTick(server);
+}
+
 void SM64::onTick(ServerWrapper server)
 {
 	isHost = true;
@@ -596,7 +630,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	}
 
 	auto playerController = car.GetPlayerController();
-	if (!playerController.IsNull())
+	if (!instance->isPreGame && !playerController.IsNull())
 	{
 		auto playerInputs = playerController.GetVehicleInput();
 		marioInstance->marioInputs.buttonA = playerInputs.Jump;
