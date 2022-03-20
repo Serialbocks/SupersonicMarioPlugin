@@ -267,7 +267,7 @@ void SM64::RenderOptions()
 
 		if( 0 != bljSetup.bljState )
 		{
-			int velocity;
+			int velocity = bljSetup.bljVel;
 			ImGui::SliderInt("BLJ Velocity", &velocity, 0, 10);
 			bljSetup.bljVel = (uint8_t)velocity;
 		}
