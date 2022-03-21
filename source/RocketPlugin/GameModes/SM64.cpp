@@ -478,9 +478,9 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 			// If attacked flag is set, decrement boost and demo if out of boost
 			auto boostComponent = car.GetBoostComponent();
-			if (marioInstance->marioBodyState.marioState.userState.isAttacked && !boostComponent.IsNull())
+			if (marioInstance->marioBodyState.marioState.userState.attackState.isAttacked && !boostComponent.IsNull())
 			{
-				marioInstance->marioBodyState.marioState.userState.isAttacked = false;
+				marioInstance->marioBodyState.marioState.userState.attackState.isAttacked = false;
 				float curBoostAmt = boostComponent.GetCurrentBoostAmount();
 				if (curBoostAmt >= 0.01f)
 				{
@@ -674,8 +674,10 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	marioInstance->marioState.userState.isBoosting = controllerInput.HoldingBoost && instance->currentBoostAount >= 0.01f;
 
 	// Determine interaction between other marios
-	marioInstance->marioState.userState.isAttacked = false;
-	Vector attackedFromFector(0, 0, 0);
+	marioInstance->marioState.userState.attackState.isAttacked = false;
+	marioInstance->marioState.userState.attackState.attackedPosX = 0;
+	marioInstance->marioState.userState.attackState.attackedPosY = 0;
+	marioInstance->marioState.userState.attackState.attackedPosZ = 0;
 	if (marioInstance->marioId >= 0)
 	{
 		Vector localMarioVector(marioInstance->marioState.posX,
@@ -683,7 +685,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 			marioInstance->marioState.posZ);
 		for (auto const& [playerId, remoteMarioInstance] : instance->remoteMarios)
 		{
-			if (marioInstance->marioState.userState.isAttacked)
+			if (marioInstance->marioState.userState.attackState.isAttacked)
 				break;
 
 			if (remoteMarioInstance->marioId < 0)
@@ -698,8 +700,10 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 			auto distance = instance->utils.Distance(localMarioVector, remoteMarioVector);
 			if (distance < 100.0f && remoteMarioInstance->marioBodyState.action & ACT_FLAG_ATTACKING) // TODO if in our direction
 			{
-				marioInstance->marioState.userState.isAttacked = true;
-				attackedFromFector = remoteMarioVector;
+				marioInstance->marioState.userState.attackState.isAttacked = true;
+				marioInstance->marioState.userState.attackState.attackedPosX = remoteMarioVector.X;
+				marioInstance->marioState.userState.attackState.attackedPosY = remoteMarioVector.Y;
+				marioInstance->marioState.userState.attackState.attackedPosZ = remoteMarioVector.Z;
 			}
 			remoteMarioInstance->sema.release();
 		}
@@ -713,10 +717,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		&marioInstance->marioGeometry,
 		&marioInstance->marioBodyState,
 		true,
-		true,
-		attackedFromFector.X,
-		attackedFromFector.Y,
-		attackedFromFector.Z);
+		true);
 
 
 	auto marioVector = Vector(marioInstance->marioState.posX, marioInstance->marioState.posZ, marioInstance->marioState.posY);
@@ -946,10 +947,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 			&marioInstance->marioGeometry,
 			&marioInstance->marioBodyState,
 			false,
-			false,
-			0,
-			0,
-			0);
+			false);
 
 		auto marioVector = Vector(marioInstance->marioBodyState.marioState.posX,
 			marioInstance->marioBodyState.marioState.posZ,
