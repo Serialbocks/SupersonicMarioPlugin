@@ -134,7 +134,7 @@ public:
     float attackBoostDamage;
     float diveBallVelHoriz;
     float diveBallVelVert;
-    struct SM64MarioBljConfig bljSetup;
+    struct SM64MarioBljInput bljSetup;
 
 protected:
     const std::string initialCharacterSpawnCheck = "Function GameEvent_Soccar_TA.WaitingForPlayers.OnPlayerRestarted";
