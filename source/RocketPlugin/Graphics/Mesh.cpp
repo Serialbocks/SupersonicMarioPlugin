@@ -4,6 +4,7 @@
 #define FAR_Z 20000.0f
 
 Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
+	std::shared_ptr<DirectX::SpriteFont> inSpriteFont,
 	int inWindowWidth,
 	int inWindowHeight,
 	size_t maxTriangles,
@@ -12,10 +13,11 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	uint16_t inTexWidth,
 	uint16_t inTexHeight)
 {
-	init(deviceIn, inWindowWidth, inWindowHeight, maxTriangles, inTexture, inTexSize, inTexWidth, inTexHeight);
+	init(deviceIn, inSpriteFont, inWindowWidth, inWindowHeight, maxTriangles, inTexture, inTexSize, inTexWidth, inTexHeight);
 }
 
 Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
+	std::shared_ptr<DirectX::SpriteFont> inSpriteFont,
 	int inWindowWidth,
 	int inWindowHeight,
 	std::vector<Vertex> *inVertices,
@@ -29,7 +31,7 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	{
 		Vertices.push_back((*inVertices)[i]);
 	}
-	init(deviceIn, inWindowWidth, inWindowHeight, Vertices.size(), inTexture, inTexSize, inTexWidth, inTexHeight);
+	init(deviceIn, inSpriteFont, inWindowWidth, inWindowHeight, Vertices.size(), inTexture, inTexSize, inTexWidth, inTexHeight);
 	NumTrianglesUsed = Vertices.size();
 }
 
@@ -79,6 +81,13 @@ void Mesh::Render(CameraWrapper *camera)
 
 	VertexConstBufferData.world = identity * rotation * quatRotation * scale * translation;
 	VertexConstBufferData.wvp = VertexConstBufferData.world * view * projection;
+
+	if (spriteFont != nullptr)
+	{
+		NameplateVertexConstBufferData.world = identity * scale * translation;
+		NameplateVertexConstBufferData.wvp = VertexConstBufferData.world * view * projection;
+	}
+
 	render = true;
 }
 
@@ -116,7 +125,18 @@ void Mesh::SetColorIndex(int index)
 	ColorIndex = index;
 }
 
+void Mesh::ShowNameplate(std::wstring name)
+{
+
+}
+
+void Mesh::HideNameplate()
+{
+	NumNameplateTriangles = 0;
+}
+
 void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
+	std::shared_ptr<DirectX::SpriteFont> inSpriteFont,
 	int inWindowWidth,
 	int inWindowHeight,
 	size_t maxTriangles,
@@ -126,6 +146,7 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	uint16_t inTexHeight)
 {
 	device = deviceIn;
+	spriteFont = inSpriteFont;
 	windowWidth = inWindowWidth;
 	windowHeight = inWindowHeight;
 
@@ -182,6 +203,46 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	D3D11_SUBRESOURCE_DATA cbData = { &VertexConstBufferData, 0, 0 };
 
 	device->CreateBuffer(&cbDesc, &cbData, VertexConstantBuffer.GetAddressOf());
+
+
+	if (inSpriteFont != nullptr)
+	{
+		// Create buffers for nameplate
+		ZeroMemory(&vbDesc, sizeof(D3D11_BUFFER_DESC));
+		vbDesc.ByteWidth = (UINT)(sizeof(Vertex) * MaxNameplateTriangles * 3);
+		vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		vbDesc.Usage = D3D11_USAGE_DYNAMIC;
+		vbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		vbDesc.StructureByteStride = sizeof(Vertex);
+
+		D3D11_SUBRESOURCE_DATA npvbData = { NameplateVertices.data(), 0, 0 };
+
+		device->CreateBuffer(&vbDesc, &npvbData, NameplateVertexBuffer.GetAddressOf());
+
+		auto numNameplateIndices = MaxNameplateTriangles * 3;
+		ZeroMemory(&ibDesc, sizeof(ibDesc));
+		ibDesc.ByteWidth = (UINT)(sizeof(unsigned int) * numNameplateIndices);
+		ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+		ibDesc.Usage = D3D11_USAGE_DEFAULT;
+		ibDesc.CPUAccessFlags = 0;
+		ibDesc.MiscFlags = 0;
+
+		D3D11_SUBRESOURCE_DATA npibData = { NameplateIndices.data(), 0, 0 };
+
+		device->CreateBuffer(&ibDesc, &npibData, NameplateIndexBuffer.GetAddressOf());
+
+		ZeroMemory(&cbDesc, sizeof(D3D11_BUFFER_DESC));
+		cbDesc.ByteWidth = static_cast<UINT>(sizeof(VS_ConstantBufferData) + (16 - (sizeof(VS_ConstantBufferData) % 16)));
+		cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+		cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		cbDesc.MiscFlags = 0;
+		cbDesc.StructureByteStride = 0;
+
+		D3D11_SUBRESOURCE_DATA npcbData = { &NameplateVertexConstBufferData, 0, 0 };
+
+		device->CreateBuffer(&cbDesc, &npcbData, NameplateVertexConstantBuffer.GetAddressOf());
+	}
 
 
 	// If there's texture data, create a shader resource view for it

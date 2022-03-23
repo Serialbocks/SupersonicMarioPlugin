@@ -9,6 +9,7 @@
 class Utils
 {
 public:
+	std::wstring GetBakkesmodFolderPathWide();
 	std::string GetBakkesmodFolderPath();
 	void ParseObjFile(std::string path, std::vector<Vertex> *outVertices);
 	std::vector<std::string> SplitStr(std::string str, char delimiter);

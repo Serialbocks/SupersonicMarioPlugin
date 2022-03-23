@@ -48,7 +48,7 @@ Mesh* Renderer::CreateMesh(size_t maxTriangles,
 	{
 		return nullptr;
 	}
-	Mesh* newMesh = new Mesh(device, windowWidth, windowHeight, maxTriangles, inTexture, inTexSize, inTexWidth, inTexHeight);
+	Mesh* newMesh = new Mesh(device, spriteFont, windowWidth, windowHeight, maxTriangles, inTexture, inTexSize, inTexWidth, inTexHeight);
 	meshes.push_back(newMesh);
 	return newMesh;
 }
@@ -63,7 +63,7 @@ Mesh* Renderer::CreateMesh(std::vector<Vertex> *inVertices,
 	{
 		return nullptr;
 	}
-	Mesh* newMesh = new Mesh(device, windowWidth, windowHeight, inVertices, inTexture, inTexSize, inTexWidth, inTexHeight);
+	Mesh* newMesh = new Mesh(device, nullptr, windowWidth, windowHeight, inVertices, inTexture, inTexSize, inTexWidth, inTexHeight);
 	meshes.push_back(newMesh);
 	return newMesh;
 }
@@ -246,6 +246,12 @@ void Renderer::CreatePipeline()
 	D3D11_SUBRESOURCE_DATA pixelCbData = { &PixelConstBufferData, 0, 0 };
 
 	device->CreateBuffer(&cbDesc, &pixelCbData, pixelConstantBuffer.GetAddressOf());
+
+	// Initialize font
+	//spriteBatch = std::make_unique<DirectX::SpriteBatch>(context.Get());
+	std::wstring spriteFontPath = utils.GetBakkesmodFolderPathWide() + fontPath;
+	spriteFont = std::make_shared<DirectX::SpriteFont>(device.Get(), spriteFontPath.c_str());
+	spriteFont->GetSpriteSheet(&spriteFontSheetTexture);
 }
 
 void Renderer::Render()
@@ -362,4 +368,16 @@ void Renderer::DrawRenderedMesh()
 		}
 		context->DrawIndexed((UINT)mesh->NumTrianglesUsed * 3, 0, 0);
 	}
+
+	// Test render some text
+	//spriteBatch->Begin();
+	//spriteFont->DrawString(spriteBatch.get(),
+	//	L"Hello World",
+	//	DirectX::XMFLOAT2(0, 0),
+	//	DirectX::Colors::White,
+	//	0.0f,
+	//	DirectX::XMFLOAT2(0, 0),
+	//	DirectX::XMFLOAT2(1.0f, 1.0f));
+	//spriteBatch->End();
+
 }
