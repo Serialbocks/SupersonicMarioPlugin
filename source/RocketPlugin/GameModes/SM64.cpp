@@ -62,12 +62,36 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
 
 	HookEventWithCaller<CarWrapper>(
-		"Function TAGame.Car_TA.SetVehicleInput",
+		vehicleInputCheck,
 		[this](const CarWrapper& caller, void* params, const std::string&) {
 			onSetVehicleInput(caller, params);
 		});
 
-
+	HookEventWithCaller<ServerWrapper>(
+		initialCharacterSpawnCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			onCharacterSpawn(caller);
+		});
+	HookEventWithCaller<ServerWrapper>(
+		CharacterSpawnCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			onCharacterSpawn(caller);
+		});
+	HookEventWithCaller<ServerWrapper>(
+		endPreGameTickCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			onCountdownEnd(caller);
+		});
+	HookEventWithCaller<ServerWrapper>(
+		clientEndPreGameTickCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			onCountdownEnd(caller);
+		});
+	HookEventWithCaller<ServerWrapper>(
+		overtimeGameCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			onOvertimeStart(caller);
+		});
 
 	self = this;
 
@@ -77,7 +101,14 @@ SM64::~SM64()
 {
 	gameWrapper->UnregisterDrawables();
 	DestroySM64();
-	UnhookEvent("Function TAGame.Car_TA.SetVehicleInput");
+	UnhookEvent(vehicleInputCheck);
+	UnhookEvent(initialCharacterSpawnCheck);
+	UnhookEvent(CharacterSpawnCheck);
+	UnhookEvent(preGameTickCheck);
+	UnhookEvent(endPreGameTickCheck);
+	UnhookEvent(clientEndPreGameTickCheck);
+	UnhookEvent(overtimeGameCheck);
+
 }
 
 void SM64::OnGameLeft()
@@ -325,42 +356,19 @@ std::string SM64::GetGameModeName()
 void SM64::Activate(const bool active)
 {
 	if (active && !isActive) {
-		isHost = false;
-
-		HookEventWithCaller<ServerWrapper>(
-			initialCharacterSpawnCheck,
-			[this](const ServerWrapper& caller, void* params, const std::string&) {
-				onCharacterSpawn(caller);
-			});
-		HookEventWithCaller<ServerWrapper>(
-			CharacterSpawnCheck,
-			[this](const ServerWrapper& caller, void* params, const std::string&) {
-				onCharacterSpawn(caller);
-			});
-		HookEventWithCaller<ServerWrapper>(
-			endPreGameTickCheck,
-			[this](const ServerWrapper& caller, void* params, const std::string&) {
-				onCountdownEnd(caller);
-			});
+		isHost = true;
 		HookEventWithCaller<ServerWrapper>(
 			gameTickCheck,
 			[this](const ServerWrapper& caller, void* params, const std::string&) {
 				onTick(caller);
 			});
-		HookEventWithCaller<ServerWrapper>(
-			overtimeGameCheck,
-			[this](const ServerWrapper& caller, void* params, const std::string&) {
-				onOvertimeStart(caller);
-			});
+
+
 	}
 	else if (!active && isActive) {
 		isHost = false;
-		UnhookEvent(initialCharacterSpawnCheck);
-		UnhookEvent(CharacterSpawnCheck);
-		UnhookEvent(preGameTickCheck);
-		UnhookEvent(endPreGameTickCheck);
+
 		UnhookEvent(gameTickCheck);
-		UnhookEvent(overtimeGameCheck);
 	}
 
 	isActive = active;
@@ -594,7 +602,7 @@ void SM64::onCountdownEnd(ServerWrapper server)
 
 void SM64::onTick(ServerWrapper server)
 {
-	isHost = true;
+	if (!isHost) return;
 	isInSm64GameSema.acquire();
 	isInSm64Game = true;
 	isInSm64GameSema.release();
