@@ -485,9 +485,10 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 			// If attacked flag is set, decrement boost and demo if out of boost
 			auto boostComponent = car.GetBoostComponent();
-			if (marioInstance->marioInputs.attackInput.isAttacked && !boostComponent.IsNull())
+			if (marioInstance->marioBodyState.marioState.isAttacked && !boostComponent.IsNull())
 			{
 				marioInstance->marioInputs.attackInput.isAttacked = false;
+				marioInstance->marioBodyState.marioState.isAttacked = false;
 				float curBoostAmt = boostComponent.GetCurrentBoostAmount();
 				if (curBoostAmt >= 0.01f)
 				{
