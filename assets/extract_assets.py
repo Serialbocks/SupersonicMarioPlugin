@@ -981,7 +981,7 @@ def main():
         f.write(output)
 
     import shutil
-    assetsToCopy = ['baserom.us.z64', 'ROCKETBALL.obj', 'transparent.png']
+    assetsToCopy = ['baserom.us.z64', 'ROCKETBALL.obj', 'transparent.png', 'arial_rounded_bold_16.spritefont']
     for asset in assetsToCopy:
         src = os.path.join(basePath, asset)
         dst = os.path.join(destPath, asset)

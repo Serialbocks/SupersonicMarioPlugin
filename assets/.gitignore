@@ -1,3 +1,8 @@
 /**
 !*
 .assets-local.txt
+*.z64
+dist/*
+build/*
+__pycache__/*
+extract_assets.spec
