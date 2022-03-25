@@ -741,10 +741,11 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	marioInstance->sema.release();
 }
 
-void loadBallMesh()
+void backgroundLoadData()
 {
 	self->utils.ParseObjFile(self->utils.GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj", &self->ballVertices);
-	self->loadMeshesThreadFinished = true;
+	self->backgroundLoadThreadFinished = true;
+	self->marioAudio->CheckAndModulateSounds();
 }
 
 inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
@@ -784,16 +785,16 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 void SM64::OnRender(CanvasWrapper canvas)
 {
 	if (renderer == nullptr) return;
-	if (!loadMeshesThreadStarted)
+	if (!backgroundLoadThreadStarted)
 	{
 		if (!renderer->Initialized) return;
-		std::thread loadMeshesThread(loadBallMesh);
+		std::thread loadMeshesThread(backgroundLoadData);
 		loadMeshesThread.detach();
-		loadMeshesThreadStarted = true;
+		backgroundLoadThreadStarted = true;
 		return;
 	}
 
-	if (!loadMeshesThreadFinished) return;
+	if (!backgroundLoadThreadFinished) return;
 
 	if (!meshesInitialized)
 	{

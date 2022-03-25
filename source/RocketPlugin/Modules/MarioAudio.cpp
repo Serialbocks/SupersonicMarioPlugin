@@ -22,12 +22,7 @@ MarioAudio::MarioAudio()
 	soloud = new SoLoud::Soloud();
 	soloud->init(SoLoud::Soloud::FLAGS::LEFT_HANDED_3D);
 
-	std::string soundDir = utils.GetBakkesmodFolderPath() + "data\\assets\\sound\\";
-	for (auto i = 0; i < marioSounds.size(); i++)
-	{
-		std::string soundPath = soundDir + marioSounds[i].wavPath;
-		marioSounds[i].wav.load(soundPath.c_str());
-	}
+	loadSoundFiles();
 	soloud->set3dListenerUp(0, 0, 1.0f);
 }
 
@@ -115,6 +110,29 @@ int MarioAudio::UpdateSounds(int soundMask,
 	return slideHandle;
 }
 
+void MarioAudio::CheckAndModulateSounds()
+{
+	// Check if first sound exists, and assume all do if the first does
+	//std::string soundPath = SOUND_DIR + marioSounds[0].wavPath;
+	//if (utils.FileExists(soundPath))
+	//	return;
+	//
+	//// Sound file doesn't exist, let's extract the sounds from the ROM
+	//std::string extractScript = EXTRACT_ASSETS_SCRIPT;
+	//int result = system(extractScript.c_str());
+	//
+	//loadSoundFiles();
+}
+
+void MarioAudio::loadSoundFiles()
+{
+	std::string soundDir = SOUND_DIR;
+	for (auto i = 0; i < marioSounds.size(); i++)
+	{
+		std::string soundPath = soundDir + marioSounds[i].wavPath;
+		marioSounds[i].wav.load(soundPath.c_str());
+	}
+}
 
 std::pair<size_t, size_t> MarioAudio::resample(double factor,
 	float* inBuffer,

@@ -7,6 +7,9 @@
 #include <soxr./src/soxr.h>
 #pragma comment(lib, "libsoxr.lib")
 
+#define ASSETS_DIR utils.GetBakkesmodFolderPath() + "data\\assets\\"
+#define SOUND_DIR ASSETS_DIR + "sound\\samples\\"
+
 #define ACT_WALL_KICK_AIR								0x03000886
 #define SOUND_MARIO_UH_INDEX							17
 #define SOUND_MARIO_DOH_INDEX							18
@@ -66,6 +69,7 @@ public:
 		Vector listenerAt,
 		int inSlideHandle,
 		uint32_t marioAction);
+	void CheckAndModulateSounds();
 private:
 	std::pair<size_t, size_t> resample(double factor,
 		float* inBuffer,
@@ -73,6 +77,7 @@ private:
 		bool lastFlag,
 		float* outBuffer,
 		size_t outBufferLen);
+	void loadSoundFiles();
 
 private:
 	SoLoud::Wav testWav;

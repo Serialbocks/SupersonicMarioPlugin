@@ -95,3 +95,9 @@ float Utils::Distance(Vector v1, Vector v2)
 	return (float)sqrt(pow(v2.X - v1.X, 2.0) + pow(v2.Y - v1.Y, 2.0) + pow(v2.Z - v1.Z, 2.0));
 }
 
+bool Utils::FileExists(std::string filename)
+{
+	struct stat buffer;
+	return (stat(filename.c_str(), &buffer) == 0);
+}
+

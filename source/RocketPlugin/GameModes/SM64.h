@@ -96,8 +96,8 @@ public:
     bool inputManagerInitialized = false;
     Renderer* renderer = nullptr;
     std::vector<Vertex> ballVertices;
-    bool loadMeshesThreadStarted = false;
-    bool loadMeshesThreadFinished = false;
+    bool backgroundLoadThreadStarted = false;
+    bool backgroundLoadThreadFinished = false;
     Utils utils;
     Rotator carRotation;
     char netcodeOutBuf[SM64_NETCODE_BUF_LEN];
