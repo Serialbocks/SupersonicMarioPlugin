@@ -114,7 +114,6 @@ SM64::~SM64()
 void SM64::OnGameLeft()
 {
 	// Cleanup after a game session has been left
-	isHost = false;
 	isInSm64GameSema.acquire();
 	isInSm64Game = false;
 	isInSm64GameSema.release();
