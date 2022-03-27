@@ -15,12 +15,12 @@
 #define GROUND_POUND_BALL_RADIUS 200.0f
 #define GROUND_POUND_PINCH_VELOCITY 2708.0f
 #define ATTACK_BALL_RADIUS 261.0f
-#define KICK_BALL_VEL_HORIZ 777.0f
-#define KICK_BALL_VEL_VERT 416.0f
-#define PUNCH_BALL_VEL_HORIZ 1861.0f
-#define PUNCH_BALL_VEL_VERT 361.0f
-#define DIVE_BALL_VEL_HORIZ KICK_BALL_VEL_HORIZ
-#define DIVE_BALL_VEL_VERT KICK_BALL_VEL_VERT
+#define KICK_BALL_VEL_HORIZ 583.0f
+#define KICK_BALL_VEL_VERT 305.0f
+#define PUNCH_BALL_VEL_HORIZ 1388.0f
+#define PUNCH_BALL_VEL_VERT 250.0f
+#define DIVE_BALL_VEL_HORIZ 639.0f
+#define DIVE_BALL_VEL_VERT 166.6f
 
 inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
@@ -62,12 +62,36 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
 
 	HookEventWithCaller<CarWrapper>(
-		"Function TAGame.Car_TA.SetVehicleInput",
+		vehicleInputCheck,
 		[this](const CarWrapper& caller, void* params, const std::string&) {
 			onSetVehicleInput(caller, params);
 		});
 
-
+	HookEventWithCaller<ServerWrapper>(
+		initialCharacterSpawnCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			onCharacterSpawn(caller);
+		});
+	HookEventWithCaller<ServerWrapper>(
+		CharacterSpawnCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			onCharacterSpawn(caller);
+		});
+	HookEventWithCaller<ServerWrapper>(
+		endPreGameTickCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			onCountdownEnd(caller);
+		});
+	HookEventWithCaller<ServerWrapper>(
+		clientEndPreGameTickCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			onCountdownEnd(caller);
+		});
+	HookEventWithCaller<ServerWrapper>(
+		overtimeGameCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			onOvertimeStart(caller);
+		});
 
 	self = this;
 
@@ -77,13 +101,19 @@ SM64::~SM64()
 {
 	gameWrapper->UnregisterDrawables();
 	DestroySM64();
-	UnhookEvent("Function TAGame.Car_TA.SetVehicleInput");
+	UnhookEvent(vehicleInputCheck);
+	UnhookEvent(initialCharacterSpawnCheck);
+	UnhookEvent(CharacterSpawnCheck);
+	UnhookEvent(preGameTickCheck);
+	UnhookEvent(endPreGameTickCheck);
+	UnhookEvent(clientEndPreGameTickCheck);
+	UnhookEvent(overtimeGameCheck);
+
 }
 
 void SM64::OnGameLeft()
 {
 	// Cleanup after a game session has been left
-	isHost = false;
 	isInSm64GameSema.acquire();
 	isInSm64Game = false;
 	isInSm64GameSema.release();
@@ -325,42 +355,19 @@ std::string SM64::GetGameModeName()
 void SM64::Activate(const bool active)
 {
 	if (active && !isActive) {
-		isHost = false;
-
-		HookEventWithCaller<ServerWrapper>(
-			initialCharacterSpawnCheck,
-			[this](const ServerWrapper& caller, void* params, const std::string&) {
-				onCharacterSpawn(caller);
-			});
-		HookEventWithCaller<ServerWrapper>(
-			CharacterSpawnCheck,
-			[this](const ServerWrapper& caller, void* params, const std::string&) {
-				onCharacterSpawn(caller);
-			});
-		HookEventWithCaller<ServerWrapper>(
-			endPreGameTickCheck,
-			[this](const ServerWrapper& caller, void* params, const std::string&) {
-				onCountdownEnd(caller);
-			});
+		isHost = true;
 		HookEventWithCaller<ServerWrapper>(
 			gameTickCheck,
 			[this](const ServerWrapper& caller, void* params, const std::string&) {
 				onTick(caller);
 			});
-		HookEventWithCaller<ServerWrapper>(
-			overtimeGameCheck,
-			[this](const ServerWrapper& caller, void* params, const std::string&) {
-				onOvertimeStart(caller);
-			});
+
+
 	}
 	else if (!active && isActive) {
 		isHost = false;
-		UnhookEvent(initialCharacterSpawnCheck);
-		UnhookEvent(CharacterSpawnCheck);
-		UnhookEvent(preGameTickCheck);
-		UnhookEvent(endPreGameTickCheck);
+
 		UnhookEvent(gameTickCheck);
-		UnhookEvent(overtimeGameCheck);
 	}
 
 	isActive = active;
@@ -478,9 +485,10 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 			// If attacked flag is set, decrement boost and demo if out of boost
 			auto boostComponent = car.GetBoostComponent();
-			if (marioInstance->marioInputs.attackInput.isAttacked && !boostComponent.IsNull())
+			if (marioInstance->marioBodyState.marioState.isAttacked && !boostComponent.IsNull())
 			{
 				marioInstance->marioInputs.attackInput.isAttacked = false;
+				marioInstance->marioBodyState.marioState.isAttacked = false;
 				float curBoostAmt = boostComponent.GetCurrentBoostAmount();
 				if (curBoostAmt >= 0.01f)
 				{
@@ -594,7 +602,7 @@ void SM64::onCountdownEnd(ServerWrapper server)
 
 void SM64::onTick(ServerWrapper server)
 {
-	isHost = true;
+	if (!isHost) return;
 	isInSm64GameSema.acquire();
 	isInSm64Game = true;
 	isInSm64GameSema.release();
@@ -741,10 +749,11 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	marioInstance->sema.release();
 }
 
-void loadBallMesh()
+void backgroundLoadData()
 {
 	self->utils.ParseObjFile(self->utils.GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj", &self->ballVertices);
-	self->loadMeshesThreadFinished = true;
+	self->backgroundLoadThreadFinished = true;
+	self->marioAudio->CheckAndModulateSounds();
 }
 
 inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
@@ -784,16 +793,16 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 void SM64::OnRender(CanvasWrapper canvas)
 {
 	if (renderer == nullptr) return;
-	if (!loadMeshesThreadStarted)
+	if (!backgroundLoadThreadStarted)
 	{
 		if (!renderer->Initialized) return;
-		std::thread loadMeshesThread(loadBallMesh);
+		std::thread loadMeshesThread(backgroundLoadData);
 		loadMeshesThread.detach();
-		loadMeshesThreadStarted = true;
+		backgroundLoadThreadStarted = true;
 		return;
 	}
 
-	if (!loadMeshesThreadFinished) return;
+	if (!backgroundLoadThreadFinished) return;
 
 	if (!meshesInitialized)
 	{

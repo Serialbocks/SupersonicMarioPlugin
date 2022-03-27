@@ -96,8 +96,8 @@ public:
     bool inputManagerInitialized = false;
     Renderer* renderer = nullptr;
     std::vector<Vertex> ballVertices;
-    bool loadMeshesThreadStarted = false;
-    bool loadMeshesThreadFinished = false;
+    bool backgroundLoadThreadStarted = false;
+    bool backgroundLoadThreadFinished = false;
     Utils utils;
     Rotator carRotation;
     char netcodeOutBuf[SM64_NETCODE_BUF_LEN];
@@ -137,10 +137,12 @@ public:
     struct SM64MarioBljInput bljSetup;
 
 protected:
-    const std::string initialCharacterSpawnCheck = "Function GameEvent_Soccar_TA.WaitingForPlayers.OnPlayerRestarted";
+    const std::string vehicleInputCheck = "Function TAGame.Car_TA.SetVehicleInput";
+    const std::string initialCharacterSpawnCheck = "Function GameEvent_Soccar_TA.WaitingForPlayers.BeginState";
     const std::string CharacterSpawnCheck = "Function GameEvent_TA.Countdown.BeginState"; //.OnPlayerRestarted might also work
     const std::string preGameTickCheck = "Function TAGame.GameEvent_Soccar_TA.ShowSeasonIntroScene";
     const std::string endPreGameTickCheck = "Function GameEvent_TA.Countdown.EndState";
+    const std::string clientEndPreGameTickCheck = "Function GameEvent_Soccar_TA.Countdown.EndState";
     const std::string gameTickCheck = "Function GameEvent_Soccar_TA.Active.Tick";
     const std::string overtimeGameCheck = "Function TAGame.GameEvent_Soccar_TA.StartOvertime";
 };
