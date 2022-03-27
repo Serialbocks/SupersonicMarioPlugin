@@ -104,16 +104,20 @@ public:
     std::vector<Mesh*> marioMeshPool;
     std::counting_semaphore<1> marioMeshPoolSema{ 1 };
     float currentBoostAount = 0.33f;
-
-public:
-    /* SM64 Members */
-    uint8_t* texture;
     std::map<int, SM64MarioInstance*> remoteMarios;
     std::counting_semaphore<1> remoteMariosSema{ 1 };
+    std::counting_semaphore<1> isInSm64GameSema{ 1 };
+    bool isInSm64Game = false;
+    Vector carLocation;
+    bool isPreGame = false;
+    struct SM64MarioBljInput bljSetup;
+
+private:
+    /* SM64 Members */
+    uint8_t* texture;
     SM64MarioInstance localMario;
     vec3 cameraPos;
     float cameraRot;
-    Vector carLocation;
     bool locationInit;
     Mesh* marioMesh = nullptr;
     Mesh* ballMesh = nullptr;
@@ -121,9 +125,6 @@ public:
     bool meshesInitialized = false;
     struct SM64MarioBodyState marioBodyStateIn;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
-    std::counting_semaphore<1> isInSm64GameSema{ 1 };
-    bool isPreGame = false;
-    bool isInSm64Game = false;
     bool isHost = false;
     float groundPoundPinchVel;
     float attackBallRadius;
@@ -134,7 +135,6 @@ public:
     float attackBoostDamage;
     float diveBallVelHoriz;
     float diveBallVelVert;
-    struct SM64MarioBljInput bljSetup;
     float testCapColorR = 1.0f;
     float testCapColorG = 0.0f;
     float testCapColorB = 0.0f;
