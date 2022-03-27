@@ -43,7 +43,8 @@ public:
 	void SetScale(float x, float y, float z);
 	void SetRotation(float roll, float pitch, float yaw);
 	void SetRotationQuat(float x, float y, float z, float w);
-	void SetColorIndex(int index);
+	void SetCapColor(float r, float g, float b);
+	void SetShirtColor(float r, float g, float b);
 	void ShowNameplate(std::wstring name);
 	void HideNameplate();
 
@@ -73,7 +74,8 @@ public:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexConstantBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> TextureResourceView = nullptr;
-	int ColorIndex = 0;
+	float CapColorR, CapColorG, CapColorB;
+	float ShirtColorR, ShirtColorG, ShirtColorB;
 	bool render = false;
 
 	// Nameplate mesh

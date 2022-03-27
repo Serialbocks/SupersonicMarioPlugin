@@ -120,9 +120,18 @@ void Mesh::SetRotationQuat(float x, float y, float z, float w)
 	quatW = w;
 }
 
-void Mesh::SetColorIndex(int index)
+void Mesh::SetCapColor(float r, float g, float b)
 {
-	ColorIndex = index;
+	CapColorR = r;
+	CapColorG = g;
+	CapColorB = b;
+}
+
+void Mesh::SetShirtColor(float r, float g, float b)
+{
+	ShirtColorR = r;
+	ShirtColorG = g;
+	ShirtColorB = b;
 }
 
 void Mesh::ShowNameplate(std::wstring name)

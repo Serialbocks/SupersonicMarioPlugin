@@ -24,7 +24,10 @@ typedef struct PS_ConstantBufferData_t
 	DirectX::XMFLOAT4 dynamicLightColorStrengths[MAX_LIGHTS];
 	DirectX::XMFLOAT4 dynamicLightPositions[MAX_LIGHTS];
 
-	int colorIndex = 0;
+	DirectX::XMFLOAT3 capColor;
+	float padding;
+	DirectX::XMFLOAT3 shirtColor;
+	float padding2;
 } PS_ConstantBufferData;
 
 typedef struct Light_t

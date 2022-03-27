@@ -322,7 +322,12 @@ void Renderer::DrawRenderedMesh()
 			continue;
 		};
 
-		PixelConstBufferData.colorIndex = mesh->ColorIndex;
+		PixelConstBufferData.capColor.x = mesh->CapColorR;
+		PixelConstBufferData.capColor.y = mesh->CapColorG;
+		PixelConstBufferData.capColor.z = mesh->CapColorB;
+		PixelConstBufferData.shirtColor.x = mesh->ShirtColorR;
+		PixelConstBufferData.shirtColor.y = mesh->ShirtColorG;
+		PixelConstBufferData.shirtColor.z = mesh->ShirtColorB;
 
 		// Map the pixel constant buffer
 		D3D11_MAPPED_SUBRESOURCE mappedResource;

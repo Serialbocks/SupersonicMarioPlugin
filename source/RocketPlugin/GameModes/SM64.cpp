@@ -304,38 +304,47 @@ void SM64::RenderOptions()
 
 		ImGui::NewLine();
 
-		ImGui::Text("Ambient Light");
-		ImGui::SliderFloat("R", &renderer->Lighting.AmbientLightColorR, 0.0f, 1.0f);
-		ImGui::SliderFloat("G", &renderer->Lighting.AmbientLightColorG, 0.0f, 1.0f);
-		ImGui::SliderFloat("B", &renderer->Lighting.AmbientLightColorB, 0.0f, 1.0f);
-		ImGui::SliderFloat("Ambient Strength", &renderer->Lighting.AmbientLightStrength, 0.0f, 1.0f);
+		ImGui::Text("Cap Color");
+		ImGui::SliderFloat("R", &testCapColorR, 0.0f, 1.0f);
+		ImGui::SliderFloat("G", &testCapColorG, 0.0f, 1.0f);
+		ImGui::SliderFloat("B", &testCapColorB, 0.0f, 1.0f);
+		ImGui::Text("Shirt Color");
+		ImGui::SliderFloat("Rs", &testShirtColorR, 0.0f, 1.0f);
+		ImGui::SliderFloat("Gs", &testShirtColorG, 0.0f, 1.0f);
+		ImGui::SliderFloat("Bs", &testShirtColorB, 0.0f, 1.0f);
 
-		ImGui::NewLine();
-
-		ImGui::Text("Dynamic Light");
-		std::string currentLightLabel = "Light " + std::to_string(currentLightIndex + 1);
-		if (ImGui::BeginCombo("Light Select", currentLightLabel.c_str()))
-		{
-			for (int i = 0; i < MAX_LIGHTS; i++)
-			{
-				std::string lightLabel = "Light " + std::to_string(i + 1);
-				bool isSelected = i == currentLightIndex;
-				if (ImGui::Selectable(lightLabel.c_str(), isSelected))
-					currentLightIndex = i;
-				if (isSelected)
-					ImGui::SetItemDefaultFocus();
-			}
-			ImGui::EndCombo();
-		}
-
-		ImGui::SliderFloat("X", &renderer->Lighting.Lights[currentLightIndex].posX, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
-		ImGui::SliderFloat("Y", &renderer->Lighting.Lights[currentLightIndex].posY, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
-		ImGui::SliderFloat("Z", &renderer->Lighting.Lights[currentLightIndex].posZ, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
-		ImGui::SliderFloat("Rd", &renderer->Lighting.Lights[currentLightIndex].r, 0.0f, 1.0f);
-		ImGui::SliderFloat("Gd", &renderer->Lighting.Lights[currentLightIndex].g, 0.0f, 1.0f);
-		ImGui::SliderFloat("Bd", &renderer->Lighting.Lights[currentLightIndex].b, 0.0f, 1.0f);
-		ImGui::SliderFloat("Dynamic Strength", &renderer->Lighting.Lights[currentLightIndex].strength, 0.0f, 1.0f);
-		ImGui::Checkbox("Show Bulb", &renderer->Lighting.Lights[currentLightIndex].showBulb);
+		//ImGui::Text("Ambient Light");
+		//ImGui::SliderFloat("R", &renderer->Lighting.AmbientLightColorR, 0.0f, 1.0f);
+		//ImGui::SliderFloat("G", &renderer->Lighting.AmbientLightColorG, 0.0f, 1.0f);
+		//ImGui::SliderFloat("B", &renderer->Lighting.AmbientLightColorB, 0.0f, 1.0f);
+		//ImGui::SliderFloat("Ambient Strength", &renderer->Lighting.AmbientLightStrength, 0.0f, 1.0f);
+		//
+		//ImGui::NewLine();
+		//
+		//ImGui::Text("Dynamic Light");
+		//std::string currentLightLabel = "Light " + std::to_string(currentLightIndex + 1);
+		//if (ImGui::BeginCombo("Light Select", currentLightLabel.c_str()))
+		//{
+		//	for (int i = 0; i < MAX_LIGHTS; i++)
+		//	{
+		//		std::string lightLabel = "Light " + std::to_string(i + 1);
+		//		bool isSelected = i == currentLightIndex;
+		//		if (ImGui::Selectable(lightLabel.c_str(), isSelected))
+		//			currentLightIndex = i;
+		//		if (isSelected)
+		//			ImGui::SetItemDefaultFocus();
+		//	}
+		//	ImGui::EndCombo();
+		//}
+		//
+		//ImGui::SliderFloat("X", &renderer->Lighting.Lights[currentLightIndex].posX, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
+		//ImGui::SliderFloat("Y", &renderer->Lighting.Lights[currentLightIndex].posY, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
+		//ImGui::SliderFloat("Z", &renderer->Lighting.Lights[currentLightIndex].posZ, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
+		//ImGui::SliderFloat("Rd", &renderer->Lighting.Lights[currentLightIndex].r, 0.0f, 1.0f);
+		//ImGui::SliderFloat("Gd", &renderer->Lighting.Lights[currentLightIndex].g, 0.0f, 1.0f);
+		//ImGui::SliderFloat("Bd", &renderer->Lighting.Lights[currentLightIndex].b, 0.0f, 1.0f);
+		//ImGui::SliderFloat("Dynamic Strength", &renderer->Lighting.Lights[currentLightIndex].strength, 0.0f, 1.0f);
+		//ImGui::Checkbox("Show Bulb", &renderer->Lighting.Lights[currentLightIndex].showBulb);
 	}
 }
 
@@ -883,7 +892,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 			remoteMario->CarActive = true;
 			if (remoteMario->mesh != nullptr)
 			{
-				remoteMario->mesh->SetColorIndex(teamIndex);
+				remoteMario->mesh->SetCapColor(testCapColorR, testCapColorG, testCapColorB);
+				remoteMario->mesh->SetShirtColor(testShirtColorR, testShirtColorG, testShirtColorB);
 			}
 		}
 
@@ -905,7 +915,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 		}
 		else
 		{
-			marioInstance->mesh->SetColorIndex(teamIndex);
+			marioInstance->mesh->SetCapColor(testCapColorR, testCapColorG, testCapColorB);
+			marioInstance->mesh->SetShirtColor(testShirtColorR, testShirtColorG, testShirtColorB);
 		}
 
 		if(!isHost)

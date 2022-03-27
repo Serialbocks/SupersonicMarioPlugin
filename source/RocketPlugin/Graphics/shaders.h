@@ -48,7 +48,10 @@ cbuffer PS_constantBuffer
 
     float4 dynamicLightColorStrengths[numLights];
     float4 dynamicLightPositions[numLights];
-    int colorIndex;
+    float3 capColor;
+    float padding;
+    float3 shirtColor;
+    float padding2;
 };
 
 float4 PSTex(VS_Output input) : SV_Target
@@ -61,10 +64,17 @@ float4 PSTex(VS_Output input) : SV_Target
         discard;
     }
 
-    if(colorIndex == 0 && input.color.x >= 0.99f && input.color.y <= 0.01f && input.color.z <= 0.01f)
+    if(input.color.x >= 0.99f && input.color.y <= 0.01f && input.color.z <= 0.01f)
     {
-        input.color.x = 0.0f;
-        input.color.y = 1.0f;
+        input.color.x = capColor.x;
+        input.color.y = capColor.y;
+        input.color.z = capColor.z;
+    }
+    else if(input.color.x < 0.01f && input.color.y <= 0.01f && input.color.z >= 0.99f)
+    {
+        input.color.x = shirtColor.x;
+        input.color.y = shirtColor.y;
+        input.color.z = shirtColor.z;
     }
 
     float4 mixedColor = lerp(input.color, textureColor, textureColor.w < 0.3f ? 0.0f : textureColor.w);

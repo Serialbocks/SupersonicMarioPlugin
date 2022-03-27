@@ -135,6 +135,12 @@ public:
     float diveBallVelHoriz;
     float diveBallVelVert;
     struct SM64MarioBljInput bljSetup;
+    float testCapColorR = 1.0f;
+    float testCapColorG = 0.0f;
+    float testCapColorB = 0.0f;
+    float testShirtColorR = 0.0f;
+    float testShirtColorG = 0.0f;
+    float testShirtColorB = 1.0f;
 
 protected:
     const std::string vehicleInputCheck = "Function TAGame.Car_TA.SetVehicleInput";
