@@ -102,6 +102,8 @@ private:
     void sendSettingsIfHost(ServerWrapper server);
     void moveCarToMario(std::string eventName);
     void onGoalScored(std::string eventName);
+    void menuPushed(ServerWrapper server);
+    void menuPopped(ServerWrapper server);
     uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
     Mesh* getMeshFromPool();
     void addMeshToPool(Mesh*);
@@ -142,6 +144,7 @@ public:
         0.0f, 0.122f, 0.778f, 0.031f, 0.031f, 0.031f,
         0.983f, 0.0f, 0.717f, 0.0f, 0.0f, 0.0f
     };
+    int menuStackCount = 0;
 
 private:
     /* SM64 Members */
@@ -179,4 +182,7 @@ protected:
     const std::string playerLeaveOrJoinCheck = "Function TAGame.ListenServer_TA.GetCustomMatchSettings";
     const std::string playerJoinedTeamCheck = "Function TAGame.GameMetrics_TA.JoinTeam";
     const std::string playerLeftTeamCheck = "Function TAGame.GameMetrics_TA.LeaveTeam";
+
+    const std::string menuPushCheck = "Function TAGame.GFxData_MenuStack_TA.PushMenu";
+    const std::string menuPopCheck = "Function TAGame.GFxData_MenuStack_TA.PopMenu";
 };

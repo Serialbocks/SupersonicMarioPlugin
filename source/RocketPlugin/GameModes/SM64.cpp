@@ -104,6 +104,16 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 		[this](const ServerWrapper& caller, void* params, const std::string&) {
 			sendSettingsIfHost(caller);
 		});
+	HookEventWithCaller<ServerWrapper>(
+		menuPushCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			menuPushed(caller);
+		});
+	HookEventWithCaller<ServerWrapper>(
+		menuPopCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			menuPopped(caller);
+		});
 
 	self = this;
 
@@ -264,6 +274,17 @@ void SM64::onGoalScored(std::string eventName)
 	{
 		OnGameLeft(false);
 	}
+}
+
+void SM64::menuPushed(ServerWrapper server)
+{
+	menuStackCount++;
+}
+
+void SM64::menuPopped(ServerWrapper server)
+{
+	if(menuStackCount > 0)
+		menuStackCount--;
 }
 
 void MarioMessageReceived(char* buf, int len)
@@ -588,6 +609,7 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 	{
 		SM64MarioInstance* marioInstance = nullptr;
 
+		ControllerInput* contInput = (ControllerInput*)params;
 		if (isLocalPlayer)
 		{
 			marioInstance = &localMario;
@@ -595,6 +617,13 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 			if (!boostComponent.IsNull())
 			{
 				currentBoostAount = car.GetBoostComponent().GetCurrentBoostAmount();
+			}
+
+			if (menuStackCount > 0 &&
+				(contInput->Jump || contInput->Handbrake || contInput->Throttle || contInput->Steer || contInput->Pitch))
+			{
+				// Reset the menu stack on car input just in case our stack count gets desynced
+				menuStackCount = 0;
 			}
 		}
 		else
@@ -625,12 +654,11 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 			carRot.Roll = carRotation.Roll;
 			carRot.Pitch = carRotation.Pitch;
 			car.SetRotation(carRot);
-			ControllerInput* newInput = (ControllerInput*)params;
-			newInput->Jump = 0;
-			newInput->Handbrake = 0;
-			newInput->Throttle = 0;
-			newInput->Steer = 0;
-			newInput->Pitch = 0;
+			contInput->Jump = 0;
+			contInput->Handbrake = 0;
+			contInput->Throttle = 0;
+			contInput->Steer = 0;
+			contInput->Pitch = 0;
 
 			// If attacked flag is set, decrement boost and demo if out of boost
 			auto boostComponent = car.GetBoostComponent();
@@ -928,7 +956,19 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 {
 	if (marioInstance == nullptr) return;
 
+	if (self->menuStackCount > 0)
+	{
+		marioInstance->sema.acquire();
+		if (marioInstance->mesh != nullptr)
+		{
+			marioInstance->mesh->RenderUpdateVertices(0, &camera);
+		}
+		marioInstance->sema.release();
+		return;
+	}
+
 	marioInstance->sema.acquire();
+
 	if (marioInstance->mesh != nullptr)
 	{
 		for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
