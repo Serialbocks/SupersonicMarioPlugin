@@ -125,7 +125,7 @@ SM64::~SM64()
 
 }
 
-void SM64::OnGameLeft(bool resetColors)
+void SM64::OnGameLeft()
 {
 	// Cleanup after a game session has been left
 	matchSettingsSema.acquire();
@@ -146,11 +146,11 @@ void SM64::OnGameLeft(bool resetColors)
 			addMeshToPool(localMario.mesh);
 			localMario.mesh = nullptr;
 		}
-		if (isHost && resetColors && localMario.colorIndex >= 0)
+		if (isHost && localMario.colorIndex >= 0)
 		{
 			addColorIndexToPool(localMario.colorIndex);
-			localMario.colorIndex = -1;
 		}
+		localMario.colorIndex = -1;
 	}
 
 	remoteMariosSema.acquire();
@@ -169,11 +169,11 @@ void SM64::OnGameLeft(bool resetColors)
 			sm64_mario_delete(marioInstance->marioId);
 			marioInstance->marioId = -2;
 		}
-		if (isHost && resetColors && marioInstance->colorIndex >= 0)
+		if (isHost && marioInstance->colorIndex >= 0)
 		{
 			addColorIndexToPool(marioInstance->colorIndex);
-			marioInstance->colorIndex = -1;
 		}
+		marioInstance->colorIndex = -1;
 		marioInstance->sema.release();
 	}
 	remoteMarios.clear();
@@ -237,7 +237,7 @@ void SM64::onGoalScored(std::string eventName)
 	matchSettingsSema.release();
 	if (inSm64Game)
 	{
-		OnGameLeft(false);
+		OnGameLeft();
 	}
 }
 
@@ -328,33 +328,39 @@ void SM64::SendSettingsToClients()
 {
 	int messageId = -1;
 
-	matchSettings.playerCount = 0;
-	localMario.sema.acquire();
-	if (localMario.colorIndex >= 0)
+	matchSettingsSema.acquire();
+	if (matchSettings.isInSm64Game)
 	{
-		matchSettings.playerIds[matchSettings.playerCount] = localMario.playerId;
-		matchSettings.playerColorIndices[matchSettings.playerCount] = localMario.colorIndex;
-		matchSettings.playerCount++;
-	}
-	localMario.sema.release();
-
-	remoteMariosSema.acquire();
-	for (auto const& [playerId, marioInstance] : remoteMarios)
-	{
-		marioInstance->sema.acquire();
-		if (marioInstance->colorIndex >= 0)
+		matchSettings.playerCount = 0;
+		localMario.sema.acquire();
+		if (localMario.colorIndex >= 0)
 		{
-			matchSettings.playerIds[matchSettings.playerCount] = playerId;
-			matchSettings.playerColorIndices[matchSettings.playerCount] = marioInstance->colorIndex;
+			matchSettings.playerIds[matchSettings.playerCount] = localMario.playerId;
+			matchSettings.playerColorIndices[matchSettings.playerCount] = localMario.colorIndex;
 			matchSettings.playerCount++;
 		}
-		marioInstance->sema.release();
+		localMario.sema.release();
+
+		remoteMariosSema.acquire();
+		for (auto const& [playerId, marioInstance] : remoteMarios)
+		{
+			marioInstance->sema.acquire();
+			if (marioInstance->colorIndex >= 0)
+			{
+				matchSettings.playerIds[matchSettings.playerCount] = playerId;
+				matchSettings.playerColorIndices[matchSettings.playerCount] = marioInstance->colorIndex;
+				matchSettings.playerCount++;
+			}
+			marioInstance->sema.release();
+		}
+		remoteMariosSema.release();
 	}
-	remoteMariosSema.release();
 
 	memcpy(self->netcodeOutBuf, &messageId, sizeof(int));
 	memcpy(self->netcodeOutBuf + sizeof(int), &matchSettings, sizeof(MatchSettings));
 	Networking::SendBytes(self->netcodeOutBuf, sizeof(MatchSettings) + sizeof(int));
+
+	matchSettingsSema.release();
 }
 
 void SM64::sendSettingsIfHost(ServerWrapper server)
@@ -727,21 +733,52 @@ void SM64::onCountdownEnd(ServerWrapper server)
 void SM64::onTick(ServerWrapper server)
 {
 	if (!isHost) return;
+
 	matchSettingsSema.acquire();
-	matchSettings.isInSm64Game = true;
+	int isInSm64Game = matchSettings.isInSm64Game;
 	matchSettingsSema.release();
+
+	int localMarioPlayerId = -1;
 	for (CarWrapper car : server.GetCars())
 	{
 		PriWrapper player = car.GetPRI();
 		if (player.IsNull()) continue;
 		if (player.IsLocalPlayerPRI())
 		{
+			localMarioPlayerId = player.GetPlayerID();
 			remoteMariosSema.acquire();
-			tickMarioInstance(&localMario, car, this);
+			if(isInSm64Game)
+				tickMarioInstance(&localMario, car, this);
 			remoteMariosSema.release();
 		}
 
 	}
+
+	matchSettingsSema.acquire();
+	if (!matchSettings.isInSm64Game)
+	{
+		// Restore match settings to mario instances
+		for (int i = 0; i < self->matchSettings.playerCount; i++)
+		{
+			int playerId = self->matchSettings.playerIds[i];
+			int colorIndex = self->matchSettings.playerColorIndices[i];
+			SM64MarioInstance* marioInstance = nullptr;
+			if (self->remoteMarios.count(playerId) == 0)
+			{
+				// Initialize mario for this player
+				marioInstance = new SM64MarioInstance();
+				marioInstance->colorIndex = colorIndex;
+				self->remoteMarios[playerId] = marioInstance;
+			}
+			else if (playerId == localMarioPlayerId)
+			{
+				localMario.colorIndex = colorIndex;
+			}
+		}
+		matchSettings.isInSm64Game = true;
+	}
+
+	matchSettingsSema.release();
 }
 
 void SM64::onOvertimeStart(ServerWrapper server)
@@ -751,7 +788,7 @@ void SM64::onOvertimeStart(ServerWrapper server)
 	matchSettingsSema.release();
 	if (inSm64Game)
 	{
-		OnGameLeft(false);
+		OnGameLeft();
 	}
 }
 
@@ -967,7 +1004,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 	matchSettingsSema.release();
 	if (!inGame && inSm64Game)
 	{
-		OnGameLeft(true);
+		OnGameLeft();
 	}
 	if (!inGame || !inSm64Game)
 	{

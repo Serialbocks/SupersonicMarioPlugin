@@ -87,7 +87,7 @@ public:
     void DestroySM64();
     void OnRender(CanvasWrapper canvas);
 
-    void OnGameLeft(bool resetColors);
+    void OnGameLeft();
 
     void SendSettingsToClients();
 
