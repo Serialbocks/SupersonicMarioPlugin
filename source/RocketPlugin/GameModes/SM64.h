@@ -34,6 +34,11 @@ extern "C" {
 #define SM64_NETCODE_BUF_LEN 1024
 #define MARIO_MESH_POOL_SIZE 10
 
+struct MatchSettings
+{
+    SM64MarioBljInput bljSetup;
+};
+
 class SM64MarioInstance
 {
 public:
@@ -73,6 +78,8 @@ public:
 
     void OnGameLeft();
 
+    void SendSettingsToClients();
+
     std::string bytesToHex(unsigned char* data, unsigned int len);
 
 private:
@@ -110,7 +117,8 @@ public:
     bool isInSm64Game = false;
     Vector carLocation;
     bool isPreGame = false;
-    struct SM64MarioBljInput bljSetup;
+    MatchSettings matchSettings;
+    std::counting_semaphore<1> matchSettingsSema{ 1 };
 
 private:
     /* SM64 Members */
@@ -135,12 +143,7 @@ private:
     float attackBoostDamage;
     float diveBallVelHoriz;
     float diveBallVelVert;
-    float testCapColorR = 1.0f;
-    float testCapColorG = 0.0f;
-    float testCapColorB = 0.0f;
-    float testShirtColorR = 0.0f;
-    float testShirtColorG = 0.0f;
-    float testShirtColorB = 1.0f;
+
     std::vector<float> redTeamColors = {
         1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
         1.0f, 0.389f, 0.0f, 0.0f, 0.517f, 0.803f,

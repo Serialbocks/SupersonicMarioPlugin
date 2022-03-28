@@ -56,8 +56,8 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	diveBallVelHoriz = DIVE_BALL_VEL_HORIZ;
 	diveBallVelVert = DIVE_BALL_VEL_VERT;
 
-	bljSetup.bljState = SM64_BLJ_STATE_DISABLED;
-	bljSetup.bljVel = 0;
+	matchSettings.bljSetup.bljState = SM64_BLJ_STATE_DISABLED;
+	matchSettings.bljSetup.bljVel = 0;
 
 	typeIdx = std::make_unique<std::type_index>(typeid(*this));
 
@@ -214,18 +214,11 @@ void SM64::onGoalScored(std::string eventName)
 	}
 }
 
-void MessageReceived(char* buf, int len)
+void MarioMessageReceived(char* buf, int len)
 {
-	auto targetLen = sizeof(struct SM64MarioBodyState) + sizeof(int);
+	auto marioMsgLen = sizeof(struct SM64MarioBodyState) + sizeof(int);
 	uint8_t* targetData = (uint8_t*)buf;
-	if (len < targetLen)
-	{
-		return;
-	}
-	else if (len > targetLen)
-	{
-		targetData = (uint8_t*)(buf + len - targetLen);
-	}
+	if (len != marioMsgLen) return;
 
 	int playerId = *((int*)buf);
 
@@ -244,12 +237,44 @@ void MessageReceived(char* buf, int len)
 	self->remoteMariosSema.release();
 
 	marioInstance->sema.acquire();
-	memcpy(&marioInstance->marioBodyState, targetData + sizeof(int), targetLen - sizeof(int));
+	memcpy(&marioInstance->marioBodyState, targetData + sizeof(int), marioMsgLen - sizeof(int));
 	marioInstance->sema.release();
 
 	self->isInSm64GameSema.acquire();
 	self->isInSm64Game = true;
 	self->isInSm64GameSema.release();
+}
+
+void MatchSettingsMessageReceived(char* buf, int len)
+{
+	auto settingsMsgLen = sizeof(MatchSettings) + sizeof(int);
+	if (len != settingsMsgLen) return;
+
+	self->matchSettingsSema.acquire();
+	memcpy(&self->matchSettings, buf + sizeof(int), settingsMsgLen - sizeof(int));
+	self->matchSettingsSema.release();
+}
+
+void MessageReceived(char* buf, int len)
+{
+	if (len < sizeof(int)) return;
+	int messageId = *((int*)buf);
+	if (messageId == -1)
+	{
+		MatchSettingsMessageReceived(buf, len);
+	}
+	else
+	{
+		MarioMessageReceived(buf, len);
+	}
+}
+
+void SM64::SendSettingsToClients()
+{
+	int messageId = -1;
+	memcpy(self->netcodeOutBuf, &messageId, sizeof(int));
+	memcpy(self->netcodeOutBuf + sizeof(int), &matchSettings, sizeof(MatchSettings));
+	Networking::SendBytes(self->netcodeOutBuf, sizeof(MatchSettings) + sizeof(int));
 }
 
 #define MIN_LIGHT_COORD -6000.0f
@@ -281,70 +306,64 @@ void SM64::RenderOptions()
 		bljLabel[0] = "BLJ Disabled";
 		bljLabel[1] = "BLJ Enabled (Press)";
 		bljLabel[2] = "BLJ Enabled (Hold)";
-		std::string currentBljLabel = bljLabel[bljSetup.bljState];
+		std::string currentBljLabel = bljLabel[matchSettings.bljSetup.bljState];
 		if (ImGui::BeginCombo("BLJ Mode Select", currentBljLabel.c_str()))
 		{
 			for (int i = 0; i < 3; i++)
 			{
-				bool isSelected = i == bljSetup.bljState;
+				bool isSelected = i == matchSettings.bljSetup.bljState;
 				if (ImGui::Selectable(bljLabel[i].c_str(), isSelected))
-					bljSetup.bljState = (SM64BljState)i;
+				{
+					matchSettings.bljSetup.bljState = (SM64BljState)i;
+					SendSettingsToClients();
+				}
 				if (isSelected)
 					ImGui::SetItemDefaultFocus();
 			}
 			ImGui::EndCombo();
 		}
 
-		if( 0 != bljSetup.bljState )
+		if( 0 != matchSettings.bljSetup.bljState )
 		{
-			int velocity = bljSetup.bljVel;
+			int velocity = matchSettings.bljSetup.bljVel;
 			ImGui::SliderInt("BLJ Velocity", &velocity, 0, 10);
-			bljSetup.bljVel = (uint8_t)velocity;
+			matchSettings.bljSetup.bljVel = (uint8_t)velocity;
 		}
 
 		ImGui::NewLine();
 
-		ImGui::Text("Cap Color");
-		ImGui::SliderFloat("R", &testCapColorR, 0.0f, 1.0f);
-		ImGui::SliderFloat("G", &testCapColorG, 0.0f, 1.0f);
-		ImGui::SliderFloat("B", &testCapColorB, 0.0f, 1.0f);
-		ImGui::Text("Shirt Color");
-		ImGui::SliderFloat("Rs", &testShirtColorR, 0.0f, 1.0f);
-		ImGui::SliderFloat("Gs", &testShirtColorG, 0.0f, 1.0f);
-		ImGui::SliderFloat("Bs", &testShirtColorB, 0.0f, 1.0f);
-
-		//ImGui::Text("Ambient Light");
-		//ImGui::SliderFloat("R", &renderer->Lighting.AmbientLightColorR, 0.0f, 1.0f);
-		//ImGui::SliderFloat("G", &renderer->Lighting.AmbientLightColorG, 0.0f, 1.0f);
-		//ImGui::SliderFloat("B", &renderer->Lighting.AmbientLightColorB, 0.0f, 1.0f);
-		//ImGui::SliderFloat("Ambient Strength", &renderer->Lighting.AmbientLightStrength, 0.0f, 1.0f);
-		//
-		//ImGui::NewLine();
-		//
-		//ImGui::Text("Dynamic Light");
-		//std::string currentLightLabel = "Light " + std::to_string(currentLightIndex + 1);
-		//if (ImGui::BeginCombo("Light Select", currentLightLabel.c_str()))
-		//{
-		//	for (int i = 0; i < MAX_LIGHTS; i++)
-		//	{
-		//		std::string lightLabel = "Light " + std::to_string(i + 1);
-		//		bool isSelected = i == currentLightIndex;
-		//		if (ImGui::Selectable(lightLabel.c_str(), isSelected))
-		//			currentLightIndex = i;
-		//		if (isSelected)
-		//			ImGui::SetItemDefaultFocus();
-		//	}
-		//	ImGui::EndCombo();
-		//}
-		//
-		//ImGui::SliderFloat("X", &renderer->Lighting.Lights[currentLightIndex].posX, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
-		//ImGui::SliderFloat("Y", &renderer->Lighting.Lights[currentLightIndex].posY, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
-		//ImGui::SliderFloat("Z", &renderer->Lighting.Lights[currentLightIndex].posZ, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
-		//ImGui::SliderFloat("Rd", &renderer->Lighting.Lights[currentLightIndex].r, 0.0f, 1.0f);
-		//ImGui::SliderFloat("Gd", &renderer->Lighting.Lights[currentLightIndex].g, 0.0f, 1.0f);
-		//ImGui::SliderFloat("Bd", &renderer->Lighting.Lights[currentLightIndex].b, 0.0f, 1.0f);
-		//ImGui::SliderFloat("Dynamic Strength", &renderer->Lighting.Lights[currentLightIndex].strength, 0.0f, 1.0f);
-		//ImGui::Checkbox("Show Bulb", &renderer->Lighting.Lights[currentLightIndex].showBulb);
+		ImGui::Text("Ambient Light");
+		ImGui::SliderFloat("R", &renderer->Lighting.AmbientLightColorR, 0.0f, 1.0f);
+		ImGui::SliderFloat("G", &renderer->Lighting.AmbientLightColorG, 0.0f, 1.0f);
+		ImGui::SliderFloat("B", &renderer->Lighting.AmbientLightColorB, 0.0f, 1.0f);
+		ImGui::SliderFloat("Ambient Strength", &renderer->Lighting.AmbientLightStrength, 0.0f, 1.0f);
+		
+		ImGui::NewLine();
+		
+		ImGui::Text("Dynamic Light");
+		std::string currentLightLabel = "Light " + std::to_string(currentLightIndex + 1);
+		if (ImGui::BeginCombo("Light Select", currentLightLabel.c_str()))
+		{
+			for (int i = 0; i < MAX_LIGHTS; i++)
+			{
+				std::string lightLabel = "Light " + std::to_string(i + 1);
+				bool isSelected = i == currentLightIndex;
+				if (ImGui::Selectable(lightLabel.c_str(), isSelected))
+					currentLightIndex = i;
+				if (isSelected)
+					ImGui::SetItemDefaultFocus();
+			}
+			ImGui::EndCombo();
+		}
+		
+		ImGui::SliderFloat("X", &renderer->Lighting.Lights[currentLightIndex].posX, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
+		ImGui::SliderFloat("Y", &renderer->Lighting.Lights[currentLightIndex].posY, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
+		ImGui::SliderFloat("Z", &renderer->Lighting.Lights[currentLightIndex].posZ, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
+		ImGui::SliderFloat("Rd", &renderer->Lighting.Lights[currentLightIndex].r, 0.0f, 1.0f);
+		ImGui::SliderFloat("Gd", &renderer->Lighting.Lights[currentLightIndex].g, 0.0f, 1.0f);
+		ImGui::SliderFloat("Bd", &renderer->Lighting.Lights[currentLightIndex].b, 0.0f, 1.0f);
+		ImGui::SliderFloat("Dynamic Strength", &renderer->Lighting.Lights[currentLightIndex].strength, 0.0f, 1.0f);
+		ImGui::Checkbox("Show Bulb", &renderer->Lighting.Lights[currentLightIndex].showBulb);
 	}
 }
 
@@ -726,7 +745,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		}
 	}
 
-	marioInstance->marioInputs.bljInput =  instance->bljSetup;
+	marioInstance->marioInputs.bljInput =  instance->matchSettings.bljSetup;
 
 	sm64_mario_tick(marioInstance->marioId,
 		&marioInstance->marioInputs,
