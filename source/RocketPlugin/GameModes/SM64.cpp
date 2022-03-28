@@ -327,7 +327,7 @@ void SM64::SendSettingsToClients()
 
 	matchSettings.playerCount = 0;
 	localMario.sema.acquire();
-	if (localMario.marioId >= 0)
+	if (localMario.colorIndex >= 0)
 	{
 		matchSettings.playerIds[matchSettings.playerCount] = localMario.playerId;
 		matchSettings.playerColorIndices[matchSettings.playerCount] = localMario.colorIndex;
@@ -339,7 +339,7 @@ void SM64::SendSettingsToClients()
 	for (auto const& [playerId, marioInstance] : remoteMarios)
 	{
 		marioInstance->sema.acquire();
-		if (marioInstance->marioId >= 0)
+		if (marioInstance->colorIndex >= 0)
 		{
 			matchSettings.playerIds[matchSettings.playerCount] = playerId;
 			matchSettings.playerColorIndices[matchSettings.playerCount] = marioInstance->colorIndex;
@@ -1051,15 +1051,15 @@ void SM64::OnRender(CanvasWrapper canvas)
 		{
 			//marioInstance->mesh->ShowNameplate(L"", car.GetLocation());
 		}
-		if (isHost && localMario.colorIndex < 0)
-		{
-			localMario.colorIndex = getColorIndexFromPool(teamIndex);
-			needsSettingSync = true;
-		}
 
 		if(!isHost)
 		{
 			tickMarioInstance(marioInstance, car, this);
+		}
+		if (isHost && localMario.colorIndex < 0)
+		{
+			localMario.colorIndex = getColorIndexFromPool(teamIndex);
+			needsSettingSync = true;
 		}
 
 		renderMario(marioInstance, camera);
