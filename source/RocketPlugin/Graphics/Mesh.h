@@ -45,7 +45,7 @@ public:
 	void SetRotationQuat(float x, float y, float z, float w);
 	void SetCapColor(float r, float g, float b);
 	void SetShirtColor(float r, float g, float b);
-	void ShowNameplate(std::wstring name);
+	void ShowNameplate(std::wstring name, Vector pos);
 	void HideNameplate();
 
 private:
@@ -79,7 +79,6 @@ public:
 	bool render = false;
 
 	// Nameplate mesh
-	const size_t MaxNameplateTriangles = 1000;
 	size_t NumNameplateTriangles = 0;
 	bool UpdateNameplateVertices = false;
 	std::vector<Vertex> NameplateVertices;

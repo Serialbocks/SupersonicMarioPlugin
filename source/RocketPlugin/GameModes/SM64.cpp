@@ -894,6 +894,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 			{
 				remoteMario->mesh->SetCapColor(testCapColorR, testCapColorG, testCapColorB);
 				remoteMario->mesh->SetShirtColor(testShirtColorR, testShirtColorG, testShirtColorB);
+				remoteMario->mesh->ShowNameplate(L"", car.GetLocation());
 			}
 		}
 
@@ -917,6 +918,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		{
 			marioInstance->mesh->SetCapColor(testCapColorR, testCapColorG, testCapColorB);
 			marioInstance->mesh->SetShirtColor(testShirtColorR, testShirtColorG, testShirtColorB);
+			marioInstance->mesh->ShowNameplate(L"", car.GetLocation());
 		}
 
 		if(!isHost)

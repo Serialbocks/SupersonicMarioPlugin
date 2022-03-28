@@ -372,6 +372,29 @@ void Renderer::DrawRenderedMesh()
 			context->PSSetShader(pixelShader.Get(), nullptr, 0);
 		}
 		context->DrawIndexed((UINT)mesh->NumTrianglesUsed * 3, 0, 0);
+
+		// Render nameplate if the mesh contains one
+		if (mesh->NumNameplateTriangles > 0)
+		{
+			// Map the vertex constant buffer on the GPU
+			context->Map(mesh->NameplateVertexConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+			memcpy(mappedResource.pData, &mesh->NameplateVertexConstBufferData, sizeof(VS_ConstantBufferData));
+			context->Unmap(mesh->NameplateVertexConstantBuffer.Get(), 0);
+
+			context->UpdateSubresource(mesh->NameplateVertexConstantBuffer.Get(), 0, 0, &mesh->NameplateVertexConstBufferData, 0, 0);
+			context->VSSetConstantBuffers(0, 1, mesh->NameplateVertexConstantBuffer.GetAddressOf());
+
+			context->Map(mesh->NameplateVertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+			memcpy(mappedResource.pData, (void*)mesh->NameplateVertices.data(), sizeof(Vertex) * mesh->NumNameplateTriangles * 3);
+			context->Unmap(mesh->NameplateVertexBuffer.Get(), 0);
+
+			context->IASetVertexBuffers(0, 1, mesh->NameplateVertexBuffer.GetAddressOf(), &stride, &offset);
+			context->IASetIndexBuffer(mesh->NameplateIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+
+			context->PSSetShader(pixelShader.Get(), nullptr, 0);
+
+			context->DrawIndexed((UINT)mesh->NumNameplateTriangles * 3, 0, 0);
+		}
 	}
 
 	// Test render some text
