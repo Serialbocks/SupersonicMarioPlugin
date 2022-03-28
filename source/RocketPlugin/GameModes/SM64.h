@@ -141,6 +141,18 @@ private:
     float testShirtColorR = 0.0f;
     float testShirtColorG = 0.0f;
     float testShirtColorB = 1.0f;
+    std::vector<float> redTeamColors = {
+        1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+        1.0f, 0.389f, 0.0f, 0.0f, 0.517f, 0.803f,
+        1.0f, 0.722f, 0.0f, 0.464f, 0.0f, 0.472f,
+        1.0f, 0.15f, 0.0f, 0.508f, 0.508f, 0.508f
+    };
+    std::vector<float> blueTeamColors = {
+        0.0f, 0.719f, 0.156f, 0.0f, 0.0f, 1.0f,
+        0.586f, 0.0f, 0.869f, 0.0f, 0.0f, 0.606f,
+        0.0f, 0.122f, 0.778f, 0.031f, 0.031f, 0.031f,
+        0.983f, 0.0f, 0.717f, 0.0f, 0.0f, 0.0f
+    };
 
 protected:
     const std::string vehicleInputCheck = "Function TAGame.Car_TA.SetVehicleInput";

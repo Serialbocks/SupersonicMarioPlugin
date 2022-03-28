@@ -884,6 +884,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		{
 			teamIndex = team.GetTeamIndex();
 		}
+		std::vector<float> teamColors = teamIndex == 0 ? redTeamColors : blueTeamColors;
 
 		auto playerId = player.GetPlayerID();
 		if (remoteMarios.count(playerId) > 0)
@@ -892,9 +893,10 @@ void SM64::OnRender(CanvasWrapper canvas)
 			remoteMario->CarActive = true;
 			if (remoteMario->mesh != nullptr)
 			{
+
 				remoteMario->mesh->SetCapColor(testCapColorR, testCapColorG, testCapColorB);
 				remoteMario->mesh->SetShirtColor(testShirtColorR, testShirtColorG, testShirtColorB);
-				remoteMario->mesh->ShowNameplate(L"", car.GetLocation());
+				//remoteMario->mesh->ShowNameplate(L"", car.GetLocation());
 			}
 		}
 
@@ -918,7 +920,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		{
 			marioInstance->mesh->SetCapColor(testCapColorR, testCapColorG, testCapColorB);
 			marioInstance->mesh->SetShirtColor(testShirtColorR, testShirtColorG, testShirtColorB);
-			marioInstance->mesh->ShowNameplate(L"", car.GetLocation());
+			//marioInstance->mesh->ShowNameplate(L"", car.GetLocation());
 		}
 
 		if(!isHost)

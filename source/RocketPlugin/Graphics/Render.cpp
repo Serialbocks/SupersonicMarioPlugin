@@ -388,6 +388,7 @@ void Renderer::DrawRenderedMesh()
 			memcpy(mappedResource.pData, (void*)mesh->NameplateVertices.data(), sizeof(Vertex) * mesh->NumNameplateTriangles * 3);
 			context->Unmap(mesh->NameplateVertexBuffer.Get(), 0);
 
+			offset = 0;
 			context->IASetVertexBuffers(0, 1, mesh->NameplateVertexBuffer.GetAddressOf(), &stride, &offset);
 			context->IASetIndexBuffer(mesh->NameplateIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 
