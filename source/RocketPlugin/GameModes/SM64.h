@@ -33,10 +33,18 @@ extern "C" {
 
 #define SM64_NETCODE_BUF_LEN 1024
 #define MARIO_MESH_POOL_SIZE 10
+#define TEAM_COLOR_POOL_SIZE 4
+#define MAX_NUM_PLAYERS 8
 
 struct MatchSettings
 {
     SM64MarioBljInput bljSetup;
+    bool isPreGame = false;
+    bool isInSm64Game = false;
+
+    int playerCount = 0;
+    int playerIds[MAX_NUM_PLAYERS] = { 0 };
+    int playerColorIndices[MAX_NUM_PLAYERS] = { 0 };
 };
 
 class SM64MarioInstance
@@ -55,6 +63,9 @@ public:
     Mesh* mesh = nullptr;
     std::counting_semaphore<1> sema{ 1 };
     int slidingHandle = -1;
+    int colorIndex = -1;
+    int playerId = -1;
+    int teamIndex = -1;
     unsigned long tickCount = 0;
     unsigned long lastBallInteraction = 0;
 };
@@ -88,14 +99,18 @@ private:
     void onOvertimeStart(ServerWrapper server);
     void onTick(ServerWrapper server);
     void onSetVehicleInput(CarWrapper car, void* params);
+    void sendSettingsIfHost(ServerWrapper server);
     void moveCarToMario(std::string eventName);
     void onGoalScored(std::string eventName);
     std::vector<char> hexToBytes(const std::string& hex);
     uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
     Mesh* getMeshFromPool();
     void addMeshToPool(Mesh*);
+    int getColorIndexFromPool(int teamIndex);
+    void addColorIndexToPool(int teamIndex, int colorIndex);
 
 public:
+    SM64MarioInstance localMario;
     MarioAudio* marioAudio = nullptr;
     std::shared_ptr<GameWrapper> gameWrapper;
     Vector cameraLoc = Vector(0, 0, 0);
@@ -113,17 +128,25 @@ public:
     float currentBoostAount = 0.33f;
     std::map<int, SM64MarioInstance*> remoteMarios;
     std::counting_semaphore<1> remoteMariosSema{ 1 };
-    std::counting_semaphore<1> isInSm64GameSema{ 1 };
-    bool isInSm64Game = false;
     Vector carLocation;
-    bool isPreGame = false;
     MatchSettings matchSettings;
     std::counting_semaphore<1> matchSettingsSema{ 1 };
+    std::vector<int> redTeamColorIndexPool = { 0, 1, 2 };
+    std::vector<int> blueTeamColorIndexPool = { 3, 4, 5 };
+    std::vector<float> teamColors = {
+        1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Red team
+        1.0f, 0.389f, 0.0f, 0.0f, 0.517f, 0.803f,
+        1.0f, 0.722f, 0.0f, 0.464f, 0.0f, 0.472f,
+        1.0f, 0.15f, 0.0f, 0.508f, 0.508f, 0.508f,
+        0.0f, 0.719f, 0.156f, 0.0f, 0.0f, 1.0f, // Blue team
+        0.586f, 0.0f, 0.869f, 0.0f, 0.0f, 0.606f,
+        0.0f, 0.122f, 0.778f, 0.031f, 0.031f, 0.031f,
+        0.983f, 0.0f, 0.717f, 0.0f, 0.0f, 0.0f
+    };
 
 private:
     /* SM64 Members */
     uint8_t* texture;
-    SM64MarioInstance localMario;
     vec3 cameraPos;
     float cameraRot;
     bool locationInit;
@@ -144,19 +167,6 @@ private:
     float diveBallVelHoriz;
     float diveBallVelVert;
 
-    std::vector<float> redTeamColors = {
-        1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
-        1.0f, 0.389f, 0.0f, 0.0f, 0.517f, 0.803f,
-        1.0f, 0.722f, 0.0f, 0.464f, 0.0f, 0.472f,
-        1.0f, 0.15f, 0.0f, 0.508f, 0.508f, 0.508f
-    };
-    std::vector<float> blueTeamColors = {
-        0.0f, 0.719f, 0.156f, 0.0f, 0.0f, 1.0f,
-        0.586f, 0.0f, 0.869f, 0.0f, 0.0f, 0.606f,
-        0.0f, 0.122f, 0.778f, 0.031f, 0.031f, 0.031f,
-        0.983f, 0.0f, 0.717f, 0.0f, 0.0f, 0.0f
-    };
-
 protected:
     const std::string vehicleInputCheck = "Function TAGame.Car_TA.SetVehicleInput";
     const std::string initialCharacterSpawnCheck = "Function GameEvent_Soccar_TA.WaitingForPlayers.BeginState";
@@ -166,4 +176,8 @@ protected:
     const std::string clientEndPreGameTickCheck = "Function GameEvent_Soccar_TA.Countdown.EndState";
     const std::string gameTickCheck = "Function GameEvent_Soccar_TA.Active.Tick";
     const std::string overtimeGameCheck = "Function TAGame.GameEvent_Soccar_TA.StartOvertime";
+
+    const std::string playerLeaveOrJoinCheck = "Function TAGame.ListenServer_TA.GetCustomMatchSettings";
+    const std::string playerJoinedTeamCheck = "Function TAGame.GameMetrics_TA.JoinTeam";
+    const std::string playerLeftTeamCheck = "Function TAGame.GameMetrics_TA.LeaveTeam";
 };

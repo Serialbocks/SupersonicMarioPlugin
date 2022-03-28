@@ -36,9 +36,6 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	gameWrapper = gw;
 	cvarManager = cm;
 
-	// Register callback to receiving TCP data from server/clients
-	Networking::RegisterCallback(MessageReceived);
-
 	InitSM64();
 	gameWrapper->RegisterDrawable(std::bind(&SM64::OnRender, this, _1));
 	gameWrapper->HookEventPost("Function TAGame.EngineShare_TA.EventPostPhysicsStep", bind(&SM64::moveCarToMario, this, _1));
@@ -92,9 +89,26 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 		[this](const ServerWrapper& caller, void* params, const std::string&) {
 			onOvertimeStart(caller);
 		});
+	HookEventWithCaller<ServerWrapper>(
+		playerLeaveOrJoinCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			sendSettingsIfHost(caller);
+		});
+	HookEventWithCaller<ServerWrapper>(
+		playerJoinedTeamCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			sendSettingsIfHost(caller);
+		});
+	HookEventWithCaller<ServerWrapper>(
+		playerLeftTeamCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			sendSettingsIfHost(caller);
+		});
 
 	self = this;
 
+	// Register callback to receiving TCP data from server/clients
+	Networking::RegisterCallback(MessageReceived);
 }
 
 SM64::~SM64()
@@ -114,9 +128,9 @@ SM64::~SM64()
 void SM64::OnGameLeft()
 {
 	// Cleanup after a game session has been left
-	isInSm64GameSema.acquire();
-	isInSm64Game = false;
-	isInSm64GameSema.release();
+	matchSettingsSema.acquire();
+	matchSettings.isInSm64Game = false;
+	matchSettingsSema.release();
 	if (localMario.mesh != nullptr)
 	{
 		localMario.mesh->RenderUpdateVertices(0, nullptr);
@@ -160,9 +174,9 @@ void SM64::moveCarToMario(std::string eventName)
 	{
 		return;
 	}
-	isInSm64GameSema.acquire();
-	bool inSm64Game = isInSm64Game;
-	isInSm64GameSema.release();
+	matchSettingsSema.acquire();
+	bool inSm64Game = matchSettings.isInSm64Game;
+	matchSettingsSema.release();
 	if (!inSm64Game)
 	{
 		return;
@@ -205,10 +219,10 @@ void SM64::moveCarToMario(std::string eventName)
 
 void SM64::onGoalScored(std::string eventName)
 {
-	isInSm64GameSema.acquire();
-	bool inSm64Game = isInSm64Game;
-	isInSm64GameSema.release();
-	if (isInSm64Game)
+	matchSettingsSema.acquire();
+	bool inSm64Game = matchSettings.isInSm64Game;
+	matchSettingsSema.release();
+	if (inSm64Game)
 	{
 		OnGameLeft();
 	}
@@ -240,9 +254,9 @@ void MarioMessageReceived(char* buf, int len)
 	memcpy(&marioInstance->marioBodyState, targetData + sizeof(int), marioMsgLen - sizeof(int));
 	marioInstance->sema.release();
 
-	self->isInSm64GameSema.acquire();
-	self->isInSm64Game = true;
-	self->isInSm64GameSema.release();
+	self->matchSettingsSema.acquire();
+	self->matchSettings.isInSm64Game = true;
+	self->matchSettingsSema.release();
 }
 
 void MatchSettingsMessageReceived(char* buf, int len)
@@ -253,6 +267,34 @@ void MatchSettingsMessageReceived(char* buf, int len)
 	self->matchSettingsSema.acquire();
 	memcpy(&self->matchSettings, buf + sizeof(int), settingsMsgLen - sizeof(int));
 	self->matchSettingsSema.release();
+
+	// Sync player colors
+	self->remoteMariosSema.acquire();
+	self->localMario.sema.acquire();
+	int localMarioPlayerId = self->localMario.playerId;
+	self->localMario.sema.release();
+	for (int i = 0; i < self->matchSettings.playerCount; i++)
+	{
+		int playerId = self->matchSettings.playerIds[i];
+		int colorIndex = self->matchSettings.playerColorIndices[i];
+		SM64MarioInstance* marioInstance = nullptr;
+		if (self->remoteMarios.count(playerId) > 0)
+		{
+			marioInstance = self->remoteMarios[playerId];
+		}
+		else if (playerId == localMarioPlayerId)
+		{
+			marioInstance = &self->localMario;
+		}
+
+		if (marioInstance != nullptr)
+		{
+			marioInstance->sema.acquire();
+			marioInstance->colorIndex = colorIndex;
+			marioInstance->sema.release();
+		}
+	}
+	self->remoteMariosSema.release();
 }
 
 void MessageReceived(char* buf, int len)
@@ -275,6 +317,16 @@ void SM64::SendSettingsToClients()
 	memcpy(self->netcodeOutBuf, &messageId, sizeof(int));
 	memcpy(self->netcodeOutBuf + sizeof(int), &matchSettings, sizeof(MatchSettings));
 	Networking::SendBytes(self->netcodeOutBuf, sizeof(MatchSettings) + sizeof(int));
+}
+
+void SM64::sendSettingsIfHost(ServerWrapper server)
+{
+	if (isHost)
+	{
+		matchSettingsSema.acquire();
+		SendSettingsToClients();
+		matchSettingsSema.release();
+	}
 }
 
 #define MIN_LIGHT_COORD -6000.0f
@@ -306,6 +358,7 @@ void SM64::RenderOptions()
 		bljLabel[0] = "BLJ Disabled";
 		bljLabel[1] = "BLJ Enabled (Press)";
 		bljLabel[2] = "BLJ Enabled (Hold)";
+		matchSettingsSema.acquire();
 		std::string currentBljLabel = bljLabel[matchSettings.bljSetup.bljState];
 		if (ImGui::BeginCombo("BLJ Mode Select", currentBljLabel.c_str()))
 		{
@@ -329,6 +382,7 @@ void SM64::RenderOptions()
 			ImGui::SliderInt("BLJ Velocity", &velocity, 0, 10);
 			matchSettings.bljSetup.bljVel = (uint8_t)velocity;
 		}
+		matchSettingsSema.release();
 
 		ImGui::NewLine();
 
@@ -453,10 +507,10 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 	auto isLocalPlayer = player.IsLocalPlayerPRI();
 
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame();
-	isInSm64GameSema.acquire();
-	bool inSm64Game = isInSm64Game;
-	isInSm64GameSema.release();
-	if (!inGame || !isInSm64Game)
+	matchSettingsSema.acquire();
+	bool inSm64Game = matchSettings.isInSm64Game;
+	matchSettingsSema.release();
+	if (!inGame || !inSm64Game)
 	{
 		return;
 	}
@@ -619,21 +673,25 @@ void SM64::onCharacterSpawn(ServerWrapper server)
 		[this](const ServerWrapper& caller, void* params, const std::string&) {
 			onTick(caller);
 		});
-	isPreGame = true;
+	matchSettingsSema.acquire();
+	matchSettings.isPreGame = true;
+	matchSettingsSema.release();
 }
 
 void SM64::onCountdownEnd(ServerWrapper server)
 {
 	UnhookEvent(preGameTickCheck);
-	isPreGame = false;
+	matchSettingsSema.acquire();
+	matchSettings.isPreGame = true;
+	matchSettingsSema.release();
 }
 
 void SM64::onTick(ServerWrapper server)
 {
 	if (!isHost) return;
-	isInSm64GameSema.acquire();
-	isInSm64Game = true;
-	isInSm64GameSema.release();
+	matchSettingsSema.acquire();
+	matchSettings.isInSm64Game = true;
+	matchSettingsSema.release();
 	for (CarWrapper car : server.GetCars())
 	{
 		PriWrapper player = car.GetPRI();
@@ -650,10 +708,10 @@ void SM64::onTick(ServerWrapper server)
 
 void SM64::onOvertimeStart(ServerWrapper server)
 {
-	isInSm64GameSema.acquire();
-	bool inSm64Game = isInSm64Game;
-	isInSm64GameSema.release();
-	if (isInSm64Game)
+	matchSettingsSema.acquire();
+	bool inSm64Game = matchSettings.isInSm64Game;
+	matchSettingsSema.release();
+	if (inSm64Game)
 	{
 		OnGameLeft();
 	}
@@ -685,7 +743,10 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	}
 
 	auto playerController = car.GetPlayerController();
-	if (!instance->isPreGame && !playerController.IsNull())
+	instance->matchSettingsSema.acquire();
+	bool isPreGame = instance->matchSettings.isPreGame;
+	instance->matchSettingsSema.release();
+	if (!isPreGame && !playerController.IsNull())
 	{
 		auto playerInputs = playerController.GetVehicleInput();
 		marioInstance->marioInputs.buttonA = playerInputs.Jump;
@@ -813,6 +874,18 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 			currentVertex->normal.y = normal[2];
 			currentVertex->normal.z = normal[1];
 		}
+
+		if (marioInstance->colorIndex >= 0)
+		{
+			int trueIndex = 6 * marioInstance->colorIndex;
+			marioInstance->mesh->SetCapColor(self->teamColors[trueIndex],
+				self->teamColors[trueIndex + 1],
+				self->teamColors[trueIndex + 2]);
+			marioInstance->mesh->SetShirtColor(self->teamColors[trueIndex + 3],
+				self->teamColors[trueIndex + 4],
+				self->teamColors[trueIndex + 5]);
+		}
+
 		marioInstance->mesh->RenderUpdateVertices(marioInstance->marioGeometry.numTrianglesUsed, &camera);
 	}
 	marioInstance->sema.release();
@@ -851,10 +924,10 @@ void SM64::OnRender(CanvasWrapper canvas)
 	}
 
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame();
-	isInSm64GameSema.acquire();
-	bool inSm64Game = isInSm64Game;
-	isInSm64GameSema.release();
-	if (!inGame || !isInSm64Game)
+	matchSettingsSema.acquire();
+	bool inSm64Game = matchSettings.isInSm64Game;
+	matchSettingsSema.release();
+	if (!inGame || !inSm64Game)
 	{
 		return;
 	}
@@ -890,8 +963,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 	localMario.CarActive = false;
 
 	// Render local mario, and mark which marios no longer exist
-	int redTeamIndex = 0;
-	int blueTeamIndex = 0;
 	for (CarWrapper car : server.GetCars())
 	{
 		auto player = car.GetPRI();
@@ -899,26 +970,10 @@ void SM64::OnRender(CanvasWrapper canvas)
 		auto playerName = player.GetPlayerName().ToString();
 
 		int teamIndex = -1;
-
 		auto team = player.GetTeam();
 		if (!team.IsNull())
 		{
 			teamIndex = team.GetTeamIndex();
-		}
-
-		// Determine which colors should apply to this mario
-		std::vector<float> teamColors = blueTeamColors;
-		int colorIndex = 0;
-		if (teamIndex == 1)
-		{
-			teamColors = redTeamColors;
-			colorIndex = redTeamIndex * 6;
-			redTeamIndex++;
-		}
-		else
-		{
-			colorIndex = blueTeamIndex * 6;
-			blueTeamIndex++;
 		}
 
 		auto playerId = player.GetPlayerID();
@@ -926,16 +981,14 @@ void SM64::OnRender(CanvasWrapper canvas)
 		{
 			auto remoteMario = remoteMarios[playerId];
 			remoteMario->CarActive = true;
+			remoteMario->teamIndex = teamIndex;
 			if (remoteMario->mesh != nullptr)
 			{
-
-				remoteMario->mesh->SetCapColor(teamColors[colorIndex],
-					teamColors[colorIndex+1],
-					teamColors[colorIndex+2]);
-				remoteMario->mesh->SetShirtColor(teamColors[colorIndex+3],
-					teamColors[colorIndex+4],
-					teamColors[colorIndex+5]);
 				//remoteMario->mesh->ShowNameplate(L"", car.GetLocation());
+			}
+			if (isHost && remoteMario->colorIndex < 0)
+			{
+				remoteMario->colorIndex = getColorIndexFromPool(teamIndex);
 			}
 		}
 
@@ -945,6 +998,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		}
 
 		localMario.CarActive = true;
+		localMario.teamIndex = teamIndex;
 
 		SM64MarioInstance* marioInstance = &localMario;
 
@@ -957,13 +1011,11 @@ void SM64::OnRender(CanvasWrapper canvas)
 		}
 		else
 		{
-			marioInstance->mesh->SetCapColor(teamColors[colorIndex],
-				teamColors[colorIndex + 1],
-				teamColors[colorIndex + 2]);
-			marioInstance->mesh->SetShirtColor(teamColors[colorIndex + 3],
-				teamColors[colorIndex + 4],
-				teamColors[colorIndex + 5]);
 			//marioInstance->mesh->ShowNameplate(L"", car.GetLocation());
+		}
+		if (isHost && localMario.colorIndex < 0)
+		{
+			localMario.colorIndex = getColorIndexFromPool(teamIndex);
 		}
 
 		if(!isHost)
@@ -985,6 +1037,12 @@ void SM64::OnRender(CanvasWrapper canvas)
 		if (localMario.mesh != nullptr)
 		{
 			localMario.mesh->RenderUpdateVertices(0, nullptr);
+		}
+
+		if (isHost && localMario.colorIndex >= 0)
+		{
+			addColorIndexToPool(localMario.teamIndex, localMario.colorIndex);
+			localMario.colorIndex = -1;
 		}
 	}
 
@@ -1049,6 +1107,12 @@ void SM64::OnRender(CanvasWrapper canvas)
 				marioInstance->mesh->RenderUpdateVertices(0, nullptr);
 				addMeshToPool(marioInstance->mesh);
 				marioInstance->mesh = nullptr;
+			}
+
+			if (isHost && marioInstance->colorIndex >= 0)
+			{
+				addColorIndexToPool(marioInstance->teamIndex, marioInstance->colorIndex);
+				marioInstance->colorIndex = -1;
 			}
 		}
 
@@ -1130,6 +1194,32 @@ void SM64::addMeshToPool(Mesh* mesh)
 		marioMeshPool.push_back(mesh);
 		marioMeshPoolSema.release();
 	}
+}
+
+int SM64::getColorIndexFromPool(int teamIndex)
+{
+	std::vector<int> colorPool = blueTeamColorIndexPool;
+	if (teamIndex == 1)
+	{
+		colorPool = redTeamColorIndexPool;
+	}
+	int colorIndex = 0;
+	if (colorPool.size() > 0)
+	{
+		colorIndex = colorPool[0];
+		colorPool.erase(colorPool.begin());
+	}
+	return colorIndex;
+}
+
+void SM64::addColorIndexToPool(int teamIndex, int colorIndex)
+{
+	std::vector<int> colorPool = blueTeamColorIndexPool;
+	if (teamIndex == 1)
+	{
+		colorPool = redTeamColorIndexPool;
+	}
+	colorPool.push_back(colorIndex);
 }
 
 std::vector<char> SM64::hexToBytes(const std::string& hex) {
