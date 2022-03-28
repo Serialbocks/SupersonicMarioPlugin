@@ -316,10 +316,27 @@ void SM64::SendSettingsToClients()
 	int messageId = -1;
 
 	matchSettings.playerCount = 0;
+	localMario.sema.acquire();
 	if (localMario.marioId >= 0)
+	{
+		matchSettings.playerIds[matchSettings.playerCount] = localMario.playerId;
+		matchSettings.playerColorIndices[matchSettings.playerCount] = localMario.colorIndex;
 		matchSettings.playerCount++;
+	}
+	localMario.sema.release();
+
 	remoteMariosSema.acquire();
-	matchSettings.playerCount += remoteMarios.size();
+	for (auto const& [playerId, marioInstance] : remoteMarios)
+	{
+		marioInstance->sema.acquire();
+		if (marioInstance->marioId >= 0)
+		{
+			matchSettings.playerIds[matchSettings.playerCount] = playerId;
+			matchSettings.playerColorIndices[matchSettings.playerCount] = marioInstance->colorIndex;
+			matchSettings.playerCount++;
+		}
+		marioInstance->sema.release();
+	}
 	remoteMariosSema.release();
 
 	memcpy(self->netcodeOutBuf, &messageId, sizeof(int));
@@ -839,8 +856,8 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		marioInstance->slidingHandle,
 		marioInstance->marioBodyState.action);
 
-	int playerId = car.GetPRI().GetPlayerID();
-	memcpy(self->netcodeOutBuf, &playerId, sizeof(int));
+	marioInstance->playerId = car.GetPRI().GetPlayerID();
+	memcpy(self->netcodeOutBuf, &marioInstance->playerId, sizeof(int));
 	memcpy(self->netcodeOutBuf + sizeof(int), &marioInstance->marioBodyState, sizeof(struct SM64MarioBodyState));
 	Networking::SendBytes(self->netcodeOutBuf, sizeof(struct SM64MarioBodyState) + sizeof(int));
 	marioInstance->sema.release();
@@ -1206,28 +1223,28 @@ void SM64::addMeshToPool(Mesh* mesh)
 
 int SM64::getColorIndexFromPool(int teamIndex)
 {
-	std::vector<int> colorPool = blueTeamColorIndexPool;
+	std::vector<int>* colorPool = &blueTeamColorIndexPool;
 	if (teamIndex == 1)
 	{
-		colorPool = redTeamColorIndexPool;
+		colorPool = &redTeamColorIndexPool;
 	}
 	int colorIndex = 0;
-	if (colorPool.size() > 0)
+	if (colorPool->size() > 0)
 	{
-		colorIndex = colorPool[0];
-		colorPool.erase(colorPool.begin());
+		colorIndex = (*colorPool)[0];
+		colorPool->erase(colorPool->begin());
 	}
 	return colorIndex;
 }
 
 void SM64::addColorIndexToPool(int teamIndex, int colorIndex)
 {
-	std::vector<int> colorPool = blueTeamColorIndexPool;
+	std::vector<int>* colorPool = &blueTeamColorIndexPool;
 	if (teamIndex == 1)
 	{
-		colorPool = redTeamColorIndexPool;
+		colorPool = &redTeamColorIndexPool;
 	}
-	colorPool.push_back(colorIndex);
+	colorPool->insert(colorPool->begin(), colorIndex);
 }
 
 std::vector<char> SM64::hexToBytes(const std::string& hex) {

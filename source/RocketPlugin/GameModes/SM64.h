@@ -131,8 +131,8 @@ public:
     Vector carLocation;
     MatchSettings matchSettings;
     std::counting_semaphore<1> matchSettingsSema{ 1 };
-    std::vector<int> redTeamColorIndexPool = { 0, 1, 2 };
-    std::vector<int> blueTeamColorIndexPool = { 3, 4, 5 };
+    std::vector<int> redTeamColorIndexPool = { 0, 1, 2, 3 };
+    std::vector<int> blueTeamColorIndexPool = { 4, 5, 6, 7 };
     std::vector<float> teamColors = {
         1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, // Red team
         1.0f, 0.389f, 0.0f, 0.0f, 0.517f, 0.803f,
