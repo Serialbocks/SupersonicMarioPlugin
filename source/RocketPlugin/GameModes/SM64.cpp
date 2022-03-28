@@ -125,7 +125,7 @@ SM64::~SM64()
 
 }
 
-void SM64::OnGameLeft()
+void SM64::OnGameLeft(bool resetColors)
 {
 	// Cleanup after a game session has been left
 	matchSettingsSema.acquire();
@@ -146,12 +146,14 @@ void SM64::OnGameLeft()
 			addMeshToPool(localMario.mesh);
 			localMario.mesh = nullptr;
 		}
-		if (localMario.colorIndex >= 0)
+		if (isHost && resetColors && localMario.colorIndex >= 0)
 		{
 			addColorIndexToPool(localMario.colorIndex);
 			localMario.colorIndex = -1;
 		}
 	}
+
+	remoteMariosSema.acquire();
 	for (const auto& remoteMario : remoteMarios)
 	{
 		SM64MarioInstance* marioInstance = remoteMario.second;
@@ -167,7 +169,7 @@ void SM64::OnGameLeft()
 			sm64_mario_delete(marioInstance->marioId);
 			marioInstance->marioId = -2;
 		}
-		if (marioInstance->colorIndex >= 0)
+		if (isHost && resetColors && marioInstance->colorIndex >= 0)
 		{
 			addColorIndexToPool(marioInstance->colorIndex);
 			marioInstance->colorIndex = -1;
@@ -175,6 +177,7 @@ void SM64::OnGameLeft()
 		marioInstance->sema.release();
 	}
 	remoteMarios.clear();
+	remoteMariosSema.release();
 }
 
 void SM64::moveCarToMario(std::string eventName)
@@ -234,7 +237,7 @@ void SM64::onGoalScored(std::string eventName)
 	matchSettingsSema.release();
 	if (inSm64Game)
 	{
-		OnGameLeft();
+		OnGameLeft(false);
 	}
 }
 
@@ -748,7 +751,7 @@ void SM64::onOvertimeStart(ServerWrapper server)
 	matchSettingsSema.release();
 	if (inSm64Game)
 	{
-		OnGameLeft();
+		OnGameLeft(false);
 	}
 }
 
@@ -962,6 +965,10 @@ void SM64::OnRender(CanvasWrapper canvas)
 	matchSettingsSema.acquire();
 	bool inSm64Game = matchSettings.isInSm64Game;
 	matchSettingsSema.release();
+	if (!inGame && inSm64Game)
+	{
+		OnGameLeft(true);
+	}
 	if (!inGame || !inSm64Game)
 	{
 		return;
