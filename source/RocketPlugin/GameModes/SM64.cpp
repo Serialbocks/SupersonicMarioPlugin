@@ -314,6 +314,14 @@ void MessageReceived(char* buf, int len)
 void SM64::SendSettingsToClients()
 {
 	int messageId = -1;
+
+	matchSettings.playerCount = 0;
+	if (localMario.marioId >= 0)
+		matchSettings.playerCount++;
+	remoteMariosSema.acquire();
+	matchSettings.playerCount += remoteMarios.size();
+	remoteMariosSema.release();
+
 	memcpy(self->netcodeOutBuf, &messageId, sizeof(int));
 	memcpy(self->netcodeOutBuf + sizeof(int), &matchSettings, sizeof(MatchSettings));
 	Networking::SendBytes(self->netcodeOutBuf, sizeof(MatchSettings) + sizeof(int));
@@ -682,7 +690,7 @@ void SM64::onCountdownEnd(ServerWrapper server)
 {
 	UnhookEvent(preGameTickCheck);
 	matchSettingsSema.acquire();
-	matchSettings.isPreGame = true;
+	matchSettings.isPreGame = false;
 	matchSettingsSema.release();
 }
 
