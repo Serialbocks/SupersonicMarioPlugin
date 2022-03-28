@@ -143,6 +143,12 @@ void SM64::OnGameLeft(bool deleteMario)
 			sm64_mario_delete(localMario.marioId);
 			localMario.marioId = -2;
 		}
+		else
+		{
+			localMario.marioBodyState.marioState.posX = 0.0f;
+			localMario.marioBodyState.marioState.posY = 0.0f;
+			localMario.marioBodyState.marioState.posZ = 0.0f;
+		}
 
 		if (localMario.mesh != nullptr)
 		{
@@ -185,6 +191,12 @@ void SM64::OnGameLeft(bool deleteMario)
 		{
 			addColorIndexToPool(marioInstance->colorIndex);
 			marioInstance->colorIndex = -1;
+		}
+		if (!deleteMario)
+		{
+			marioInstance->marioBodyState.marioState.posX = 0.0f;
+			marioInstance->marioBodyState.marioState.posY = 0.0f;
+			marioInstance->marioBodyState.marioState.posZ = 0.0f;
 		}
 		marioInstance->sema.release();
 	}
@@ -791,6 +803,14 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	{
 		// Unreal swaps coords
 		instance->carRotation = car.GetRotation();
+		marioInstance->marioId = sm64_mario_create(x, z, y);
+		if (marioInstance->marioId < 0) return;
+	}
+	else if (marioInstance->marioBodyState.marioState.posX == 0.0f &&
+		marioInstance->marioBodyState.marioState.posY == 0.0f &&
+		marioInstance->marioBodyState.marioState.posZ == 0.0f)
+	{
+		sm64_mario_delete(marioInstance->marioId);
 		marioInstance->marioId = sm64_mario_create(x, z, y);
 		if (marioInstance->marioId < 0) return;
 	}
