@@ -871,6 +871,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 	localMario.CarActive = false;
 
 	// Render local mario, and mark which marios no longer exist
+	int redTeamIndex = 0;
+	int blueTeamIndex = 0;
 	for (CarWrapper car : server.GetCars())
 	{
 		auto player = car.GetPRI();
@@ -884,7 +886,21 @@ void SM64::OnRender(CanvasWrapper canvas)
 		{
 			teamIndex = team.GetTeamIndex();
 		}
-		std::vector<float> teamColors = teamIndex == 0 ? redTeamColors : blueTeamColors;
+
+		// Determine which colors should apply to this mario
+		std::vector<float> teamColors = blueTeamColors;
+		int colorIndex = 0;
+		if (teamIndex == 1)
+		{
+			teamColors = redTeamColors;
+			colorIndex = redTeamIndex * 6;
+			redTeamIndex++;
+		}
+		else
+		{
+			colorIndex = blueTeamIndex * 6;
+			blueTeamIndex++;
+		}
 
 		auto playerId = player.GetPlayerID();
 		if (remoteMarios.count(playerId) > 0)
@@ -894,8 +910,12 @@ void SM64::OnRender(CanvasWrapper canvas)
 			if (remoteMario->mesh != nullptr)
 			{
 
-				remoteMario->mesh->SetCapColor(testCapColorR, testCapColorG, testCapColorB);
-				remoteMario->mesh->SetShirtColor(testShirtColorR, testShirtColorG, testShirtColorB);
+				remoteMario->mesh->SetCapColor(teamColors[colorIndex],
+					teamColors[colorIndex+1],
+					teamColors[colorIndex+2]);
+				remoteMario->mesh->SetShirtColor(teamColors[colorIndex+3],
+					teamColors[colorIndex+4],
+					teamColors[colorIndex+5]);
 				//remoteMario->mesh->ShowNameplate(L"", car.GetLocation());
 			}
 		}
@@ -918,8 +938,12 @@ void SM64::OnRender(CanvasWrapper canvas)
 		}
 		else
 		{
-			marioInstance->mesh->SetCapColor(testCapColorR, testCapColorG, testCapColorB);
-			marioInstance->mesh->SetShirtColor(testShirtColorR, testShirtColorG, testShirtColorB);
+			marioInstance->mesh->SetCapColor(teamColors[colorIndex],
+				teamColors[colorIndex + 1],
+				teamColors[colorIndex + 2]);
+			marioInstance->mesh->SetShirtColor(teamColors[colorIndex + 3],
+				teamColors[colorIndex + 4],
+				teamColors[colorIndex + 5]);
 			//marioInstance->mesh->ShowNameplate(L"", car.GetLocation());
 		}
 
