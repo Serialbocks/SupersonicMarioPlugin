@@ -188,7 +188,8 @@ void SM64::OnGameLeft(bool deleteMario)
 		}
 		marioInstance->sema.release();
 	}
-	remoteMarios.clear();
+	if(deleteMario)
+		remoteMarios.clear();
 	remoteMariosSema.release();
 }
 
