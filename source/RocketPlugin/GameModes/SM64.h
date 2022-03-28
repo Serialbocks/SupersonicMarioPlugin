@@ -102,7 +102,6 @@ private:
     void sendSettingsIfHost(ServerWrapper server);
     void moveCarToMario(std::string eventName);
     void onGoalScored(std::string eventName);
-    std::vector<char> hexToBytes(const std::string& hex);
     uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
     Mesh* getMeshFromPool();
     void addMeshToPool(Mesh*);

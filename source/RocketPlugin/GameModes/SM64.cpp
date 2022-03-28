@@ -1316,18 +1316,6 @@ void SM64::addColorIndexToPool(int colorIndex)
 	colorPool->insert(colorPool->begin(), colorIndex);
 }
 
-std::vector<char> SM64::hexToBytes(const std::string& hex) {
-	std::vector<char> bytes;
-
-	for (unsigned int i = 0; i < hex.length(); i += 2) {
-		std::string byteString = hex.substr(i, 2);
-		char byte = (char)strtol(byteString.c_str(), NULL, 16);
-		bytes.push_back(byte);
-	}
-
-	return bytes;
-}
-
 uint8_t* SM64::utilsReadFileAlloc(std::string path, size_t* fileLength)
 {
 	FILE* f;
