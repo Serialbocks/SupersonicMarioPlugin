@@ -87,7 +87,7 @@ public:
     void DestroySM64();
     void OnRender(CanvasWrapper canvas);
 
-    void OnGameLeft();
+    void OnGameLeft(bool deleteMario);
 
     void SendSettingsToClients();
 

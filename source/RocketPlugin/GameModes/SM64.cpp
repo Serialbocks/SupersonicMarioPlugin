@@ -125,7 +125,7 @@ SM64::~SM64()
 
 }
 
-void SM64::OnGameLeft()
+void SM64::OnGameLeft(bool deleteMario)
 {
 	// Cleanup after a game session has been left
 	matchSettingsSema.acquire();
@@ -138,19 +138,27 @@ void SM64::OnGameLeft()
 
 	if (localMario.marioId >= 0)
 	{
-		sm64_mario_delete(localMario.marioId);
-		localMario.marioId = -2;
+		if (deleteMario)
+		{
+			sm64_mario_delete(localMario.marioId);
+			localMario.marioId = -2;
+		}
+
 		if (localMario.mesh != nullptr)
 		{
 			localMario.mesh->RenderUpdateVertices(0, nullptr);
-			addMeshToPool(localMario.mesh);
-			localMario.mesh = nullptr;
+			if (deleteMario)
+			{
+				addMeshToPool(localMario.mesh);
+				localMario.mesh = nullptr;
+			}
 		}
-		if (isHost && localMario.colorIndex >= 0)
+		if (isHost && deleteMario && localMario.colorIndex >= 0)
 		{
 			addColorIndexToPool(localMario.colorIndex);
+			localMario.colorIndex = -1;
 		}
-		localMario.colorIndex = -1;
+
 	}
 
 	remoteMariosSema.acquire();
@@ -161,19 +169,23 @@ void SM64::OnGameLeft()
 		if (marioInstance->mesh != nullptr)
 		{
 			marioInstance->mesh->RenderUpdateVertices(0, nullptr);
-			addMeshToPool(marioInstance->mesh);
-			marioInstance->mesh = nullptr;
+			if (deleteMario)
+			{
+				addMeshToPool(marioInstance->mesh);
+				marioInstance->mesh = nullptr;
+			}
+
 		}
-		if (marioInstance->marioId >= 0)
+		if (deleteMario && marioInstance->marioId >= 0)
 		{
 			sm64_mario_delete(marioInstance->marioId);
 			marioInstance->marioId = -2;
 		}
-		if (isHost && marioInstance->colorIndex >= 0)
+		if (isHost && deleteMario && marioInstance->colorIndex >= 0)
 		{
 			addColorIndexToPool(marioInstance->colorIndex);
+			marioInstance->colorIndex = -1;
 		}
-		marioInstance->colorIndex = -1;
 		marioInstance->sema.release();
 	}
 	remoteMarios.clear();
@@ -237,7 +249,7 @@ void SM64::onGoalScored(std::string eventName)
 	matchSettingsSema.release();
 	if (inSm64Game)
 	{
-		OnGameLeft();
+		OnGameLeft(false);
 	}
 }
 
@@ -731,6 +743,9 @@ void SM64::onCountdownEnd(ServerWrapper server)
 void SM64::onTick(ServerWrapper server)
 {
 	if (!isHost) return;
+	matchSettingsSema.acquire();
+	matchSettings.isInSm64Game = true;
+	matchSettingsSema.release();
 
 	int localMarioPlayerId = -1;
 	for (CarWrapper car : server.GetCars())
@@ -747,33 +762,6 @@ void SM64::onTick(ServerWrapper server)
 
 	}
 
-	matchSettingsSema.acquire();
-	if (!matchSettings.isInSm64Game)
-	{
-		// Restore match settings to mario instances
-		for (int i = 0; i < self->matchSettings.playerCount; i++)
-		{
-			int playerId = self->matchSettings.playerIds[i];
-			int colorIndex = self->matchSettings.playerColorIndices[i];
-			SM64MarioInstance* marioInstance = nullptr;
-			remoteMariosSema.acquire();
-			if (self->remoteMarios.count(playerId) == 0)
-			{
-				// Initialize mario for this player
-				marioInstance = new SM64MarioInstance();
-				marioInstance->colorIndex = colorIndex;
-				self->remoteMarios[playerId] = marioInstance;
-			}
-			else if (playerId == localMarioPlayerId)
-			{
-				localMario.colorIndex = colorIndex;
-			}
-			remoteMariosSema.release();
-		}
-	}
-
-	matchSettings.isInSm64Game = true;
-	matchSettingsSema.release();
 }
 
 void SM64::onOvertimeStart(ServerWrapper server)
@@ -783,7 +771,7 @@ void SM64::onOvertimeStart(ServerWrapper server)
 	matchSettingsSema.release();
 	if (inSm64Game)
 	{
-		OnGameLeft();
+		OnGameLeft(false);
 	}
 }
 
@@ -999,7 +987,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 	matchSettingsSema.release();
 	if (!inGame && inSm64Game)
 	{
-		OnGameLeft();
+		OnGameLeft(true);
 	}
 	if (!inGame || !inSm64Game)
 	{

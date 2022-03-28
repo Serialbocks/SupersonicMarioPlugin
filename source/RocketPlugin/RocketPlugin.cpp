@@ -1153,7 +1153,7 @@ void RocketPlugin::registerHooks()
         [this](const PlayerControllerWrapper& caller, void*, const std::string&) {
             TcpServer::getInstance().StopServer();
             TcpClient::getInstance().DisconnectFromServer();
-            sm64.get()->OnGameLeft();
+            sm64.get()->OnGameLeft(true);
         });
 }
 
