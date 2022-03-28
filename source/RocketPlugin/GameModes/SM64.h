@@ -107,7 +107,7 @@ private:
     Mesh* getMeshFromPool();
     void addMeshToPool(Mesh*);
     int getColorIndexFromPool(int teamIndex);
-    void addColorIndexToPool(int teamIndex, int colorIndex);
+    void addColorIndexToPool(int colorIndex);
 
 public:
     SM64MarioInstance localMario;

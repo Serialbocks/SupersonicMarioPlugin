@@ -146,6 +146,11 @@ void SM64::OnGameLeft()
 			addMeshToPool(localMario.mesh);
 			localMario.mesh = nullptr;
 		}
+		if (localMario.colorIndex >= 0)
+		{
+			addColorIndexToPool(localMario.colorIndex);
+			localMario.colorIndex = -1;
+		}
 	}
 	for (const auto& remoteMario : remoteMarios)
 	{
@@ -161,6 +166,11 @@ void SM64::OnGameLeft()
 		{
 			sm64_mario_delete(marioInstance->marioId);
 			marioInstance->marioId = -2;
+		}
+		if (marioInstance->colorIndex >= 0)
+		{
+			addColorIndexToPool(marioInstance->colorIndex);
+			marioInstance->colorIndex = -1;
 		}
 		marioInstance->sema.release();
 	}
@@ -987,6 +997,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 	localMario.CarActive = false;
 
+	bool needsSettingSync = false;
+
 	// Render local mario, and mark which marios no longer exist
 	for (CarWrapper car : server.GetCars())
 	{
@@ -1014,6 +1026,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 			if (isHost && remoteMario->colorIndex < 0)
 			{
 				remoteMario->colorIndex = getColorIndexFromPool(teamIndex);
+				needsSettingSync = true;
 			}
 		}
 
@@ -1041,6 +1054,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		if (isHost && localMario.colorIndex < 0)
 		{
 			localMario.colorIndex = getColorIndexFromPool(teamIndex);
+			needsSettingSync = true;
 		}
 
 		if(!isHost)
@@ -1066,8 +1080,9 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		if (isHost && localMario.colorIndex >= 0)
 		{
-			addColorIndexToPool(localMario.teamIndex, localMario.colorIndex);
+			addColorIndexToPool(localMario.colorIndex);
 			localMario.colorIndex = -1;
+			needsSettingSync = true;
 		}
 	}
 
@@ -1136,8 +1151,9 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 			if (isHost && marioInstance->colorIndex >= 0)
 			{
-				addColorIndexToPool(marioInstance->teamIndex, marioInstance->colorIndex);
+				addColorIndexToPool(marioInstance->colorIndex);
 				marioInstance->colorIndex = -1;
+				needsSettingSync = true;
 			}
 		}
 
@@ -1146,6 +1162,11 @@ void SM64::OnRender(CanvasWrapper canvas)
 		renderMario(marioInstance, camera);
 	}
 	remoteMariosSema.release();
+
+	if (needsSettingSync)
+	{
+		sendSettingsIfHost(server);
+	}
 
 
 	if (ballMesh != nullptr)
@@ -1237,10 +1258,10 @@ int SM64::getColorIndexFromPool(int teamIndex)
 	return colorIndex;
 }
 
-void SM64::addColorIndexToPool(int teamIndex, int colorIndex)
+void SM64::addColorIndexToPool(int colorIndex)
 {
 	std::vector<int>* colorPool = &blueTeamColorIndexPool;
-	if (teamIndex == 1)
+	if (colorIndex < TEAM_COLOR_POOL_SIZE)
 	{
 		colorPool = &redTeamColorIndexPool;
 	}
