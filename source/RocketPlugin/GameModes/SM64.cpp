@@ -324,11 +324,11 @@ void MessageReceived(char* buf, int len)
 	}
 }
 
+// Assumes matchSettingsSema is already acquired. Don't acquire here!
 void SM64::SendSettingsToClients()
 {
 	int messageId = -1;
 
-	matchSettingsSema.acquire();
 	if (matchSettings.isInSm64Game)
 	{
 		matchSettings.playerCount = 0;
@@ -359,8 +359,6 @@ void SM64::SendSettingsToClients()
 	memcpy(self->netcodeOutBuf, &messageId, sizeof(int));
 	memcpy(self->netcodeOutBuf + sizeof(int), &matchSettings, sizeof(MatchSettings));
 	Networking::SendBytes(self->netcodeOutBuf, sizeof(MatchSettings) + sizeof(int));
-
-	matchSettingsSema.release();
 }
 
 void SM64::sendSettingsIfHost(ServerWrapper server)
@@ -734,10 +732,6 @@ void SM64::onTick(ServerWrapper server)
 {
 	if (!isHost) return;
 
-	matchSettingsSema.acquire();
-	int isInSm64Game = matchSettings.isInSm64Game;
-	matchSettingsSema.release();
-
 	int localMarioPlayerId = -1;
 	for (CarWrapper car : server.GetCars())
 	{
@@ -747,8 +741,7 @@ void SM64::onTick(ServerWrapper server)
 		{
 			localMarioPlayerId = player.GetPlayerID();
 			remoteMariosSema.acquire();
-			if(isInSm64Game)
-				tickMarioInstance(&localMario, car, this);
+			tickMarioInstance(&localMario, car, this);
 			remoteMariosSema.release();
 		}
 
@@ -763,6 +756,7 @@ void SM64::onTick(ServerWrapper server)
 			int playerId = self->matchSettings.playerIds[i];
 			int colorIndex = self->matchSettings.playerColorIndices[i];
 			SM64MarioInstance* marioInstance = nullptr;
+			remoteMariosSema.acquire();
 			if (self->remoteMarios.count(playerId) == 0)
 			{
 				// Initialize mario for this player
@@ -774,10 +768,11 @@ void SM64::onTick(ServerWrapper server)
 			{
 				localMario.colorIndex = colorIndex;
 			}
+			remoteMariosSema.release();
 		}
-		matchSettings.isInSm64Game = true;
 	}
 
+	matchSettings.isInSm64Game = true;
 	matchSettingsSema.release();
 }
 
