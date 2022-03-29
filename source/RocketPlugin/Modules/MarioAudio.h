@@ -62,12 +62,13 @@ class MarioAudio
 public:
 	MarioAudio();
 	~MarioAudio();
-	int UpdateSounds(int soundMask,
+	void UpdateSounds(int soundMask,
 		Vector sourcePos,
 		Vector sourceVel,
 		Vector listenerPos,
 		Vector listenerAt,
-		int inSlideHandle,
+		int *inSlideHandle,
+		int *yahooHandle,
 		uint32_t marioAction);
 	void CheckAndModulateSounds();
 private:

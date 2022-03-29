@@ -34,12 +34,13 @@ MarioAudio::~MarioAudio()
 }
 
 static volatile float speedPlaybackFactor = 0.01f;
-int MarioAudio::UpdateSounds(int soundMask,
+void MarioAudio::UpdateSounds(int soundMask,
 	Vector sourcePos,
 	Vector sourceVel,
 	Vector listenerPos,
 	Vector listenerAt,
-	int inSlideHandle,
+	int *inSlideHandle,
+	int *yahooHandle,
 	uint32_t marioAction)
 {
 	if (marioAction == ACT_WALL_KICK_AIR)
@@ -62,13 +63,13 @@ int MarioAudio::UpdateSounds(int soundMask,
 			if (marioSound->mask == SOUND_MOVING_TERRAIN_SLIDE)
 			{
 				// Handle sliding as a special case since it loops
-				if (inSlideHandle < 0)
+				if (*inSlideHandle < 0)
 				{
 					slideHandle = soloud->play3d(marioSound->wav, sourcePos.X, sourcePos.Y, sourcePos.Z, 0, 0, 0, volume);
 				}
 				else
 				{
-					slideHandle = inSlideHandle;
+					slideHandle = *inSlideHandle;
 				}
 
 				float speed = sqrt(sourceVel.X * sourceVel.X +
@@ -92,22 +93,31 @@ int MarioAudio::UpdateSounds(int soundMask,
 					playbackSpeed = 1.05f + speedChange;
 				}
 
+				if (marioSound->mask == SOUND_MARIO_YAHOO)
+				{
+					if (*yahooHandle >= 0)
+					{
+						soloud->stop(*yahooHandle);
+					}
+					*yahooHandle = handle;
+				}
+
 				soloud->setRelativePlaySpeed(handle, playbackSpeed);
 			}
 
 		}
 	}
 
-	if (inSlideHandle >= 0 && slideHandle < 0)
+	if (*inSlideHandle >= 0 && slideHandle < 0)
 	{
-		soloud->stop(inSlideHandle);
+		soloud->stop(*inSlideHandle);
 	}
 
 	soloud->set3dListenerPosition(listenerPos.X, listenerPos.Y, listenerPos.Z);
 	soloud->set3dListenerAt(listenerAt.X, listenerAt.Y, listenerAt.Z);
 	soloud->update3dAudio();
 
-	return slideHandle;
+	*inSlideHandle = slideHandle;
 }
 
 void MarioAudio::CheckAndModulateSounds()

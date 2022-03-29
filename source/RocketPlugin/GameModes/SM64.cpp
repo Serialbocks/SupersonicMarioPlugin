@@ -930,12 +930,13 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	instance->cameraLoc = camera.GetLocation();
 	Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 
-	marioInstance->slidingHandle = instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
+	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
 		marioVector,
 		marioVel,
 		instance->cameraLoc,
 		cameraAt,
-		marioInstance->slidingHandle,
+		&marioInstance->slidingHandle,
+		&marioInstance->yahooHandle,
 		marioInstance->marioBodyState.action);
 
 	marioInstance->playerId = car.GetPRI().GetPlayerID();
@@ -1212,12 +1213,13 @@ void SM64::OnRender(CanvasWrapper canvas)
 		cameraLoc = camera.GetLocation();
 		Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 
-		marioInstance->slidingHandle = marioAudio->UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
+		marioAudio->UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
 			marioVector,
 			marioVel,
 			cameraLoc,
 			cameraAt,
-			marioInstance->slidingHandle,
+			&marioInstance->slidingHandle,
+			&marioInstance->yahooHandle,
 			marioInstance->marioBodyState.action);
 
 		marioInstance->marioBodyState.marioState.soundMask = 0;

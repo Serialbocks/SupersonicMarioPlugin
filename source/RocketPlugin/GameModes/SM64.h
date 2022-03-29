@@ -63,6 +63,7 @@ public:
     Mesh* mesh = nullptr;
     std::counting_semaphore<1> sema{ 1 };
     int slidingHandle = -1;
+    int yahooHandle = -1;
     int colorIndex = -1;
     int playerId = -1;
     int teamIndex = -1;
