@@ -12,11 +12,12 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	int inWindowHeight,
 	size_t maxTriangles,
 	uint8_t* inTexture,
+	uint8_t* inAltTexture,
 	size_t inTexSize,
 	uint16_t inTexWidth,
 	uint16_t inTexHeight)
 {
-	init(deviceIn, inSpriteFont, inWindowWidth, inWindowHeight, maxTriangles, inTexture, inTexSize, inTexWidth, inTexHeight);
+	init(deviceIn, inSpriteFont, inWindowWidth, inWindowHeight, maxTriangles, inTexture, inAltTexture, inTexSize, inTexWidth, inTexHeight);
 }
 
 Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
@@ -34,7 +35,7 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	{
 		Vertices.push_back((*inVertices)[i]);
 	}
-	init(deviceIn, inSpriteFont, inWindowWidth, inWindowHeight, Vertices.size(), inTexture, inTexSize, inTexWidth, inTexHeight);
+	init(deviceIn, inSpriteFont, inWindowWidth, inWindowHeight, Vertices.size(), inTexture, nullptr, inTexSize, inTexWidth, inTexHeight);
 	NumTrianglesUsed = Vertices.size();
 }
 
@@ -194,12 +195,18 @@ void Mesh::HideNameplate()
 	NumNameplateTriangles = 0;
 }
 
+void Mesh::SetShowAltTexture(bool val)
+{
+	ShowAltTexture = val;
+}
+
 void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	std::shared_ptr<DirectX::SpriteFont> inSpriteFont,
 	int inWindowWidth,
 	int inWindowHeight,
 	size_t maxTriangles,
 	uint8_t* inTexture,
+	uint8_t* inAltTexture,
 	size_t inTexSize,
 	uint16_t inTexWidth,
 	uint16_t inTexHeight)
@@ -220,6 +227,7 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	}
 
 	texData = inTexture;
+	altTexData = inAltTexture;
 	texSize = inTexSize;
 	texWidth = inTexWidth;
 	texHeight = inTexHeight;
@@ -341,6 +349,15 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 		if (texture != nullptr)
 		{
 			device->CreateShaderResourceView(texture, &shaderResourceViewDesc, TextureResourceView.GetAddressOf());
+		}
+
+		if (inAltTexture != nullptr)
+		{
+			subresourceData.pSysMem = altTexData;
+
+			ID3D11Texture2D* altTexture;
+			device->CreateTexture2D(&texture2dDesc, &subresourceData, &altTexture);
+			device->CreateShaderResourceView(altTexture, &shaderResourceViewDesc, AltTextureResourceView.GetAddressOf());
 		}
 
 	}

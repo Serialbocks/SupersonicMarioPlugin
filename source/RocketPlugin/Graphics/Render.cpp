@@ -40,6 +40,7 @@ Renderer::~Renderer()
 
 Mesh* Renderer::CreateMesh(size_t maxTriangles,
 	uint8_t* inTexture,
+	uint8_t* inAltTexture,
 	size_t inTexSize,
 	uint16_t inTexWidth,
 	uint16_t inTexHeight)
@@ -48,7 +49,7 @@ Mesh* Renderer::CreateMesh(size_t maxTriangles,
 	{
 		return nullptr;
 	}
-	Mesh* newMesh = new Mesh(device, spriteFont, windowWidth, windowHeight, maxTriangles, inTexture, inTexSize, inTexWidth, inTexHeight);
+	Mesh* newMesh = new Mesh(device, spriteFont, windowWidth, windowHeight, maxTriangles, inTexture, inAltTexture, inTexSize, inTexWidth, inTexHeight);
 	meshes.push_back(newMesh);
 	return newMesh;
 }
@@ -365,7 +366,14 @@ void Renderer::DrawRenderedMesh()
 				context->PSSetShader(pixelShaderTextures.Get(), nullptr, 0);
 			}
 			context->PSSetSamplers(0, 1, samplerState.GetAddressOf());
-			context->PSSetShaderResources(0, 1, mesh->TextureResourceView.GetAddressOf());
+			if (mesh->ShowAltTexture && mesh->AltTextureResourceView != nullptr)
+			{
+				context->PSSetShaderResources(0, 1, mesh->AltTextureResourceView.GetAddressOf());
+			}
+			else
+			{
+				context->PSSetShaderResources(0, 1, mesh->TextureResourceView.GetAddressOf());
+			}
 		}
 		else
 		{

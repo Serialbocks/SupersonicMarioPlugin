@@ -25,6 +25,7 @@ public:
 		int inWindowHeight,
 		size_t maxTriangles,
 		uint8_t* inTexture = nullptr,
+		uint8_t* inAltTexture = nullptr,
 		size_t inTexSize = 0,
 		uint16_t inTexWidth = 0,
 		uint16_t inTexHeight = 0);
@@ -47,6 +48,7 @@ public:
 	void SetShirtColor(float r, float g, float b);
 	void ShowNameplate(std::wstring name, Vector pos);
 	void HideNameplate();
+	void SetShowAltTexture(bool val);
 
 private:
 	void init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
@@ -55,6 +57,7 @@ private:
 		int inWindowHeight,
 		size_t maxTriangles,
 		uint8_t* inTexture = nullptr,
+		uint8_t* inAltTexture = nullptr,
 		size_t inTexSize = 0,
 		uint16_t inTexWidth = 0,
 		uint16_t inTexHeight = 0);
@@ -70,10 +73,12 @@ public:
 	std::vector<unsigned int> Indices;
 	size_t NumIndices = 0;
 	bool IsTransparent = false;
+	bool ShowAltTexture = false;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> VertexConstantBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> TextureResourceView = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> AltTextureResourceView = nullptr;
 	float CapColorR, CapColorG, CapColorB;
 	float ShirtColorR, ShirtColorG, ShirtColorB;
 	bool render = false;
@@ -89,6 +94,7 @@ public:
 
 private:
 	uint8_t* texData = nullptr;
+	uint8_t* altTexData = nullptr;
 	size_t texSize;
 	uint16_t texWidth, texHeight;
 	int windowWidth, windowHeight;

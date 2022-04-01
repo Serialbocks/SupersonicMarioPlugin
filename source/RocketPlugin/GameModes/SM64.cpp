@@ -530,38 +530,40 @@ void SM64::RenderOptions()
 
 		ImGui::NewLine();
 
-		ImGui::Text("Ambient Light");
-		ImGui::SliderFloat("R", &renderer->Lighting.AmbientLightColorR, 0.0f, 1.0f);
-		ImGui::SliderFloat("G", &renderer->Lighting.AmbientLightColorG, 0.0f, 1.0f);
-		ImGui::SliderFloat("B", &renderer->Lighting.AmbientLightColorB, 0.0f, 1.0f);
-		ImGui::SliderFloat("Ambient Strength", &renderer->Lighting.AmbientLightStrength, 0.0f, 1.0f);
+		ImGui::Checkbox("Stem Mode", &matchSettings.isStem);
 
-		ImGui::NewLine();
-
-		ImGui::Text("Dynamic Light");
-		std::string currentLightLabel = "Light " + std::to_string(currentLightIndex + 1);
-		if (ImGui::BeginCombo("Light Select", currentLightLabel.c_str()))
-		{
-			for (int i = 0; i < MAX_LIGHTS; i++)
-			{
-				std::string lightLabel = "Light " + std::to_string(i + 1);
-				bool isSelected = i == currentLightIndex;
-				if (ImGui::Selectable(lightLabel.c_str(), isSelected))
-					currentLightIndex = i;
-				if (isSelected)
-					ImGui::SetItemDefaultFocus();
-			}
-			ImGui::EndCombo();
-		}
-
-		ImGui::SliderFloat("X", &renderer->Lighting.Lights[currentLightIndex].posX, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
-		ImGui::SliderFloat("Y", &renderer->Lighting.Lights[currentLightIndex].posY, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
-		ImGui::SliderFloat("Z", &renderer->Lighting.Lights[currentLightIndex].posZ, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
-		ImGui::SliderFloat("Rd", &renderer->Lighting.Lights[currentLightIndex].r, 0.0f, 1.0f);
-		ImGui::SliderFloat("Gd", &renderer->Lighting.Lights[currentLightIndex].g, 0.0f, 1.0f);
-		ImGui::SliderFloat("Bd", &renderer->Lighting.Lights[currentLightIndex].b, 0.0f, 1.0f);
-		ImGui::SliderFloat("Dynamic Strength", &renderer->Lighting.Lights[currentLightIndex].strength, 0.0f, 1.0f);
-		ImGui::Checkbox("Show Bulb", &renderer->Lighting.Lights[currentLightIndex].showBulb);
+		//ImGui::Text("Ambient Light");
+		//ImGui::SliderFloat("R", &renderer->Lighting.AmbientLightColorR, 0.0f, 1.0f);
+		//ImGui::SliderFloat("G", &renderer->Lighting.AmbientLightColorG, 0.0f, 1.0f);
+		//ImGui::SliderFloat("B", &renderer->Lighting.AmbientLightColorB, 0.0f, 1.0f);
+		//ImGui::SliderFloat("Ambient Strength", &renderer->Lighting.AmbientLightStrength, 0.0f, 1.0f);
+		//
+		//ImGui::NewLine();
+		//
+		//ImGui::Text("Dynamic Light");
+		//std::string currentLightLabel = "Light " + std::to_string(currentLightIndex + 1);
+		//if (ImGui::BeginCombo("Light Select", currentLightLabel.c_str()))
+		//{
+		//	for (int i = 0; i < MAX_LIGHTS; i++)
+		//	{
+		//		std::string lightLabel = "Light " + std::to_string(i + 1);
+		//		bool isSelected = i == currentLightIndex;
+		//		if (ImGui::Selectable(lightLabel.c_str(), isSelected))
+		//			currentLightIndex = i;
+		//		if (isSelected)
+		//			ImGui::SetItemDefaultFocus();
+		//	}
+		//	ImGui::EndCombo();
+		//}
+		//
+		//ImGui::SliderFloat("X", &renderer->Lighting.Lights[currentLightIndex].posX, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
+		//ImGui::SliderFloat("Y", &renderer->Lighting.Lights[currentLightIndex].posY, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
+		//ImGui::SliderFloat("Z", &renderer->Lighting.Lights[currentLightIndex].posZ, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
+		//ImGui::SliderFloat("Rd", &renderer->Lighting.Lights[currentLightIndex].r, 0.0f, 1.0f);
+		//ImGui::SliderFloat("Gd", &renderer->Lighting.Lights[currentLightIndex].g, 0.0f, 1.0f);
+		//ImGui::SliderFloat("Bd", &renderer->Lighting.Lights[currentLightIndex].b, 0.0f, 1.0f);
+		//ImGui::SliderFloat("Dynamic Strength", &renderer->Lighting.Lights[currentLightIndex].strength, 0.0f, 1.0f);
+		//ImGui::Checkbox("Show Bulb", &renderer->Lighting.Lights[currentLightIndex].showBulb);
 	}
 }
 
@@ -611,11 +613,12 @@ void SM64::InitSM64()
 	}
 
 	texture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
+	stemTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
 
 	//sm64_global_terminate();
 	if (!sm64Initialized)
 	{
-		sm64_global_init(rom, texture, NULL);
+		sm64_global_init(rom, texture, stemTexture, NULL);
 		sm64_static_surfaces_load(surfaces, surfaces_count);
 		sm64Initialized = true;
 	}
@@ -640,6 +643,7 @@ void SM64::DestroySM64()
 	localMario.marioId = -2;
 	//sm64_global_terminate();
 	free(texture);
+	free(stemTexture);
 	delete renderer;
 	delete marioAudio;
 }
@@ -1074,6 +1078,7 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 				self->teamColors[trueIndex + 5]);
 		}
 
+		marioInstance->mesh->SetShowAltTexture(self->matchSettings.isStem);
 		marioInstance->mesh->RenderUpdateVertices(marioInstance->marioGeometry.numTrianglesUsed, &camera);
 	}
 	marioInstance->sema.release();
@@ -1102,6 +1107,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		{
 			marioMeshPool.push_back(renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
 				texture,
+				stemTexture,
 				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
 				SM64_TEXTURE_WIDTH,
 				SM64_TEXTURE_HEIGHT));

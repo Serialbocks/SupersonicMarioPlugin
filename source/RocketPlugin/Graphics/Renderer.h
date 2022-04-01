@@ -29,6 +29,7 @@ public:
 	~Renderer();
 	Mesh* CreateMesh(size_t maxTriangles,
 		uint8_t* inTexture = nullptr,
+		uint8_t* inAltTexture = nullptr,
 		size_t inTexSize = 0,
 		uint16_t inTexWidth = 0,
 		uint16_t inTexHeight = 0);
