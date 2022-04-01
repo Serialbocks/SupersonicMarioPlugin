@@ -90,6 +90,11 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 			onOvertimeStart(caller);
 		});
 	HookEventWithCaller<ServerWrapper>(
+		clientOvertimeGameCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			onOvertimeStart(caller);
+		});
+	HookEventWithCaller<ServerWrapper>(
 		playerLeaveOrJoinCheck,
 		[this](const ServerWrapper& caller, void* params, const std::string&) {
 			sendSettingsIfHost(caller);
@@ -132,6 +137,7 @@ SM64::~SM64()
 	UnhookEvent(endPreGameTickCheck);
 	UnhookEvent(clientEndPreGameTickCheck);
 	UnhookEvent(overtimeGameCheck);
+	UnhookEvent(clientOvertimeGameCheck);
 
 }
 
@@ -252,6 +258,11 @@ void SM64::moveCarToMario(std::string eventName)
 	{
 		auto marioState = &marioInstance->marioBodyState.marioState;
 		auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+		if( marioState->posX == 0 && marioState->posY == 0 && marioState->posZ == 0 )
+		{
+			marioInstance->sema.release();
+			return;
+		}
 		auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
 		car.SetLocation(carPosition);
 		car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
@@ -479,9 +490,9 @@ void SM64::RenderOptions()
 		ImGui::SliderFloat("G", &renderer->Lighting.AmbientLightColorG, 0.0f, 1.0f);
 		ImGui::SliderFloat("B", &renderer->Lighting.AmbientLightColorB, 0.0f, 1.0f);
 		ImGui::SliderFloat("Ambient Strength", &renderer->Lighting.AmbientLightStrength, 0.0f, 1.0f);
-		
+
 		ImGui::NewLine();
-		
+
 		ImGui::Text("Dynamic Light");
 		std::string currentLightLabel = "Light " + std::to_string(currentLightIndex + 1);
 		if (ImGui::BeginCombo("Light Select", currentLightLabel.c_str()))
@@ -497,7 +508,7 @@ void SM64::RenderOptions()
 			}
 			ImGui::EndCombo();
 		}
-		
+
 		ImGui::SliderFloat("X", &renderer->Lighting.Lights[currentLightIndex].posX, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
 		ImGui::SliderFloat("Y", &renderer->Lighting.Lights[currentLightIndex].posY, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
 		ImGui::SliderFloat("Z", &renderer->Lighting.Lights[currentLightIndex].posZ, MIN_LIGHT_COORD, MAX_LIGHT_COORD);
@@ -646,6 +657,11 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 			car.SetbHiddenSelf(TRUE);
 			auto marioState = &marioInstance->marioBodyState.marioState;
 			auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+			if( marioState->posX == 0 && marioState->posY == 0 && marioState->posZ == 0 )
+			{
+				marioInstance->sema.release();
+				return;
+			}
 			auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
 			car.SetLocation(carPosition);
 			car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));

@@ -179,6 +179,7 @@ protected:
     const std::string clientEndPreGameTickCheck = "Function GameEvent_Soccar_TA.Countdown.EndState";
     const std::string gameTickCheck = "Function GameEvent_Soccar_TA.Active.Tick";
     const std::string overtimeGameCheck = "Function TAGame.GameEvent_Soccar_TA.StartOvertime";
+    const std::string clientOvertimeGameCheck = "Function TAGame.GameEvent_Soccar_TA.OnOvertimeUpdated";
 
     const std::string playerLeaveOrJoinCheck = "Function TAGame.ListenServer_TA.GetCustomMatchSettings";
     const std::string playerJoinedTeamCheck = "Function TAGame.GameMetrics_TA.JoinTeam";
