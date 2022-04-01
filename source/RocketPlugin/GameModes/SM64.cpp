@@ -564,13 +564,13 @@ void SM64::RenderOptions()
 
 				if (marioInstance == nullptr) continue;
 
-				std::string playerName = player.GetPlayerName().ToString() + " Settings";
+				std::string playerName = player.GetPlayerName().ToString() + " Stem Mode";
 
 				marioInstance->sema.acquire();
 				
-				ImGui::Text(playerName.c_str());
+				
 				bool oldStem = marioInstance->isStem;
-				ImGui::Checkbox("Stem Mode", &marioInstance->isStem);
+				ImGui::Checkbox(playerName.c_str(), &marioInstance->isStem);
 				marioInstance->sema.release();
 
 				if (oldStem != marioInstance->isStem)
