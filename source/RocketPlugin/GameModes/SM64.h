@@ -41,11 +41,11 @@ struct MatchSettings
     SM64MarioBljInput bljSetup;
     bool isPreGame = false;
     bool isInSm64Game = false;
-    bool isStem = false;
 
     int playerCount = 0;
     int playerIds[MAX_NUM_PLAYERS] = { 0 };
     int playerColorIndices[MAX_NUM_PLAYERS] = { 0 };
+    bool playerStemFlags[MAX_NUM_PLAYERS] = { 0 };
 };
 
 class SM64MarioInstance
@@ -61,6 +61,7 @@ public:
     struct SM64MarioGeometryBuffers marioGeometry { 0 };
     struct SM64MarioBodyState marioBodyState { 0 };
     bool CarActive = true;
+    bool isStem = false;
     Mesh* mesh = nullptr;
     std::counting_semaphore<1> sema{ 1 };
     int slidingHandle = -1;
