@@ -100,6 +100,7 @@ private:
     void onOvertimeStart(ServerWrapper server);
     void onTick(ServerWrapper server);
     void onSetVehicleInput(CarWrapper car, void* params);
+    void onNameplateTick(ServerWrapper caller, void* params);
     void sendSettingsIfHost(ServerWrapper server);
     void moveCarToMario(std::string eventName);
     void onGoalScored(std::string eventName);
@@ -184,7 +185,7 @@ protected:
     const std::string playerLeaveOrJoinCheck = "Function TAGame.ListenServer_TA.GetCustomMatchSettings";
     const std::string playerJoinedTeamCheck = "Function TAGame.GameMetrics_TA.JoinTeam";
     const std::string playerLeftTeamCheck = "Function TAGame.GameMetrics_TA.LeaveTeam";
-
     const std::string menuPushCheck = "Function TAGame.GFxData_MenuStack_TA.PushMenu";
     const std::string menuPopCheck = "Function TAGame.GFxData_MenuStack_TA.PopMenu";
+    const std::string nameplateTickCheck = "Function TAGame.NameplateMeshComponent_TA.TickNameplate";
 };

@@ -65,6 +65,12 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 		});
 
 	HookEventWithCaller<ServerWrapper>(
+		nameplateTickCheck,
+		[this](const ServerWrapper& caller, void* params, const std::string&) {
+			onNameplateTick(caller, params);
+		});
+
+	HookEventWithCaller<ServerWrapper>(
 		initialCharacterSpawnCheck,
 		[this](const ServerWrapper& caller, void* params, const std::string&) {
 			onCharacterSpawn(caller);
@@ -274,7 +280,46 @@ void SM64::moveCarToMario(std::string eventName)
 	}
 
 	marioInstance->sema.release();
+
+
+	if (!isHost)
+	{
+		remoteMariosSema.acquire();
+		for (CarWrapper car : server.GetCars())
+		{
+			PriWrapper player = car.GetPRI();
+			if (player.IsNull()) return;
+			auto isLocalPlayer = player.IsLocalPlayerPRI();
+			if (isLocalPlayer) continue;
+			auto playerId = player.GetPlayerID();
+
+			if (remoteMarios.count(playerId) > 0)
+			{
+				marioInstance = remoteMarios[playerId];
+				marioInstance->sema.acquire();
+
+				if (marioInstance->marioId >= 0)
+				{
+					auto marioState = &marioInstance->marioBodyState.marioState;
+					auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+					auto carPosition = Vector(marioState->posX, marioState->posZ, marioState->posY + CAR_OFFSET_Z);
+					car.SetLocation(carPosition);
+					car.SetVelocity(Vector(marioState->velX, marioState->velZ, marioState->velY));
+					auto carRot = car.GetRotation();
+					carRot.Yaw = marioYaw;
+					carRot.Roll = carRotation.Roll;
+					carRot.Pitch = carRotation.Pitch;
+					car.SetRotation(carRot);
+				}
+
+				marioInstance->sema.release();
+			}
+		}
+		remoteMariosSema.release();
+		
+	}
 }
+
 
 void SM64::onGoalScored(std::string eventName)
 {
@@ -775,6 +820,13 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 	}
 
+}
+
+void SM64::onNameplateTick(ServerWrapper caller, void* params)
+{
+	PrimitiveComponentWrapper nameplate = static_cast<PrimitiveComponentWrapper>(caller.memory_address);
+	nameplate.SetbIgnoreOwnerHidden(true);
+	auto translation = nameplate.GetTranslation();
 }
 
 void SM64::onCharacterSpawn(ServerWrapper server)
