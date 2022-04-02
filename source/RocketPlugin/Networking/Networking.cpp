@@ -476,9 +476,3 @@ void Networking::SendBytes(char* buf, int len)
     TcpClient::getInstance().SendBytes(buf, len);
     TcpServer::getInstance().SendBytes(buf, len);
 }
-
-void Networking::DisconnectTcpConnections()
-{
-    TcpClient::getInstance().DisconnectFromServer();
-    TcpServer::getInstance().StopServer();
-}
