@@ -88,8 +88,7 @@ void TcpClient::ConnectToServer(std::string inIpAddress, int inPort)
 {
 	if (sock != INVALID_SOCKET)
 	{
-		BM_LOG("Tried to connect to server, but we're already connected");
-		return;
+		DisconnectFromServer();
 	}
 	serverIp = inIpAddress;
 	serverPort = inPort;
