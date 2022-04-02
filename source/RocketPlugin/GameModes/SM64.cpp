@@ -1012,14 +1012,16 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 
 	marioInstance->marioInputs.bljInput =  instance->matchSettings.bljSetup;
 
-	sm64_mario_tick(marioInstance->marioId,
-		&marioInstance->marioInputs,
-		&marioInstance->marioState,
-		&marioInstance->marioGeometry,
-		&marioInstance->marioBodyState,
-		true,
-		true);
-
+	if (!self->gameWrapper->IsPaused())
+	{
+		sm64_mario_tick(marioInstance->marioId,
+			&marioInstance->marioInputs,
+			&marioInstance->marioState,
+			&marioInstance->marioGeometry,
+			&marioInstance->marioBodyState,
+			true,
+			true);
+	}
 
 	auto marioVector = Vector(marioInstance->marioState.posX, marioInstance->marioState.posZ, marioInstance->marioState.posY);
 	auto marioVel = Vector(marioInstance->marioState.velX, marioInstance->marioState.velZ, marioInstance->marioState.velY);
