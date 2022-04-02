@@ -867,7 +867,12 @@ void SM64::onCharacterSpawn(ServerWrapper server)
 		});
 	matchSettingsSema.acquire();
 	matchSettings.isPreGame = true;
+	if (isHost && isActive)
+	{
+		matchSettings.isInSm64Game = true;
+	}
 	matchSettingsSema.release();
+	sendSettingsIfHost(server);
 }
 
 void SM64::onCountdownEnd(ServerWrapper server)
