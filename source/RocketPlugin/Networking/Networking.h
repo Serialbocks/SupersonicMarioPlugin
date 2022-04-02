@@ -58,6 +58,7 @@ namespace Networking
 
     void RegisterCallback(void (*clbk)(char* buf, int len));
     void SendBytes(char* buf, int len);
+    void DisconnectTcpConnections();
 }
 
 // Singleton server used for communicating custom netcode without exploiting RL's in-game chat

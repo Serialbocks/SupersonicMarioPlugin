@@ -222,8 +222,12 @@ void SM64::OnGameLeft(bool deleteMario)
 		}
 		marioInstance->sema.release();
 	}
-	if(deleteMario)
+	if (deleteMario)
+	{
+		Networking::DisconnectTcpConnections();
 		remoteMarios.clear();
+	}
+
 	remoteMariosSema.release();
 }
 
