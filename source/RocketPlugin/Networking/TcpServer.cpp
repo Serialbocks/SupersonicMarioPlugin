@@ -188,8 +188,7 @@ void TcpServer::StartServer(int inPort)
 {
 	if (stopServerSocket != INVALID_SOCKET)
 	{
-		BM_LOG("Tried to create server, but one is already running!");
-		return;
+		StopServer();
 	}
 
 	playerIdMap.clear();
