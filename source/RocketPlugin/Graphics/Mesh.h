@@ -18,9 +18,7 @@ public:
 	} MeshVertex;
 
 	VS_ConstantBufferData VertexConstBufferData;
-	VS_ConstantBufferData NameplateVertexConstBufferData;
 	Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
-		std::shared_ptr<DirectX::SpriteFont> inSpriteFont,
 		int inWindowWidth,
 		int inWindowHeight,
 		size_t maxTriangles,
@@ -30,7 +28,6 @@ public:
 		uint16_t inTexWidth = 0,
 		uint16_t inTexHeight = 0);
 	Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
-		std::shared_ptr<DirectX::SpriteFont> inSpriteFont,
 		int inWindowWidth,
 		int inWindowHeight,
 		std::vector<Vertex>* inVertices,
@@ -46,13 +43,10 @@ public:
 	void SetRotationQuat(float x, float y, float z, float w);
 	void SetCapColor(float r, float g, float b);
 	void SetShirtColor(float r, float g, float b);
-	void ShowNameplate(std::wstring name, Vector pos);
-	void HideNameplate();
 	void SetShowAltTexture(bool val);
 
 private:
 	void init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
-		std::shared_ptr<DirectX::SpriteFont> inSpriteFont,
 		int inWindowWidth,
 		int inWindowHeight,
 		size_t maxTriangles,
@@ -83,15 +77,6 @@ public:
 	float ShirtColorR, ShirtColorG, ShirtColorB;
 	bool render = false;
 
-	// Nameplate mesh
-	size_t NumNameplateTriangles = 0;
-	bool UpdateNameplateVertices = false;
-	std::vector<Vertex> NameplateVertices;
-	std::vector<unsigned int> NameplateIndices;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> NameplateVertexBuffer = nullptr;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> NameplateIndexBuffer = nullptr;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> NameplateVertexConstantBuffer = nullptr;
-
 private:
 	uint8_t* texData = nullptr;
 	uint8_t* altTexData = nullptr;
@@ -103,6 +88,5 @@ private:
 	Vector scaleVector = Vector(1.0f, 1.0f, 1.0f);
 	Vector rotationVector = Vector(0.0f, 0.0f, 0.0f);
 	Microsoft::WRL::ComPtr<ID3D11Device> device = nullptr;
-	std::shared_ptr<DirectX::SpriteFont> spriteFont = nullptr;
 
 };

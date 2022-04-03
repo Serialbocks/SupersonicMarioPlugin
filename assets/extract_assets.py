@@ -486,7 +486,7 @@ def write_aiff(entry, filename, basePath):
     with tempfile.NamedTemporaryFile(suffix=".aifc", delete=False) as temp:
         write_aifc(entry, temp)
         temp.flush()
-        aifc_decode = os.path.join(basePath, "aifc_decode.exe")
+        aifc_decode = os.path.join('powershell.exe', '-windowstyle', 'hidden', basePath, "aifc_decode.exe")
         subprocess.run([aifc_decode, temp.name, filename], check=True, capture_output=False)
 
 
@@ -610,7 +610,7 @@ def disassemble_main(inArgs, basePath, destPath):
                     ffmpegDir = os.path.join(basePath, "ffmpeg")
                     ffmpeg = os.path.join(ffmpegDir, "ffmpeg.exe")
                     try:
-                        subprocess.run([ffmpeg, '-i', filename, wavFilename], check=True, capture_output=False)
+                        subprocess.run(['powershell.exe', '-windowstyle', 'hidden', ffmpeg, '-i', filename, wavFilename], check=True, capture_output=False)
                     except:
                         traceback.print_exc()
                     os.remove(filename)
@@ -981,7 +981,7 @@ def main():
         f.write(output)
 
     import shutil
-    assetsToCopy = ['baserom.us.z64', 'ROCKETBALL.obj', 'transparent.png', 'arial_rounded_bold_16.spritefont']
+    assetsToCopy = ['baserom.us.z64', 'ROCKETBALL.obj', 'transparent.png']
     for asset in assetsToCopy:
         src = os.path.join(basePath, asset)
         dst = os.path.join(destPath, asset)

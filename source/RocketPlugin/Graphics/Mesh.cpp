@@ -2,12 +2,8 @@
 
 #define NEAR_Z 50.0f
 #define FAR_Z 20000.0f
-#define MAX_NAMEPLATE_TRIANGLES 300
-#define MAX_NAMEPLATE_INDICES (MAX_NAMEPLATE_TRIANGLES * 3)
-#define MAX_NAMEPLATE_VERTICES MAX_NAMEPLATE_INDICES
 
 Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
-	std::shared_ptr<DirectX::SpriteFont> inSpriteFont,
 	int inWindowWidth,
 	int inWindowHeight,
 	size_t maxTriangles,
@@ -17,11 +13,10 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	uint16_t inTexWidth,
 	uint16_t inTexHeight)
 {
-	init(deviceIn, inSpriteFont, inWindowWidth, inWindowHeight, maxTriangles, inTexture, inAltTexture, inTexSize, inTexWidth, inTexHeight);
+	init(deviceIn, inWindowWidth, inWindowHeight, maxTriangles, inTexture, inAltTexture, inTexSize, inTexWidth, inTexHeight);
 }
 
 Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
-	std::shared_ptr<DirectX::SpriteFont> inSpriteFont,
 	int inWindowWidth,
 	int inWindowHeight,
 	std::vector<Vertex> *inVertices,
@@ -35,7 +30,7 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	{
 		Vertices.push_back((*inVertices)[i]);
 	}
-	init(deviceIn, inSpriteFont, inWindowWidth, inWindowHeight, Vertices.size(), inTexture, nullptr, inTexSize, inTexWidth, inTexHeight);
+	init(deviceIn, inWindowWidth, inWindowHeight, Vertices.size(), inTexture, nullptr, inTexSize, inTexWidth, inTexHeight);
 	NumTrianglesUsed = Vertices.size();
 }
 
@@ -86,12 +81,6 @@ void Mesh::Render(CameraWrapper *camera)
 	VertexConstBufferData.world = identity * rotation * quatRotation * scale * translation;
 	VertexConstBufferData.wvp = VertexConstBufferData.world * view * projection;
 
-	if (spriteFont != nullptr)
-	{
-		NameplateVertexConstBufferData.world = identity * scale * translation;
-		NameplateVertexConstBufferData.wvp = VertexConstBufferData.world * view * projection;
-	}
-
 	render = true;
 }
 
@@ -138,70 +127,12 @@ void Mesh::SetShirtColor(float r, float g, float b)
 	ShirtColorB = b;
 }
 
-static volatile float nameplateWidth = 500.0f;
-static volatile float nameplateHeight = 75.0f;
-static volatile float nameplateZOffset = 250.0f;
-void Mesh::ShowNameplate(std::wstring name, Vector pos)
-{
-	Vertex* v1 = &NameplateVertices[0];
-	Vertex* v2 = &NameplateVertices[1];
-	Vertex* v3 = &NameplateVertices[2];
-	Vertex* v4 = &NameplateVertices[3];
-
-	v1->pos.x = -(nameplateWidth / 2);
-	v1->pos.y = 0.0f;
-	v1->pos.z = (nameplateHeight / 2) + nameplateZOffset;
-	v1->color.x = 1.0f;
-	v1->color.y = 1.0f;
-	v1->color.z = 1.0f;
-	v1->color.w = 1.0f;
-
-	v2->pos.x = (nameplateWidth / 2);
-	v2->pos.y = 0.0f;
-	v2->pos.z = (nameplateHeight / 2) + nameplateZOffset;
-	v2->color.x = 1.0f;
-	v2->color.y = 1.0f;
-	v2->color.z = 1.0f;
-	v2->color.w = 1.0f;
-
-	v3->pos.x = -(nameplateWidth / 2);
-	v3->pos.y = 0.0f;
-	v3->pos.z = -(nameplateHeight / 2) + nameplateZOffset;
-	v3->color.x = 1.0f;
-	v3->color.y = 1.0f;
-	v3->color.z = 1.0f;
-	v3->color.w = 1.0f;
-
-	v4->pos.x = (nameplateWidth / 2);
-	v4->pos.y = 0.0f;
-	v4->pos.z = -(nameplateHeight / 2) + nameplateZOffset;
-	v4->color.x = 1.0f;
-	v4->color.y = 1.0f;
-	v4->color.z = 1.0f;
-	v4->color.w = 1.0f;
-
-	NameplateIndices[0] = 0;
-	NameplateIndices[1] = 1;
-	NameplateIndices[2] = 3;
-	NameplateIndices[3] = 0;
-	NameplateIndices[4] = 3;
-	NameplateIndices[5] = 2;
-
-	NumNameplateTriangles = 2;
-}
-
-void Mesh::HideNameplate()
-{
-	NumNameplateTriangles = 0;
-}
-
 void Mesh::SetShowAltTexture(bool val)
 {
 	ShowAltTexture = val;
 }
 
 void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
-	std::shared_ptr<DirectX::SpriteFont> inSpriteFont,
 	int inWindowWidth,
 	int inWindowHeight,
 	size_t maxTriangles,
@@ -212,7 +143,6 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	uint16_t inTexHeight)
 {
 	device = deviceIn;
-	spriteFont = inSpriteFont;
 	windowWidth = inWindowWidth;
 	windowHeight = inWindowHeight;
 
@@ -270,49 +200,6 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	D3D11_SUBRESOURCE_DATA cbData = { &VertexConstBufferData, 0, 0 };
 
 	device->CreateBuffer(&cbDesc, &cbData, VertexConstantBuffer.GetAddressOf());
-
-
-	if (inSpriteFont != nullptr)
-	{
-		NameplateVertices.resize(MAX_NAMEPLATE_VERTICES);
-		NameplateIndices.resize(MAX_NAMEPLATE_INDICES);
-
-		// Create buffers for nameplate
-		ZeroMemory(&vbDesc, sizeof(D3D11_BUFFER_DESC));
-		vbDesc.ByteWidth = (UINT)(sizeof(Vertex) * MAX_NAMEPLATE_VERTICES);
-		vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		vbDesc.Usage = D3D11_USAGE_DYNAMIC;
-		vbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-		vbDesc.StructureByteStride = sizeof(Vertex);
-
-		D3D11_SUBRESOURCE_DATA npvbData = { NameplateVertices.data(), 0, 0 };
-
-		device->CreateBuffer(&vbDesc, &npvbData, NameplateVertexBuffer.GetAddressOf());
-
-		auto numNameplateIndices = MAX_NAMEPLATE_INDICES;
-		ZeroMemory(&ibDesc, sizeof(ibDesc));
-		ibDesc.ByteWidth = (UINT)(sizeof(unsigned int) * numNameplateIndices);
-		ibDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-		ibDesc.Usage = D3D11_USAGE_DEFAULT;
-		ibDesc.CPUAccessFlags = 0;
-		ibDesc.MiscFlags = 0;
-
-		D3D11_SUBRESOURCE_DATA npibData = { NameplateIndices.data(), 0, 0 };
-
-		device->CreateBuffer(&ibDesc, &npibData, NameplateIndexBuffer.GetAddressOf());
-
-		ZeroMemory(&cbDesc, sizeof(D3D11_BUFFER_DESC));
-		cbDesc.ByteWidth = static_cast<UINT>(sizeof(VS_ConstantBufferData) + (16 - (sizeof(VS_ConstantBufferData) % 16)));
-		cbDesc.Usage = D3D11_USAGE_DYNAMIC;
-		cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-		cbDesc.MiscFlags = 0;
-		cbDesc.StructureByteStride = 0;
-
-		D3D11_SUBRESOURCE_DATA npcbData = { &NameplateVertexConstBufferData, 0, 0 };
-
-		device->CreateBuffer(&cbDesc, &npcbData, NameplateVertexConstantBuffer.GetAddressOf());
-	}
 
 
 	// If there's texture data, create a shader resource view for it

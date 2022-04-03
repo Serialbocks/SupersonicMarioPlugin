@@ -7,8 +7,6 @@
 #include <d3dcompiler.h>
 #include <DirectXMath.h>
 #include <wrl/client.h>
-#include <SpriteBatch.h>
-#include <SpriteFont.h>
 #include <fstream>
 #include <bakkesmod/wrappers/wrapperstructs.h>
 #include "Mesh.h"
@@ -78,10 +76,4 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthStencilView = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11BlendState> blendState = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> pixelConstantBuffer = nullptr;
-	//std::unique_ptr<DirectX::SpriteBatch> spriteBatch = nullptr;
-	std::shared_ptr<DirectX::SpriteFont> spriteFont = nullptr;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> spriteFontSheetTexture = nullptr;
-
-protected:
-	const std::wstring fontPath = L"data\\assets\\arial_rounded_bold_16.spritefont";
 };

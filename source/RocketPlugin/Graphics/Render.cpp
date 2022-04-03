@@ -49,7 +49,7 @@ Mesh* Renderer::CreateMesh(size_t maxTriangles,
 	{
 		return nullptr;
 	}
-	Mesh* newMesh = new Mesh(device, spriteFont, windowWidth, windowHeight, maxTriangles, inTexture, inAltTexture, inTexSize, inTexWidth, inTexHeight);
+	Mesh* newMesh = new Mesh(device, windowWidth, windowHeight, maxTriangles, inTexture, inAltTexture, inTexSize, inTexWidth, inTexHeight);
 	meshes.push_back(newMesh);
 	return newMesh;
 }
@@ -64,7 +64,7 @@ Mesh* Renderer::CreateMesh(std::vector<Vertex> *inVertices,
 	{
 		return nullptr;
 	}
-	Mesh* newMesh = new Mesh(device, nullptr, windowWidth, windowHeight, inVertices, inTexture, inTexSize, inTexWidth, inTexHeight);
+	Mesh* newMesh = new Mesh(device, windowWidth, windowHeight, inVertices, inTexture, inTexSize, inTexWidth, inTexHeight);
 	meshes.push_back(newMesh);
 	return newMesh;
 }
@@ -247,12 +247,6 @@ void Renderer::CreatePipeline()
 	D3D11_SUBRESOURCE_DATA pixelCbData = { &PixelConstBufferData, 0, 0 };
 
 	device->CreateBuffer(&cbDesc, &pixelCbData, pixelConstantBuffer.GetAddressOf());
-
-	// Initialize font
-	//spriteBatch = std::make_unique<DirectX::SpriteBatch>(context.Get());
-	std::wstring spriteFontPath = utils.GetBakkesmodFolderPathWide() + fontPath;
-	spriteFont = std::make_shared<DirectX::SpriteFont>(device.Get(), spriteFontPath.c_str());
-	spriteFont->GetSpriteSheet(&spriteFontSheetTexture);
 }
 
 void Renderer::Render()
@@ -380,41 +374,7 @@ void Renderer::DrawRenderedMesh()
 			context->PSSetShader(pixelShader.Get(), nullptr, 0);
 		}
 		context->DrawIndexed((UINT)mesh->NumTrianglesUsed * 3, 0, 0);
-
-		// Render nameplate if the mesh contains one
-		if (mesh->NumNameplateTriangles > 0)
-		{
-			// Map the vertex constant buffer on the GPU
-			context->Map(mesh->NameplateVertexConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-			memcpy(mappedResource.pData, &mesh->NameplateVertexConstBufferData, sizeof(VS_ConstantBufferData));
-			context->Unmap(mesh->NameplateVertexConstantBuffer.Get(), 0);
-
-			context->UpdateSubresource(mesh->NameplateVertexConstantBuffer.Get(), 0, 0, &mesh->NameplateVertexConstBufferData, 0, 0);
-			context->VSSetConstantBuffers(0, 1, mesh->NameplateVertexConstantBuffer.GetAddressOf());
-
-			context->Map(mesh->NameplateVertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-			memcpy(mappedResource.pData, (void*)mesh->NameplateVertices.data(), sizeof(Vertex) * mesh->NumNameplateTriangles * 3);
-			context->Unmap(mesh->NameplateVertexBuffer.Get(), 0);
-
-			offset = 0;
-			context->IASetVertexBuffers(0, 1, mesh->NameplateVertexBuffer.GetAddressOf(), &stride, &offset);
-			context->IASetIndexBuffer(mesh->NameplateIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-
-			context->PSSetShader(pixelShader.Get(), nullptr, 0);
-
-			context->DrawIndexed((UINT)mesh->NumNameplateTriangles * 3, 0, 0);
-		}
 	}
 
-	// Test render some text
-	//spriteBatch->Begin();
-	//spriteFont->DrawString(spriteBatch.get(),
-	//	L"Hello World",
-	//	DirectX::XMFLOAT2(0, 0),
-	//	DirectX::Colors::White,
-	//	0.0f,
-	//	DirectX::XMFLOAT2(0, 0),
-	//	DirectX::XMFLOAT2(1.0f, 1.0f));
-	//spriteBatch->End();
 
 }
