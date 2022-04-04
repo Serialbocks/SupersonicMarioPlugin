@@ -1,28 +1,14 @@
-// RocketPlugin.cpp
-// A BakkesMod plugin for joining, hosting and manipulating multiplayer games.
+// SupersonicMarioPlugin.cpp
 //
-// Author:        Stanbroek
-// Version:       0.6.8 18/09/21
-// BMSDK version: 95
+// Original Author: Stanbroek
+// Modified by:     Serialbocks
 #include "RPConfig.h"
-#include "RocketPlugin.h"
+#include "SupersonicMarioPlugin.h"
 
 // Game modes
-#include "GameModes/Drainage.h"
-#include "GameModes/CrazyRumble.h"
-#include "GameModes/Zombies.h"
-#include "GameModes/BoostSteal.h"
-#include "GameModes/KeepAway.h"
-#include "GameModes/Tag.h"
-#include "GameModes/Juggernaut.h"
-#include "GameModes/BoostMod.h"
-#include "GameModes/BoostShare.h"
-#include "GameModes/SacredGround.h"
-#include "GameModes/SmallCars.h"
 #include "GameModes/SM64.h"
 
-
-BAKKESMOD_PLUGIN(RocketPlugin, "Rocket Plugin", PLUGIN_VERSION, PLUGINTYPE_ALL)
+BAKKESMOD_PLUGIN(SupersonicMarioPlugin, "Supersonic Mario", PLUGIN_VERSION, PLUGINTYPE_ALL)
 
 std::filesystem::path BakkesModConfigFolder;
 std::filesystem::path BakkesModCrashesFolder;
@@ -46,7 +32,7 @@ std::shared_ptr<SM64> sm64 = nullptr;
 /// <param name="extensions">List of map extensions to filter by</param>
 /// <param name="preferredExtension">Map extension to prefer when multiple files are found</param>
 /// <returns>The workshop maps from the given directory</returns>
-std::vector<std::filesystem::path> RocketPlugin::getWorkshopMaps(const std::filesystem::path& workshopPath,
+std::vector<std::filesystem::path> SupersonicMarioPlugin::getWorkshopMaps(const std::filesystem::path& workshopPath,
     const std::vector<std::string>& extensions, const std::string& preferredExtension)
 {
     if (!exists(workshopPath)) {
@@ -92,7 +78,6 @@ std::vector<std::filesystem::path> RocketPlugin::getWorkshopMaps(const std::file
     return workshopMaps;
 }
 
-
 /*
  *  Commandline Parser Helpers
  */
@@ -133,11 +118,11 @@ void PrintJoinOptions(std::string error = "")
 /// <summary>Prints how to use the available mutators for the `rp` command.</summary>
 /// <param name="mutators">List of available mutators</param>
 /// <param name="error">Error to prepend</param>
-void PrintAvailableMutators(const std::vector<RocketPlugin::GameSetting>& mutators, std::string error = "")
+void PrintAvailableMutators(const std::vector<SupersonicMarioPlugin::GameSetting>& mutators, std::string error = "")
 {
     error += "usage: rp mutator [mutator] [value]\n"
         "mutators:\n";
-    for (const RocketPlugin::GameSetting& mutator : mutators) {
+    for (const SupersonicMarioPlugin::GameSetting& mutator : mutators) {
         error += "\t" + quote(mutator.InternalCategoryName) + " [value]\n";
     }
 
@@ -149,7 +134,7 @@ void PrintAvailableMutators(const std::vector<RocketPlugin::GameSetting>& mutato
 /// <param name="mutators">List of mutators</param>
 /// <param name="mutatorNameToFind">Mutator to find the index of</param>
 /// <returns>The index of a given string the mutators list or -1 or it was not found</returns>
-int FindSanitizedIndexInMutators(const std::vector<RocketPlugin::GameSetting>& mutators, std::string mutatorNameToFind)
+int FindSanitizedIndexInMutators(const std::vector<SupersonicMarioPlugin::GameSetting>& mutators, std::string mutatorNameToFind)
 {
     for (size_t i = 0; i < mutators.size(); i++) {
         std::string internalMutatorName = mutators[i].InternalCategoryName;
@@ -173,7 +158,7 @@ int FindSanitizedIndexInMutators(const std::vector<RocketPlugin::GameSetting>& m
 /// <summary>Prints how to use the available mutator values for the `rp` command.</summary>
 /// <param name="mutator"><see cref="RocketPlugin::Mutator"/> to print the values from</param>
 /// <param name="error">Error to prepend</param>
-void PrintAvailableMutatorValues(const RocketPlugin::GameSetting& mutator, std::string error = "")
+void PrintAvailableMutatorValues(const SupersonicMarioPlugin::GameSetting& mutator, std::string error = "")
 {
     error += "usage: rp mutator '" + mutator.InternalCategoryName + "' [value]\n"
         "values:\n";
@@ -192,7 +177,7 @@ void PrintAvailableMutatorValues(const RocketPlugin::GameSetting& mutator, std::
 /// <param name="mutator"><see cref="RocketPlugin::Mutator"/>'s to get the values from</param>
 /// <param name="mutatorValueToFind">Mutator value to find the index of</param>
 /// <returns>The index of a given string the mutator values list or -1 or it was not found</returns>
-int FindSanitizedIndexInMutatorValues(const RocketPlugin::GameSetting& mutator, std::string mutatorValueToFind)
+int FindSanitizedIndexInMutatorValues(const SupersonicMarioPlugin::GameSetting& mutator, std::string mutatorValueToFind)
 {
     if (mutatorValueToFind == "Default") {
         return 0;
@@ -274,7 +259,7 @@ bool IsNumber(const std::string& str)
 
 /// <summary>Parses the arguments for the `rp` command.</summary>
 /// <param name="arguments">Arguments given with the `rp` command</param>
-void RocketPlugin::parseArguments(const std::vector<std::string>& arguments)
+void SupersonicMarioPlugin::parseArguments(const std::vector<std::string>& arguments)
 {
     if (arguments.size() < 2) {
         PrintCommandOptions();
@@ -311,7 +296,7 @@ void RocketPlugin::parseArguments(const std::vector<std::string>& arguments)
 }
 
 
-void RocketPlugin::parseJoinArguments(const std::vector<std::string>& arguments)
+void SupersonicMarioPlugin::parseJoinArguments(const std::vector<std::string>& arguments)
 {
     if (arguments.size() < 3) {
         PrintJoinOptions();
@@ -332,7 +317,7 @@ void RocketPlugin::parseJoinArguments(const std::vector<std::string>& arguments)
 }
 
 
-void RocketPlugin::parseHostArguments(const std::vector<std::string>& arguments)
+void SupersonicMarioPlugin::parseHostArguments(const std::vector<std::string>& arguments)
 {
     if (arguments.size() < 3) {
         BM_LOG("usage: rp host [map] (preset)");
@@ -350,7 +335,7 @@ void RocketPlugin::parseHostArguments(const std::vector<std::string>& arguments)
 /// <summary>Prints how to use the available game modes for the `rp` command.</summary>
 /// <param name="gameModes">List of available game modes</param>
 /// <param name="error">Error to prepend</param>
-void PrintAvailableGameModes(const RocketPlugin::GameSetting& gameModes, std::string error = "")
+void PrintAvailableGameModes(const SupersonicMarioPlugin::GameSetting& gameModes, std::string error = "")
 {
     error += "usage: rp gamemode [gamemode]\n"
         "game modes:\n";
@@ -364,7 +349,7 @@ void PrintAvailableGameModes(const RocketPlugin::GameSetting& gameModes, std::st
 }
 
 
-void RocketPlugin::parseGameModeArguments(const std::vector<std::string>& arguments)
+void SupersonicMarioPlugin::parseGameModeArguments(const std::vector<std::string>& arguments)
 {
     if (arguments.size() < 3) {
         PrintAvailableGameModes(gameModes);
@@ -392,7 +377,7 @@ void RocketPlugin::parseGameModeArguments(const std::vector<std::string>& argume
 }
 
 
-void RocketPlugin::parseMapArguments(const std::vector<std::string>& arguments)
+void SupersonicMarioPlugin::parseMapArguments(const std::vector<std::string>& arguments)
 {
     if (arguments.size() < 3) {
         BM_LOG("usage: rp map [map]");
@@ -427,7 +412,7 @@ void RocketPlugin::parseMapArguments(const std::vector<std::string>& arguments)
 }
 
 
-void RocketPlugin::parsePlayerCountArguments(const std::vector<std::string>& arguments)
+void SupersonicMarioPlugin::parsePlayerCountArguments(const std::vector<std::string>& arguments)
 {
     if (arguments.size() < 3) {
         BM_LOG("usage: rp players [players]");
@@ -454,7 +439,7 @@ void setTeamColor(int8_t& teamColor, const int8_t& newTeamColor)
 }
 
 
-void RocketPlugin::parseTeamArguments(const std::vector<std::string>& arguments)
+void SupersonicMarioPlugin::parseTeamArguments(const std::vector<std::string>& arguments)
 {
     if (arguments.size() < 6) {
         BM_LOG("usage: rp team [teamNum] [teamName*] [primaryColorIdx*] [accentColorIdx*] (clubMatch), *leave empty for default");
@@ -522,7 +507,7 @@ void RocketPlugin::parseTeamArguments(const std::vector<std::string>& arguments)
 }
 
 
-void RocketPlugin::parseMutatorArguments(const std::vector<std::string>& arguments)
+void SupersonicMarioPlugin::parseMutatorArguments(const std::vector<std::string>& arguments)
 {
     if (arguments.size() < 3) {
         PrintAvailableMutators(mutators);
@@ -559,7 +544,7 @@ void RocketPlugin::parseMutatorArguments(const std::vector<std::string>& argumen
 }
 
 
-void RocketPlugin::parseRumbleArguments(const std::vector<std::string>& arguments)
+void SupersonicMarioPlugin::parseRumbleArguments(const std::vector<std::string>& arguments)
 {
     if (arguments.size() < 5 || !IsFloat(arguments[2]) || !IsFloat(arguments[3]) || !IsFloat(arguments[4])) {
         PrintRumbleOptions();
@@ -569,10 +554,6 @@ void RocketPlugin::parseRumbleArguments(const std::vector<std::string>& argument
     const float forceMultiplier    = std::strtof(arguments[2].c_str(), nullptr);
     const float rangeMultiplier    = std::strtof(arguments[3].c_str(), nullptr);
     const float durationMultiplier = std::strtof(arguments[4].c_str(), nullptr);
-    const std::shared_ptr<CrazyRumble> crazyRumble = GetCustomGameMode<CrazyRumble>();
-    if (crazyRumble != nullptr) {
-        crazyRumble->UpdateItemsValues(forceMultiplier, rangeMultiplier, durationMultiplier);
-    }
 }
 
 
@@ -580,7 +561,7 @@ void RocketPlugin::parseRumbleArguments(const std::vector<std::string>& argument
 /// <remarks>Not available in the public BakkesMod version.</remarks>
 /// <param name="arguments">Arguments given with the `rp` command</param>
 /// <returns>List of suggestions</returns>
-std::vector<std::string> RocketPlugin::complete(const std::vector<std::string>& arguments)
+std::vector<std::string> SupersonicMarioPlugin::complete(const std::vector<std::string>& arguments)
 {
     std::vector<std::string> suggestions;
 
@@ -657,7 +638,7 @@ std::vector<std::string> RocketPlugin::complete(const std::vector<std::string>& 
 
 /// <summary>Hosts a local game with the preconfigured settings.</summary>
 /// <param name="arena">Arena to host the local game in, if empty the selected map is used</param>
-void RocketPlugin::HostGame(std::string arena)
+void SupersonicMarioPlugin::HostGame(std::string arena)
 {
     if (arena.empty()) {
         if (enableWorkshopMaps || enableCustomMaps) {
@@ -733,12 +714,13 @@ void RocketPlugin::HostGame(std::string arena)
         gameWrapper->ExecuteUnrealCommand(command);
     }, 0.1f);
     TcpServer::getInstance().StartServer(*sm64HostPort);
+    sm64->Activate(true);
 }
 
 
 /// <summary>Joins a local game with the preconfigured settings.</summary>
 /// <param name="pswd">Password the local game is protected with</param>
-void RocketPlugin::JoinGame(const char* pswd)
+void SupersonicMarioPlugin::JoinGame(const char* pswd)
 {
     isJoiningHost = true;
     if (joinCustomMap) {
@@ -774,7 +756,7 @@ void RocketPlugin::JoinGame(const char* pswd)
 
 /// <summary>Gets the currently selected game tags.</summary>
 /// <returns>The currently selected game tags</returns>
-std::string RocketPlugin::getGameTags() const
+std::string SupersonicMarioPlugin::getGameTags() const
 {
     std::string gameTags;
     for (const GameSetting& mutator : mutators) {
@@ -790,7 +772,7 @@ std::string RocketPlugin::getGameTags() const
 
 /// <summary>Saves the configured preset with the given filename.</summary>
 /// <param name="presetName">Name of the preset file</param>
-void RocketPlugin::savePreset(const std::string& presetName)
+void SupersonicMarioPlugin::savePreset(const std::string& presetName)
 {
     std::ofstream presetFile(std::filesystem::path(*presetDirPath) / presetName);
     if (presetFile.is_open()) {
@@ -807,7 +789,7 @@ void RocketPlugin::savePreset(const std::string& presetName)
 
 /// <summary>Loads the preset with the given filename.</summary>
 /// <param name="presetPath">Path of the preset file</param>
-void RocketPlugin::loadPreset(const std::filesystem::path& presetPath)
+void SupersonicMarioPlugin::loadPreset(const std::filesystem::path& presetPath)
 {
     resetMutators();
     BM_TRACE_LOG("loading preset {:s}", quote(presetPath.string()));
@@ -816,7 +798,7 @@ void RocketPlugin::loadPreset(const std::filesystem::path& presetPath)
 
 
 /// <summary>Resets the mutators selectors.</summary>
-void RocketPlugin::resetMutators()
+void SupersonicMarioPlugin::resetMutators()
 {
     for (GameSetting& mutator : mutators) {
         mutator.CurrentSelected = 0;
@@ -826,7 +808,7 @@ void RocketPlugin::resetMutators()
 
 /// <summary>Copies the selected map to a folder in 'CookedPCConsole' where Rocket League can load it.</summary>
 /// <param name="map">Map to copy, if no map is given the selected map will be copied</param>
-void RocketPlugin::copyMap(const std::filesystem::path& map)
+void SupersonicMarioPlugin::copyMap(const std::filesystem::path& map)
 {
     std::filesystem::path mapSrc = map;
     if (mapSrc.empty()) {
@@ -872,10 +854,9 @@ void RocketPlugin::copyMap(const std::filesystem::path& map)
 /// <summary>Sets the countdown time at the start of a match.</summary>
 /// <remarks>Gets called on 'TAGame.GameEvent_TA.Init'.</remarks>
 /// <param name="server">The game server that started</param>
-void RocketPlugin::onGameEventInit([[maybe_unused]] const ServerWrapper& server)
+void SupersonicMarioPlugin::onGameEventInit([[maybe_unused]] const ServerWrapper& server)
 {
     // Clear car physics cache.
-    carPhysicsMods.carPhysics.clear();
     isJoiningHost = false;
 
     if (!hostingGame) {
@@ -913,7 +894,7 @@ void RocketPlugin::onGameEventInit([[maybe_unused]] const ServerWrapper& server)
 /// <summary>Gets the current game as <see cref="ServerWrapper"/>.</summary>
 /// <param name="allowOnlineGame">Bool with if should try to get a online game</param>
 /// <returns>The current game as <see cref="ServerWrapper"/> or <c>NULL</c> is no game is found</returns>
-ServerWrapper RocketPlugin::GetGame(const bool allowOnlineGame) const
+ServerWrapper SupersonicMarioPlugin::GetGame(const bool allowOnlineGame) const
 {
     ServerWrapper localGame = gameWrapper->GetGameEventAsServer();
     if (!localGame.IsNull()) {
@@ -933,7 +914,7 @@ ServerWrapper RocketPlugin::GetGame(const bool allowOnlineGame) const
 /// <summary>Checks if you are in a game.</summary>
 /// <param name="allowOnlineGame">Bool with if should check online games</param>
 /// <returns>Whether you are in a game</returns>
-bool RocketPlugin::IsInGame(const bool allowOnlineGame) const
+bool SupersonicMarioPlugin::IsInGame(const bool allowOnlineGame) const
 {
     ServerWrapper game = GetGame(allowOnlineGame);
     return !game.IsNull();
@@ -967,7 +948,7 @@ bool IsGUIWindowBound(const std::string& windowName)
 
 
 /// <summary>Registers notifiers and variables to interact with the plugin on load.</summary>
-void RocketPlugin::OnLoad()
+void SupersonicMarioPlugin::OnLoad()
 {
     BakkesModConfigFolder = gameWrapper->GetBakkesModPath() / L"cfg";
     BakkesModCrashesFolder = gameWrapper->GetBakkesModPath() / L"crashes";
@@ -1019,26 +1000,16 @@ void RocketPlugin::OnLoad()
     p2pHost = std::make_shared<P2PHost>();
 
     /* Init Modules */
-    RocketPluginModule::rocketPlugin = this;
+    RocketPluginModule::supersonicMarioPlugin = this;
 
     /* Init Game Modes */
-    customGameModes.push_back(std::make_shared<Drainage>());
-    customGameModes.push_back(std::make_shared<CrazyRumble>());
-    customGameModes.push_back(std::make_shared<Zombies>());
-    customGameModes.push_back(std::make_shared<BoostSteal>());
-    customGameModes.push_back(std::make_shared<KeepAway>());
-    customGameModes.push_back(std::make_shared<Tag>());
-    customGameModes.push_back(std::make_shared<Juggernaut>());
-    customGameModes.push_back(std::make_shared<BoostMod>());
-    customGameModes.push_back(std::make_shared<BoostShare>());
-    customGameModes.push_back(std::make_shared<SacredGround>());
     sm64 = std::make_shared<SM64>(gameWrapper, cvarManager, exports);
     customGameModes.push_back(sm64);
 }
 
 
 /// <summary>Unload the plugin properly.</summary>
-void RocketPlugin::OnUnload()
+void SupersonicMarioPlugin::OnUnload()
 {
     //// Save all CVars to 'config.cfg'.
     //cvarManager->backupCfg(CONFIG_FILE_PATH.string());
@@ -1046,7 +1017,7 @@ void RocketPlugin::OnUnload()
 
 
 /// <summary>Registers CVars for Rocket Plugin.</summary>
-void RocketPlugin::registerCVars()
+void SupersonicMarioPlugin::registerCVars()
 {
     joinIP = std::make_shared<std::string>();
     cvarManager->registerCvar("mp_ip", "127.0.0.1", "Default ip for joining local matches").bindTo(joinIP);
@@ -1091,7 +1062,7 @@ void RocketPlugin::registerCVars()
 
 
 /// <summary>Registers notifiers for Rocket Plugin.</summary>
-void RocketPlugin::registerNotifiers()
+void SupersonicMarioPlugin::registerNotifiers()
 {
     RegisterNotifier("rp", [this](const std::vector<std::string>& arguments) {
         parseArguments(arguments);
@@ -1119,30 +1090,12 @@ void RocketPlugin::registerNotifiers()
     RegisterNotifier("rp_broadcast_game", [this](const std::vector<std::string>&) {
         broadcastJoining();
     }, "Broadcasts a game invite to your party members.", PERMISSION_SOCCAR);
-
-    RegisterNotifier("rp_clear_car_physics_cache", [this](const std::vector<std::string>&) {
-        carPhysicsMods.carPhysics.clear();
-    }, "Broadcasts a game invite to your party members.", PERMISSION_SOCCAR);
-
-    RegisterNotifier("rp_add_beta_game_modes", [this](const std::vector<std::string>&) {
-        if (GetCustomGameMode<SmallCars>() == nullptr) {
-            customGameModes.push_back(std::make_shared<SmallCars>());
-            BM_TRACE_LOG("added Small Cars game mode");
-        }
-        else {
-            BM_WARNING_LOG("Small Cars game mode already added");
-        }
-    }, "Adds beta game modes.", PERMISSION_ALL);
 }
 
 
 /// <summary>Register hooks for Rocket Plugin.</summary>
-void RocketPlugin::registerHooks()
+void SupersonicMarioPlugin::registerHooks()
 {
-    HookEventWithCaller<CarWrapper>("Function TAGame.Car_TA.EventVehicleSetup",
-        [this](const CarWrapper& caller, void*, const std::string&) {
-            carPhysicsMods.SetPhysics(caller);
-        });
 
     HookEventWithCaller<ServerWrapper>("Function TAGame.GameEvent_TA.Init",
         [this](const ServerWrapper& caller, void*, const std::string&) {
@@ -1160,7 +1113,7 @@ void RocketPlugin::registerHooks()
 
 /// <summary>Fixes the Display names of the game settings that could not be localized.</summary>
 /// <param name="other">Game setting to fix the Display name of</param>
-void RocketPlugin::GameSetting::FixDisplayNames(const GameSetting& other)
+void SupersonicMarioPlugin::GameSetting::FixDisplayNames(const GameSetting& other)
 {
     if (DisplayCategoryName.empty() || DisplayCategoryName.front() == MARKED_INCOMPLETE) {
 #ifdef DEBUG
@@ -1199,7 +1152,13 @@ void RocketPlugin::GameSetting::FixDisplayNames(const GameSetting& other)
 
 /// <summary>Get selected game setting.</summary>
 /// <returns>Selected game setting</returns>
-std::string RocketPlugin::GameSetting::GetSelected() const
+std::string SupersonicMarioPlugin::GameSetting::GetSelected() const
 {
     return InternalName[CurrentSelected];
 }
+
+
+//std::shared_ptr<SM64> SupersonicMarioPlugin::GetSm64Instance()
+//{
+//    return sm64;
+//}

@@ -1,6 +1,6 @@
 #include "ExternalModules.h"
 
-#include "RocketPlugin.h"
+#include "SupersonicMarioPlugin.h"
 
 
 /*
@@ -8,7 +8,7 @@
  */
 
 /// <summary>Registers notifiers for Rocket Plugin.</summary>
-void RocketPlugin::registerExternalCVars()
+void SupersonicMarioPlugin::registerExternalCVars()
 {
     // std::string cvar, std::string defaultValue, std::string desc = "", bool searchAble = true, bool hasMin = false, float min = 0, bool hasMax = false, float max = 0, bool saveToCfg = true
     for (const auto& [cvar, defaultValue] : ExternalModules::ExternalCVars) {
@@ -18,7 +18,7 @@ void RocketPlugin::registerExternalCVars()
 
 
 /// <summary>Registers notifiers for Rocket Plugin.</summary>
-void RocketPlugin::registerExternalNotifiers()
+void SupersonicMarioPlugin::registerExternalNotifiers()
 {
     for (const auto& [cvar, notifier, description, permissions] : ExternalModules::ExternalNotifiers) {
         RegisterNotifier(cvar, notifier, description, permissions);
@@ -142,7 +142,7 @@ void RocketPlugin::registerExternalNotifiers()
 
 
 /// <summary>Register hooks for Rocket Plugin.</summary>
-void RocketPlugin::registerExternalHooks()
+void SupersonicMarioPlugin::registerExternalHooks()
 {
     for (const auto& [eventName, callback] : ExternalModules::ExternalEventHooksPre) {
         HookEventWithCaller<ActorWrapper>(eventName, callback);

@@ -6,8 +6,7 @@
 // BMSDK version: 95
 
 #include "RPConfig.h"
-#include "RocketPlugin.h"
-#include "GameModes/RocketGameMode.h"
+#include "SupersonicMarioPlugin.h"
 
 #include "ImGui/imgui_internal.h"
 
@@ -21,7 +20,7 @@
  */
 
 /// <summary>ImGui widgets to rendered every tick.</summary>
-void RocketPlugin::OnRender()
+void SupersonicMarioPlugin::OnRender()
 {
     set_render_thread_once();
     if (shouldRefreshGameSettingsConstants) {
@@ -41,9 +40,16 @@ void RocketPlugin::OnRender()
     ImGui::SetNextWindowSizeConstraints(ImVec2(800, 600), ImVec2(FLT_MAX, FLT_MAX));
     if (ImGui::Begin((menuTitle + "###RocketPlugin").c_str(), &isWindowOpen)) {
         if (ImGui::BeginTabBar("#RPTabBar", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip)) {
-            renderMultiplayerTab();
-            renderInGameModsTab();
-            renderGameModesTab();
+            //bool hosting = GetSm64Instance()->IsActive();
+            //if (hosting)
+            //{
+            //    renderMatchOptionsTab();
+            //}
+            //else
+            {
+                renderMultiplayerTab();
+            }
+            
             ImGui::EndTabBar();
         }
     }
@@ -57,22 +63,22 @@ void RocketPlugin::OnRender()
 
 /// <summary>Gets the menu name.</summary>
 /// <returns>The menu name</returns>
-std::string RocketPlugin::GetMenuName()
+std::string SupersonicMarioPlugin::GetMenuName()
 {
-    return "rocketplugin";
+    return "supersonicmario";
 }
 
 
 /// <summary>Gets the menu title.</summary>
 /// <returns>The menu title</returns>
-std::string RocketPlugin::GetMenuTitle()
+std::string SupersonicMarioPlugin::GetMenuTitle()
 {
     return menuTitle;
 }
 
 
 /// <summary>Sets the ImGui context.</summary>
-void RocketPlugin::SetImGuiContext(const uintptr_t ctx)
+void SupersonicMarioPlugin::SetImGuiContext(const uintptr_t ctx)
 {
     ImGui::SetCurrentContext(reinterpret_cast<ImGuiContext*>(ctx));
 }
@@ -81,7 +87,7 @@ void RocketPlugin::SetImGuiContext(const uintptr_t ctx)
 /// <summary>Gets if the user input should be blocked.</summary>
 /// <remarks>This returns true when the user is using the widgets.</remarks>
 /// <returns>Bool with if the user input should be blocked</returns>
-bool RocketPlugin::ShouldBlockInput()
+bool SupersonicMarioPlugin::ShouldBlockInput()
 {
     return ImGui::GetIO().WantCaptureMouse || ImGui::GetIO().WantCaptureKeyboard;
 }
@@ -90,21 +96,21 @@ bool RocketPlugin::ShouldBlockInput()
 /// <summary>Gets if it is an active overlay.</summary>
 /// <remarks>This always returns true.</remarks>
 /// <returns>Bool with if it is an active overlay</returns>
-bool RocketPlugin::IsActiveOverlay()
+bool SupersonicMarioPlugin::IsActiveOverlay()
 {
     return true;
 }
 
 
 /// <summary>Sets the window to open.</summary>
-void RocketPlugin::OnOpen()
+void SupersonicMarioPlugin::OnOpen()
 {
     isWindowOpen = true;
 }
 
 
 /// <summary>Sets the window to close.</summary>
-void RocketPlugin::OnClose()
+void SupersonicMarioPlugin::OnClose()
 {
     isWindowOpen = false;
 }
@@ -115,7 +121,7 @@ void RocketPlugin::OnClose()
  */
 
 /// <summary>Refreshes game settings constants.</summary>
-void RocketPlugin::refreshGameSettingsConstants()
+void SupersonicMarioPlugin::refreshGameSettingsConstants()
 {
     if (!gameSettingsRequest.valid()) {
         gameSettingsRequest = ConstantsConfig->RequestGameSettingConstants();
@@ -143,7 +149,7 @@ void RocketPlugin::refreshGameSettingsConstants()
 
 /// <summary>Pushes an error message to be displayed in the GUI.</summary>
 /// <param name="message">Message to be displayed in the GUI</param>
-void RocketPlugin::PushError(const std::string& message)
+void SupersonicMarioPlugin::PushError(const std::string& message)
 {
     errors.push(message);
 }
@@ -156,7 +162,7 @@ void RocketPlugin::PushError(const std::string& message)
 /// <param name="includeWorkshopMaps">Bool with if to include maps from the workshop maps directory, default to true</param>
 /// <param name="includeCustomMaps">Bool with if to include maps from the custom maps directory, default to true</param>
 /// <returns>Bool with if a custom map was selected</returns>
-bool RocketPlugin::renderCustomMapsSelection(std::map<std::filesystem::path, std::string>& customMaps,
+bool SupersonicMarioPlugin::renderCustomMapsSelection(std::map<std::filesystem::path, std::string>& customMaps,
     std::filesystem::path& currentCustomMap, bool& refreshCustomMaps, const bool includeWorkshopMaps,
     const bool includeCustomMaps)
 {
@@ -222,8 +228,15 @@ bool RocketPlugin::renderCustomMapsSelection(std::map<std::filesystem::path, std
 }
 
 
+void SupersonicMarioPlugin::renderMatchOptionsTab()
+{
+    //if (ImGui::BeginTabItem("Match Settings")) {
+    //    GetSm64Instance()->RenderOptions();
+    //}
+}
+
 /// <summary>Renders the multiplayer tab.</summary>
-void RocketPlugin::renderMultiplayerTab()
+void SupersonicMarioPlugin::renderMultiplayerTab()
 {
     if (ImGui::BeginTabItem("Multiplayer")) {
         if (!errors.empty()) {
@@ -244,7 +257,7 @@ void RocketPlugin::renderMultiplayerTab()
  */
 
 /// <summary>Renders the host section in game multiplayer tab.</summary>
-void RocketPlugin::renderMultiplayerTabHost()
+void SupersonicMarioPlugin::renderMultiplayerTabHost()
 {
     const ImVec2 hostGameTabSize = { -ImGui::GetFrameWidthWithSpacing() * 6,
                                      -ImGui::GetFrameHeightWithSpacing() + 23 };
@@ -360,7 +373,7 @@ void RocketPlugin::renderMultiplayerTabHost()
 
 
 /// <summary>Renders the team settings in the host section in game multiplayer tab.</summary>
-void RocketPlugin::renderMultiplayerTabHostTeamSettings()
+void SupersonicMarioPlugin::renderMultiplayerTabHostTeamSettings()
 {
     if (ImGui::CollapsingHeader("Team Settings")) {
         ImGui::TextUnformatted("Team 1");
@@ -425,7 +438,7 @@ void RocketPlugin::renderMultiplayerTabHostTeamSettings()
 
 
 /// <summary>Renders the mutator settings in the host section in game multiplayer tab.</summary>
-void RocketPlugin::renderMultiplayerTabHostMutatorSettings()
+void SupersonicMarioPlugin::renderMultiplayerTabHostMutatorSettings()
 {
     if (ImGui::CollapsingHeader("Mutators Settings")) {
         const ImVec2 MutatorsSettingsWindowSize = { -ImGui::GetFrameWidthWithSpacing() * 4,
@@ -504,7 +517,7 @@ void RocketPlugin::renderMultiplayerTabHostMutatorSettings()
 
 
 /// <summary>Renders the advanced settings in the host section in game multiplayer tab.</summary>
-void RocketPlugin::renderMultiplayerTabHostAdvancedSettings()
+void SupersonicMarioPlugin::renderMultiplayerTabHostAdvancedSettings()
 {
     if (ImGui::CollapsingHeader("Advanced Settings")) {
         ImGui::TextUnformatted(" Password: (optional)");
@@ -542,7 +555,7 @@ void RocketPlugin::renderMultiplayerTabHostAdvancedSettings()
 
 
 /// <summary>Renders the UPnP settings in the advanced settings in the host section in game multiplayer tab.</summary>
-void RocketPlugin::renderMultiplayerTabHostAdvancedSettingsUPnPSettings()
+void SupersonicMarioPlugin::renderMultiplayerTabHostAdvancedSettingsUPnPSettings()
 {
     const bool upnpFailed = upnpClient == nullptr;
     if (upnpFailed) {
@@ -680,7 +693,7 @@ void RocketPlugin::renderMultiplayerTabHostAdvancedSettingsUPnPSettings()
 
 
 /// <summary>Renders the P2P settings in the advanced settings in the host section in game multiplayer tab.</summary>
-void RocketPlugin::renderMultiplayerTabHostAdvancedSettingsP2PSettings()
+void SupersonicMarioPlugin::renderMultiplayerTabHostAdvancedSettingsP2PSettings()
 {
     const bool p2pFailed = p2pHost == nullptr;
     if (p2pFailed) {
@@ -813,7 +826,7 @@ void BeginHostStatusBorder(const Networking::DestAddrType addrType, const Networ
 
 
 /// <summary>Renders the join section in game multiplayer tab.</summary>
-void RocketPlugin::renderMultiplayerTabJoin()
+void SupersonicMarioPlugin::renderMultiplayerTabJoin()
 {
     if (ImGui::BeginChild("#JoinGame", ImVec2(0, 0), true)) {
         ImGui::PushItemWidth(-5);
@@ -935,390 +948,3 @@ void RocketPlugin::renderMultiplayerTabJoin()
 }
 
 
-/*
- *  In game mods
- */
-
-/// <summary>Renders the in game mods tab.</summary>
-void RocketPlugin::renderInGameModsTab()
-{
-    if (ImGui::BeginTabItem("In Game Mods")) {
-        if (ImGui::BeginChild("##InGameMods", ImVec2(0, 0), true)) {
-            renderInGameModsTabGameEventMods();
-            renderInGameModsTabBallMods();
-            renderInGameModsTabPlayerMods();
-            renderInGameModsTabCarPhysicsMods();
-        }
-        ImGui::EndChild();
-        ImGui::EndTabItem();
-    }
-}
-
-
-/// <summary>Renders the game event mods section in in game mods tab.</summary>
-void RocketPlugin::renderInGameModsTabGameEventMods()
-{
-    if (ImGui::CollapsingHeader("Game Event Mods")) {
-        ImGui::Indent(10);
-        if (ImGui::CollapsingHeader("Game Controls")) {
-            ImGui::Indent(10);
-            if (ImGui::Button("Force Overtime")) {
-                Execute([this](GameWrapper*) {
-                    gameControls.ForceOvertime();
-                });
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Pause Server")) {
-                Execute([this](GameWrapper*) {
-                    gameControls.PauseServer();
-                });
-            }
-            if (ImGui::Button("Restart Match")) {
-                Execute([this](GameWrapper*) {
-                    gameControls.ResetMatch();
-                });
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("End Match")) {
-                Execute([this](GameWrapper*) {
-                    gameControls.EndMatch();
-                });
-            }
-            if (ImGui::Button("Reset Players")) {
-                Execute([this](GameWrapper*) {
-                    gameControls.ResetPlayers();
-                });
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("Reset Balls")) {
-                Execute([this](GameWrapper*) {
-                    gameControls.ResetBalls();
-                });
-            }
-            ImGui::Unindent(10);
-        }
-        if (ImGui::CollapsingHeader("Match Settings")) {
-            ImGui::Indent(10);
-            int maxPlayers = matchSettings.GetMaxPlayers();
-            if (ImGui::InputInt("Max Players", &maxPlayers)) {
-                Execute([this, maxPlayers](GameWrapper*) {
-                    matchSettings.SetMaxPlayers(maxPlayers);
-                });
-            }
-            int maxTeamSize = matchSettings.GetMaxTeamSize();
-            if (ImGui::InputInt("Max Team Size", &maxTeamSize)) {
-                Execute([this, maxTeamSize](GameWrapper*) {
-                    matchSettings.SetMaxTeamSize(maxTeamSize);
-                });
-            }
-            int respawnTime = matchSettings.GetRespawnTime();
-            if (ImGui::InputInt("Respawn Time", &respawnTime)) {
-                Execute([this, respawnTime](GameWrapper*) {
-                    matchSettings.SetRespawnTime(respawnTime);
-                });
-            }
-            int blueScore = matchSettings.GetScoreBlue();
-            ImGui::PushItemWidth(150);
-            if (ImGui::InputInt("Blue Score", &blueScore)) {
-                Execute([this, blueScore](GameWrapper*) {
-                    matchSettings.SetScoreBlue(blueScore);
-                });
-            }
-            ImGui::SameLine();
-            int orangeScore = matchSettings.GetScoreOrange();
-            if (ImGui::InputInt("Orange Score", &orangeScore)) {
-                Execute([this, orangeScore](GameWrapper*) {
-                    matchSettings.SetScoreOrange(orangeScore);
-                });
-            }
-            ImGui::PopItemWidth();
-            int gameTimeRemaining = matchSettings.GetGameTimeRemaining();
-            if (ImGui::DragTime("Time Remaining", &gameTimeRemaining)) {
-                Execute([this, gameTimeRemaining](GameWrapper*) {
-                    matchSettings.SetGameTimeRemaining(gameTimeRemaining);
-                });
-            }
-            bool isGoalDelayDisabled = matchSettings.GetIsGoalDelayDisabled();
-            if (ImGui::Checkbox("Disable Goal Delay", &isGoalDelayDisabled)) {
-                Execute([this, isGoalDelayDisabled](GameWrapper*) {
-                    matchSettings.SetIsGoalDelayDisabled(isGoalDelayDisabled);
-                });
-            }
-            bool isUnlimitedTime = matchSettings.GetIsUnlimitedTime();
-            if (ImGui::Checkbox("Unlimited Time", &isUnlimitedTime)) {
-                Execute([this, isUnlimitedTime](GameWrapper*) {
-                    matchSettings.SetIsUnlimitedTime(isUnlimitedTime);
-                });
-            }
-            ImGui::Unindent(10);
-        }
-        if (ImGui::CollapsingHeader("Bots")) {
-            ImGui::Indent(10);
-            int numBots = botSettings.GetMaxNumBots();
-            if (ImGui::InputInt("Max # bots per team", &numBots)) {
-                if (!GetGame().IsNull()) {
-                    Execute([this, numBots](GameWrapper*) {
-                        botSettings.SetNumBotsPerTeam(numBots);
-                    });
-                }
-            }
-            bool isAutoFilledWithBots = botSettings.GetIsAutoFilledWithBots();
-            if (ImGui::Checkbox("Autofill with bots", &isAutoFilledWithBots)) {
-                Execute([this, isAutoFilledWithBots](GameWrapper*) {
-                    botSettings.SetIsAutoFilledWithBots(isAutoFilledWithBots);
-                });
-            }
-            ImGui::SameLine();
-            bool isUnfairTeams = botSettings.GetIsUnfairTeams();
-            if (ImGui::Checkbox("Unfair Teams", &isUnfairTeams)) {
-                Execute([this, numBots, isUnfairTeams](GameWrapper*) {
-                    botSettings.SetIsUnfairTeams(isUnfairTeams);
-                    botSettings.SetNumBotsPerTeam(numBots);
-                });
-            }
-            if (ImGui::Button("Freeze Bots")) {
-                Execute([this](GameWrapper*) {
-                    botSettings.FreezeBots();
-                });
-            }
-            ImGui::Unindent(10);
-        }
-        ImGui::Unindent(10);
-    }
-}
-
-
-/// <summary>Renders the ball mods section in in game mods tab.</summary>
-void RocketPlugin::renderInGameModsTabBallMods()
-{
-    if (ImGui::CollapsingHeader("Ball Mods")) {
-        ImGui::Indent(10);
-        int numBalls = ballMods.GetNumBalls();
-        if (ImGui::InputInt("# Balls", &numBalls)) {
-            Execute([this, numBalls](GameWrapper*) {
-                ballMods.SetNumBalls(numBalls);
-            });
-        }
-        float ballScale = ballMods.GetBallsScale();
-        if (ImGui::SliderFloat("Balls Scale", &ballScale, 0.1f, 10.0f, "%.1fX")) {
-            Execute([this, ballScale](GameWrapper*) {
-                ballMods.SetBallsScale(ballScale);
-            });
-        }
-        float maxBallVelocity = ballMods.GetMaxBallVelocity();
-        if (ImGui::DragFloat("Max Ball Velocity", &maxBallVelocity, 1.0f, 0.0f, 0.0f, "%.3f u/s")) {
-            Execute([this, maxBallVelocity](GameWrapper*) {
-                ballMods.SetMaxBallVelocity(maxBallVelocity);
-            });
-        }
-        ImGui::Unindent(10);
-    }
-}
-
-
-/// <summary>Renders the player mods section in in game mods tab.</summary>
-void RocketPlugin::renderInGameModsTabPlayerMods()
-{
-    if (ImGui::CollapsingHeader("Player Mods")) {
-        ImGui::Indent(10);
-        std::vector<PriWrapper> players;
-        if (IsInGame()) {
-            players = playerMods.GetPlayers(true);
-        }
-        ImGui::BeginColumns("Mutators", 4);
-        {
-            ImGui::SetColumnWidth(0, 110);
-            ImGui::SetColumnWidth(1, 55);
-            ImGui::SetColumnWidth(2, 55);
-            ImGui::TextUnformatted("Player");
-            ImGui::NextColumn();
-            ImGui::TextUnformatted("Admin");
-            ImGui::NextColumn();
-            ImGui::TextUnformatted("Hidden");
-            ImGui::NextColumn();
-            ImGui::NextColumn();
-            ImGui::Separator();
-            for (PriWrapper& player : players) {
-                const std::string displayName = player.GetPlayerName().ToString();
-                const std::string uniqueName = player.GetUniqueIdWrapper().str();
-                if (player.GetbBot()) {
-                    ImGui::Text("(bot) %s", displayName.c_str());
-                }
-                else {
-                    ImGui::TextUnformatted(displayName.c_str());
-                }
-                ImGui::NextColumn();
-                bool isAdmin = playerMods.GetIsAdmin(player);
-                if (ImGui::Checkbox(("##Admin_" + uniqueName).c_str(), &isAdmin)) {
-                    Execute([this, player, isAdmin](GameWrapper*) {
-                        playerMods.SetIsAdmin(player, isAdmin);
-                    });
-                }
-                ImGui::NextColumn();
-                bool isHidden = playerMods.GetIsHidden(player);
-                if (ImGui::Checkbox(("##Hidden_" + uniqueName).c_str(), &isHidden)) {
-                    Execute([this, player, isHidden](GameWrapper*) {
-                        playerMods.SetIsHidden(player, isHidden);
-                    });
-                }
-                ImGui::NextColumn();
-                if (ImGui::Button(("Demolish##_" + uniqueName).c_str())) {
-                    Execute([this, player](GameWrapper*) {
-                        playerMods.Demolish(player);
-                    });
-                }
-                ImGui::NextColumn();
-                ImGui::Separator();
-            }
-            if (players.empty()) {
-                ImGui::TextUnformatted("No players found");
-            }
-        }
-        ImGui::EndColumns();
-        ImGui::Unindent(10);
-    }
-}
-
-
-/// <summary>Renders the car physics mods section in in game mods tab.</summary>
-void RocketPlugin::renderInGameModsTabCarPhysicsMods()
-{
-    if (ImGui::CollapsingHeader("Car Physics Mods")) {
-        ImGui::Indent(10);
-        if (!carPhysicsMods.carPhysics.empty()) {
-            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
-            ImGui::TextUnformatted("Car physics mods are active (use 'rp_clear_car_physics_cache' to clear)");
-            ImGui::PopStyleColor();
-        }
-
-        std::vector<PriWrapper> players;
-        std::vector<std::string> playersNames;
-        if (IsInGame()) {
-            players = playerMods.GetPlayers(true);
-            playersNames = playerMods.GetPlayersNames(players);
-        }
-        ImGui::TextUnformatted("Modify: ");
-        ImGui::SameLine();
-        ImGui::Combo("##Players", &carPhysicsMods.selectedPlayer, playersNames, "No players found");
-        ImGui::Separator();
-
-        if (carPhysicsMods.selectedPlayer < players.size()) {
-            const PriWrapper player = players[carPhysicsMods.selectedPlayer];
-            CarPhysicsMods::CarPhysics playerPhysics = carPhysicsMods.GetPhysics(player);
-            if (ImGui::SliderFloat("Car Scale", &playerPhysics.CarScale, 0.1f, 2.0f, "%.1fX")) {
-                Execute([this, player, newCarScale = playerPhysics.CarScale](GameWrapper*) {
-                    carPhysicsMods.SetCarScale(player, newCarScale, true);
-                });
-            }
-            if (ImGui::Checkbox("Car Collision", &playerPhysics.CarHasCollision)) {
-                Execute([this, player, newCarHasCollision = playerPhysics.CarHasCollision](GameWrapper*) {
-                    carPhysicsMods.SetbCarCollision(player, newCarHasCollision);
-                });
-            }
-            ImGui::SameLine();
-            if (ImGui::Checkbox("Freeze car", &playerPhysics.CarIsFrozen)) {
-                Execute([this, player, newCarIsFrozen = playerPhysics.CarIsFrozen](GameWrapper*) {
-                    carPhysicsMods.SetCarIsFrozen(player, newCarIsFrozen);
-                });
-            }
-            ImGui::Separator();
-
-            if (ImGui::DragFloat("Torque Rate", &playerPhysics.TorqueRate, 0.1f, 0.0f, 0.0f, "%.3fx10^5 N*m")) {
-                Execute([this, player, newTorqueRate = playerPhysics.TorqueRate](GameWrapper*) {
-                    carPhysicsMods.SetTorqueRate(player, newTorqueRate);
-                });
-            }
-            if (ImGui::DragFloat("Max Car Velocity", &playerPhysics.MaxCarVelocity, 1.0f, 0.0f, 0.0f, "%.3f u/s")) {
-                Execute([this, player, newMaxCarVelocity = playerPhysics.MaxCarVelocity](GameWrapper*) {
-                    carPhysicsMods.SetMaxCarVelocity(player, newMaxCarVelocity);
-                });
-            }
-            if (ImGui::DragFloat("Ground Sticky Force", &playerPhysics.GroundStickyForce, 1.0f, 0.0f, 0.0f, "%.3f N")) {
-                Execute([this, player, newGroundStickyForce = playerPhysics.GroundStickyForce](GameWrapper*) {
-                    carPhysicsMods.SetGroundStickyForce(player, newGroundStickyForce);
-                });
-            }
-            if (ImGui::DragFloat("Wall Sticky Force", &playerPhysics.WallStickyForce, 1.0f, 0.0f, 0.0f, "%.3f N")) {
-                Execute([this, player, newWallStickyForce = playerPhysics.WallStickyForce](GameWrapper*) {
-                    carPhysicsMods.SetWallStickyForce(player, newWallStickyForce);
-                });
-            }
-        }
-        ImGui::Unindent(10);
-    }
-}
-
-
-/*
- *  Game modes
- */
-
-/// <summary>Renders the game modes tab.</summary>
-void RocketPlugin::renderGameModesTab()
-{
-    if (ImGui::BeginTabItem("GameModes")) {
-        if (ImGui::BeginChild("##GameModesList", ImVec2(200, 0), true)) {
-            ImGui::TextUnformatted("available game modes:");
-            ImGui::Separator();
-            for (size_t i = 0; i < customGameModes.size(); i++) {
-                std::shared_ptr<RocketGameMode>& customGameMode = customGameModes[i];
-                std::string gameModeName;
-                bool gameModeActive = false;
-                if (customGameMode == nullptr) {
-                    gameModeName = "Error";
-                    ImGui::BeginDisabled();
-                }
-                else {
-                    gameModeName = customGameMode->GetGameModeName();
-                    gameModeActive = customGameMode->IsActive();
-                }
-                if (ImGui::SwitchCheckbox(fmt::format("##{:s}_{:d}", gameModeName, i).c_str(), &gameModeActive)) {
-                    Execute([this, customGameMode, gameModeActive](GameWrapper*) {
-                        customGameMode->Activate(gameModeActive);
-                    });
-                }
-                ImGui::SameLine();
-                const float backupButtonTextAlignX = ImGui::GetStyle().ButtonTextAlign.x;
-                const float backupFrameRounding = ImGui::GetStyle().FrameRounding;
-                ImGui::GetStyle().ButtonTextAlign.x = 0;
-                ImGui::GetStyle().FrameRounding = 3;
-                if (ImGui::ButtonEx(gameModeName.c_str(), ImVec2(-1, 0), ImGuiButtonFlags_AlignTextBaseLine)) {
-                    customGameModeSelected = i;
-                }
-                ImGui::GetStyle().ButtonTextAlign.x = backupButtonTextAlignX;
-                ImGui::GetStyle().FrameRounding = backupFrameRounding;
-                if (customGameMode == nullptr) {
-                    ImGui::EndDisabled();
-                }
-            }
-        }
-        ImGui::EndChild();
-        ImGui::SameLine();
-        if (ImGui::BeginChild("##GameModesOptions", ImVec2(0, 0), true)) {
-            if (customGameModeSelected < customGameModes.size()) {
-                const std::shared_ptr<RocketGameMode> customGameMode = customGameModes[customGameModeSelected];
-                if (customGameMode != nullptr) {
-                    ImGui::TextUnformatted(customGameMode->GetGameModeName().c_str());
-                    ImGui::Separator();
-
-                    if (customGameMode->IsActive()) {
-                        customGameMode->RenderOptions();
-                    }
-                    else {
-                        ImGui::BeginDisabled();
-                        customGameMode->RenderOptions();
-                        ImGui::EndDisabled();
-                    }
-                }
-                else {
-                    ImGui::TextUnformatted("Failed to load game mode.");
-                }
-            }
-            else {
-                ImGui::TextUnformatted("No game modes found.");
-            }
-        }
-        ImGui::EndChild();
-        ImGui::EndTabItem();
-    }
-}

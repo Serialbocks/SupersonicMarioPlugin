@@ -1,4 +1,4 @@
 #include "RocketPluginModule.h"
 
 
-RocketPlugin* RocketPluginModule::rocketPlugin = nullptr;
+SupersonicMarioPlugin* RocketPluginModule::supersonicMarioPlugin = nullptr;

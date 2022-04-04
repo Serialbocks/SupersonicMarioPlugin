@@ -34,8 +34,6 @@
 #include <regex>
 #include <map>
 
-#pragma comment(lib, "sm64.lib")
-
 // BakkesMod SDK
 #pragma comment(lib, "pluginsdk.lib")
 #pragma warning(push, 0)

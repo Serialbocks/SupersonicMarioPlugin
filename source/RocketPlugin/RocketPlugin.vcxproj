@@ -15,6 +15,7 @@
     <ProjectGuid>{05FDC018-B60A-4983-AA81-E030820D81BD}</ProjectGuid>
     <RootNamespace>RocketPlugin</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>SupersonicMario</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
@@ -160,7 +161,6 @@
     <ClInclude Include="..\External\kiero\minhook\src\hde\table32.h" />
     <ClInclude Include="..\External\kiero\minhook\src\hde\table64.h" />
     <ClInclude Include="..\External\kiero\minhook\src\trampoline.h" />
-    <ClInclude Include="..\External\NetcodeManager\NetcodeManager.h" />
     <ClInclude Include="..\External\simdjson\singleheader\simdjson.h" />
     <ClInclude Include="..\External\soloud\src\audiosource\wav\dr_flac.h" />
     <ClInclude Include="..\External\soloud\src\audiosource\wav\dr_mp3.h" />
@@ -169,6 +169,7 @@
     <ClInclude Include="..\External\soloud\src\backend\miniaudio\miniaudio.h" />
     <ClInclude Include="..\External\soxr\src\soxr.h" />
     <ClInclude Include="ExternalModules\ExternalModules.h" />
+    <ClInclude Include="GameModes\RocketGameMode.h" />
     <ClInclude Include="GameModes\SM64.h" />
     <ClInclude Include="Graphics\GraphicsTypes.h" />
     <ClInclude Include="Graphics\level.h" />
@@ -180,29 +181,10 @@
     <ClInclude Include="Modules\MarioAudio.h" />
     <ClInclude Include="Modules\Utils.h" />
     <ClInclude Include="RPConfig.h" />
-    <ClInclude Include="GameModes\BoostShare.h" />
-    <ClInclude Include="GameModes\RocketGameMode.h" />
-    <ClInclude Include="GameModes\RumbleItems\RumbleItems.h" />
-    <ClInclude Include="GameModes\SacredGround.h" />
-    <ClInclude Include="GameModes\SmallCars.h" />
-    <ClInclude Include="Modules\BallMods.h" />
-    <ClInclude Include="Modules\BotSettings.h" />
-    <ClInclude Include="Modules\CarPhysicsMods.h" />
-    <ClInclude Include="Modules\GameControls.h" />
-    <ClInclude Include="Modules\LocalMatchSettings.h" />
-    <ClInclude Include="Modules\PlayerMods.h" />
     <ClInclude Include="Modules\RocketPluginModule.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="RocketPlugin.h" />
+    <ClInclude Include="SupersonicMarioPlugin.h" />
     <ClInclude Include="Networking\Networking.h" />
-    <ClInclude Include="GameModes\BoostMod.h" />
-    <ClInclude Include="GameModes\BoostSteal.h" />
-    <ClInclude Include="GameModes\CrazyRumble.h" />
-    <ClInclude Include="GameModes\Drainage.h" />
-    <ClInclude Include="GameModes\Juggernaut.h" />
-    <ClInclude Include="GameModes\KeepAway.h" />
-    <ClInclude Include="GameModes\Tag.h" />
-    <ClInclude Include="GameModes\Zombies.h" />
     <ClInclude Include="Version.h" />
     <ClInclude Include="Resource.h" />
   </ItemGroup>
@@ -220,7 +202,6 @@
     <ClCompile Include="..\External\kiero\minhook\src\hde\hde64.c" />
     <ClCompile Include="..\External\kiero\minhook\src\hook.c" />
     <ClCompile Include="..\External\kiero\minhook\src\trampoline.c" />
-    <ClCompile Include="..\External\NetcodeManager\NetcodeManager.cpp" />
     <ClCompile Include="..\External\simdjson\singleheader\simdjson.cpp" />
     <ClCompile Include="..\External\soloud\src\audiosource\wav\dr_impl.cpp" />
     <ClCompile Include="..\External\soloud\src\audiosource\wav\soloud_wav.cpp" />
@@ -260,34 +241,16 @@
     <ClCompile Include="Networking\TcpClient.cpp" />
     <ClCompile Include="Networking\TcpServer.cpp" />
     <ClCompile Include="RPConfig.cpp" />
-    <ClCompile Include="GameModes\BoostShare.cpp" />
-    <ClCompile Include="GameModes\RumbleItems\RumbleItems.cpp" />
-    <ClCompile Include="GameModes\SacredGround.cpp" />
-    <ClCompile Include="GameModes\SmallCars.cpp" />
-    <ClCompile Include="Modules\BallMods.cpp" />
-    <ClCompile Include="Modules\BotSettings.cpp" />
-    <ClCompile Include="Modules\CarPhysicsMods.cpp" />
-    <ClCompile Include="Modules\GameControls.cpp" />
-    <ClCompile Include="Modules\LocalMatchSettings.cpp" />
-    <ClCompile Include="Modules\PlayerMods.cpp" />
     <ClCompile Include="Modules\RocketPluginModule.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="RocketPlugin.cpp" />
+    <ClCompile Include="SupersonicMarioPlugin.cpp" />
     <ClCompile Include="RocketPluginGUI.cpp" />
     <ClCompile Include="Networking\Networking.cpp" />
     <ClCompile Include="Networking\P2PHost.cpp" />
     <ClCompile Include="Networking\UPnPClient.cpp" />
-    <ClCompile Include="GameModes\BoostMod.cpp" />
-    <ClCompile Include="GameModes\BoostSteal.cpp" />
-    <ClCompile Include="GameModes\CrazyRumble.cpp" />
-    <ClCompile Include="GameModes\Drainage.cpp" />
-    <ClCompile Include="GameModes\Juggernaut.cpp" />
-    <ClCompile Include="GameModes\KeepAway.cpp" />
-    <ClCompile Include="GameModes\Tag.cpp" />
-    <ClCompile Include="GameModes\Zombies.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="GameModes\RumbleItems\RumbleConstants.inc" />

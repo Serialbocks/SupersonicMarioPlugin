@@ -37,12 +37,6 @@
     <Filter Include="External\kiero">
       <UniqueIdentifier>{23df0e00-6be7-4c8c-b571-04aea1ec3491}</UniqueIdentifier>
     </Filter>
-    <Filter Include="External\libsm64">
-      <UniqueIdentifier>{9976d86d-cfca-46a2-ab07-53308d506517}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="External\NetcodeManager">
-      <UniqueIdentifier>{d75eafe3-720a-4d5c-865d-127892348657}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Graphics">
       <UniqueIdentifier>{012c66c4-24c3-4aac-816f-4c4bca16f996}</UniqueIdentifier>
     </Filter>
@@ -51,83 +45,26 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RocketPlugin.h">
+    <ClInclude Include="SupersonicMarioPlugin.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameModes\Drainage.h">
-      <Filter>GameModes</Filter>
-    </ClInclude>
-    <ClInclude Include="GameModes\CrazyRumble.h">
-      <Filter>GameModes</Filter>
-    </ClInclude>
-    <ClInclude Include="GameModes\Zombies.h">
-      <Filter>GameModes</Filter>
-    </ClInclude>
-    <ClInclude Include="GameModes\BoostSteal.h">
-      <Filter>GameModes</Filter>
-    </ClInclude>
-    <ClInclude Include="GameModes\KeepAway.h">
-      <Filter>GameModes</Filter>
-    </ClInclude>
-    <ClInclude Include="GameModes\Tag.h">
-      <Filter>GameModes</Filter>
-    </ClInclude>
-    <ClInclude Include="GameModes\Juggernaut.h">
-      <Filter>GameModes</Filter>
     </ClInclude>
     <ClInclude Include="Version.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameModes\BoostMod.h">
-      <Filter>GameModes</Filter>
-    </ClInclude>
-    <ClInclude Include="GameModes\BoostShare.h">
-      <Filter>GameModes</Filter>
-    </ClInclude>
     <ClInclude Include="RPConfig.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameModes\SacredGround.h">
-      <Filter>GameModes</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GameModes\SmallCars.h">
-      <Filter>GameModes</Filter>
-    </ClInclude>
-    <ClInclude Include="Modules\BallMods.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
     <ClInclude Include="Resource.h">
       <Filter>Resource Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GameModes\RumbleItems\RumbleItems.h">
-      <Filter>GameModes</Filter>
     </ClInclude>
     <ClInclude Include="Networking\Networking.h">
       <Filter>Networking</Filter>
     </ClInclude>
-    <ClInclude Include="Modules\PlayerMods.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Modules\CarPhysicsMods.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Modules\LocalMatchSettings.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Modules\BotSettings.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="Modules\GameControls.h">
-      <Filter>Modules</Filter>
-    </ClInclude>
     <ClInclude Include="Modules\RocketPluginModule.h">
       <Filter>Modules</Filter>
-    </ClInclude>
-    <ClInclude Include="GameModes\RocketGameMode.h">
-      <Filter>GameModes</Filter>
     </ClInclude>
     <ClInclude Include="ExternalModules\ExternalModules.h">
       <Filter>External Modules</Filter>
@@ -192,9 +129,6 @@
     <ClInclude Include="GameModes\SM64.h">
       <Filter>GameModes</Filter>
     </ClInclude>
-    <ClInclude Include="..\External\NetcodeManager\NetcodeManager.h">
-      <Filter>External\NetcodeManager</Filter>
-    </ClInclude>
     <ClInclude Include="Graphics\Mesh.h">
       <Filter>Graphics</Filter>
     </ClInclude>
@@ -240,58 +174,22 @@
     <ClInclude Include="..\External\soxr\src\soxr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GameModes\RocketGameMode.h">
+      <Filter>GameModes</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="RocketPlugin.cpp">
+    <ClCompile Include="SupersonicMarioPlugin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RocketPluginGUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameModes\Drainage.cpp">
-      <Filter>GameModes</Filter>
-    </ClCompile>
-    <ClCompile Include="GameModes\CrazyRumble.cpp">
-      <Filter>GameModes</Filter>
-    </ClCompile>
-    <ClCompile Include="GameModes\Zombies.cpp">
-      <Filter>GameModes</Filter>
-    </ClCompile>
-    <ClCompile Include="GameModes\BoostSteal.cpp">
-      <Filter>GameModes</Filter>
-    </ClCompile>
-    <ClCompile Include="GameModes\KeepAway.cpp">
-      <Filter>GameModes</Filter>
-    </ClCompile>
-    <ClCompile Include="GameModes\Tag.cpp">
-      <Filter>GameModes</Filter>
-    </ClCompile>
-    <ClCompile Include="GameModes\Juggernaut.cpp">
-      <Filter>GameModes</Filter>
-    </ClCompile>
-    <ClCompile Include="GameModes\BoostMod.cpp">
-      <Filter>GameModes</Filter>
-    </ClCompile>
-    <ClCompile Include="GameModes\BoostShare.cpp">
-      <Filter>GameModes</Filter>
-    </ClCompile>
     <ClCompile Include="RPConfig.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GameModes\SacredGround.cpp">
-      <Filter>GameModes</Filter>
-    </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GameModes\SmallCars.cpp">
-      <Filter>GameModes</Filter>
-    </ClCompile>
-    <ClCompile Include="Modules\BallMods.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="GameModes\RumbleItems\RumbleItems.cpp">
-      <Filter>GameModes</Filter>
     </ClCompile>
     <ClCompile Include="Networking\Networking.cpp">
       <Filter>Networking</Filter>
@@ -301,21 +199,6 @@
     </ClCompile>
     <ClCompile Include="Networking\UPnPClient.cpp">
       <Filter>Networking</Filter>
-    </ClCompile>
-    <ClCompile Include="Modules\PlayerMods.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="Modules\CarPhysicsMods.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="Modules\BotSettings.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="Modules\GameControls.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
-    <ClCompile Include="Modules\LocalMatchSettings.cpp">
-      <Filter>Modules</Filter>
     </ClCompile>
     <ClCompile Include="Modules\RocketPluginModule.cpp">
       <Filter>Modules</Filter>
@@ -355,9 +238,6 @@
     </ClCompile>
     <ClCompile Include="GameModes\SM64.cpp">
       <Filter>GameModes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\External\NetcodeManager\NetcodeManager.cpp">
-      <Filter>External\NetcodeManager</Filter>
     </ClCompile>
     <ClCompile Include="..\External\kiero\kiero.cpp">
       <Filter>External\kiero</Filter>

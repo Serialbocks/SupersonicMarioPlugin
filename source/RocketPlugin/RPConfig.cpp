@@ -6,8 +6,6 @@
 // BMSDK version: 95
 #include "RPConfig.h"
 
-#include "GameModes/CrazyRumble.h"
-
 constexpr int HttpStatusCodeSuccessOk = 200;
 
 
@@ -71,7 +69,7 @@ std::shared_future<std::pair<bool, std::string>> BaseConfig::Request(const std::
 /// <param name="data">Json string with game settings</param>
 /// <param name="rocketPlugin">Rocket Plugin class to store the result in</param>
 /// <returns>Bool with if the game settings where parsed successfully</returns>
-bool RPConfig::ParseGameSettings(const std::string& data, RocketPlugin* rocketPlugin)
+bool RPConfig::ParseGameSettings(const std::string& data, SupersonicMarioPlugin* rocketPlugin)
 {
     simdjson::ondemand::parser    parser;
     const simdjson::padded_string paddedData = data;
@@ -149,9 +147,9 @@ std::future<std::pair<bool, std::string>> RPConfig::RequestRumbleConstants()
 /// <summary>Parses game settings from json object.</summary>
 /// <param name="gameSettingJson">Json object with game settings</param>
 /// <returns>Parsed game settings</returns>
-RocketPlugin::GameSetting ParseGameSetting(simdjson::ondemand::object gameSettingJson)
+SupersonicMarioPlugin::GameSetting ParseGameSetting(simdjson::ondemand::object gameSettingJson)
 {
-    RocketPlugin::GameSetting gameSetting;
+    SupersonicMarioPlugin::GameSetting gameSetting;
     gameSetting.DisplayCategoryName  = std::string_view(gameSettingJson["DisplayCategoryName"]);
     gameSetting.InternalCategoryName = std::string_view(gameSettingJson["InternalCategoryName"]);
     for (simdjson::ondemand::value name : gameSettingJson["DisplayName"].get_array()) {
@@ -168,7 +166,7 @@ RocketPlugin::GameSetting ParseGameSetting(simdjson::ondemand::object gameSettin
 /// <summary>Parses game settings from json object.</summary>
 /// <param name="doc">Json object with game settings</param>
 /// <param name="gameModes">Game setting to save the parsed game settings to</param>
-void RPConfig::parseGameModes(simdjson::ondemand::document& doc, RocketPlugin::GameSetting& gameModes)
+void RPConfig::parseGameModes(simdjson::ondemand::document& doc, SupersonicMarioPlugin::GameSetting& gameModes)
 {
     gameModes = ParseGameSetting(doc["GameModes"]);
 }
@@ -177,7 +175,7 @@ void RPConfig::parseGameModes(simdjson::ondemand::document& doc, RocketPlugin::G
 /// <summary>Parses bot difficulties from json object.</summary>
 /// <param name="doc">Json object with bot difficulties</param>
 /// <param name="botDifficulties">Game setting to save the parsed bot difficulties to</param>
-void RPConfig::parseBotDifficulties(simdjson::ondemand::document& doc, RocketPlugin::GameSetting& botDifficulties)
+void RPConfig::parseBotDifficulties(simdjson::ondemand::document& doc, SupersonicMarioPlugin::GameSetting& botDifficulties)
 {
     botDifficulties = ParseGameSetting(doc["BotDifficulties"]);
 }
@@ -248,7 +246,7 @@ void RPConfig::parseAvailableColors(simdjson::ondemand::document& doc, int& cust
 /// <param name="doc">Json object with available mutators</param>
 /// <param name="mutators">Vector to save the parsed available mutators to</param>
 void RPConfig::parseAvailableMutators(simdjson::ondemand::document& doc,
-    std::vector<RocketPlugin::GameSetting>& mutators)
+    std::vector<SupersonicMarioPlugin::GameSetting>& mutators)
 {
     mutators.clear();
     for (simdjson::ondemand::value value : doc["Mutators"]) {

@@ -1,5 +1,5 @@
 #pragma once
-#include "RocketPlugin.h"
+#include "SupersonicMarioPlugin.h"
 #include "Modules/RocketPluginModule.h"
 
 
@@ -14,7 +14,7 @@ public:
     RocketGameMode& operator=(RocketGameMode&&) = delete;
 
     /* RocketGameMode event hook functions */
-    using EventCallback = RocketPlugin::EventCallback;
+    using EventCallback = SupersonicMarioPlugin::EventCallback;
 
     template<typename Caller>
     void HookPre(Caller caller, void* params, const std::string& eventName) const

@@ -3,19 +3,13 @@
 #include "Networking/Networking.h"
 
 #include "Modules/RocketPluginModule.h"
-#include "Modules/GameControls.h"
-#include "Modules/LocalMatchSettings.h"
-#include "Modules/BotSettings.h"
-#include "Modules/BallMods.h"
-#include "Modules/PlayerMods.h"
-#include "Modules/CarPhysicsMods.h"
 
 constexpr const char* PLUGIN_VERSION = VER_FILE_VERSION_STR;
 
 constexpr char MARKED_INCOMPLETE = '*';
 constexpr const char* MARKED_INCOMPLETE_STR = "*";
 constexpr const char* NAT_PUNCH_ADDR = "3.3.3.3";
-constexpr const char* DEFAULT_GUI_KEYBIND = "Home";
+constexpr const char* DEFAULT_GUI_KEYBIND = "F3";
 constexpr const char* DEFAULT_CONSTANTS_CONFIG_URL = "https://stanbroek.github.io/RocketPlugin-config/";
 constexpr unsigned short DEFAULT_PORT = 7777;
 constexpr unsigned short DEFAULT_SM64_PORT = 7778;
@@ -37,7 +31,7 @@ extern std::filesystem::path RocketLeagueExecutableFolder;
 class RPConfig;
 class RocketGameMode;
 
-class RocketPlugin final : public BakkesMod::Plugin::BakkesModPlugin, public BakkesMod::Plugin::PluginWindow
+class SupersonicMarioPlugin final : public BakkesMod::Plugin::BakkesModPlugin, public BakkesMod::Plugin::PluginWindow
 {
     friend RPConfig;
     friend RocketGameMode;
@@ -120,12 +114,6 @@ public:
     ServerWrapper GetGame(bool allowOnlineGame = false) const;
     bool IsInGame(bool allowOnlineGame = false) const;
 
-    GameControls gameControls;
-    LocalMatchSettings matchSettings;
-    BotSettings botSettings;
-    BallMods ballMods;
-    PlayerMods playerMods;
-    CarPhysicsMods carPhysicsMods;
 private:
 
     /* BakkesMod Plugin Overrides */
@@ -155,8 +143,10 @@ private:
      */
     /* Rocket Game Mode Hooks */
 public:
-protected:
+    //std::shared_ptr<SM64> GetSm64Instance();
     using EventCallback = std::function<void(void* caller, void* params, std::string eventName)>;
+protected:
+    
     std::unordered_map<std::string, std::unordered_map<std::type_index, EventCallback>> callbacksPre;
     std::unordered_map<std::string, std::unordered_map<std::type_index, EventCallback>> callbacksPost;
 private:
@@ -180,9 +170,9 @@ private:
     bool isWindowOpen = false;
     bool isMinimized = false;
 #ifdef DEBUG
-    const std::string menuTitle = "Rocket Plugin " + std::string(std::string_view(PLUGIN_VERSION).substr(0, std::string_view(PLUGIN_VERSION).rfind('.'))) + " dev";
+    const std::string menuTitle = "Supersonic Mario " + std::string(std::string_view(PLUGIN_VERSION).substr(0, std::string_view(PLUGIN_VERSION).rfind('.'))) + " dev";
 #else
-    const std::string menuTitle = "Rocket Plugin " + std::string(std::string_view(PLUGIN_VERSION).substr(0, std::string_view(PLUGIN_VERSION).rfind('.')));
+    const std::string menuTitle = "Supersonic Mario " + std::string(std::string_view(PLUGIN_VERSION).substr(0, std::string_view(PLUGIN_VERSION).rfind('.')));
 #endif
 
     std::shared_ptr<bool> showDemoWindow;
@@ -199,6 +189,7 @@ private:
         bool includeCustomMaps = true);
 
     void renderMultiplayerTab();
+    void renderMatchOptionsTab();
 
     std::queue<std::string> errors;
     bool shouldRefreshGameSettingsConstants = true;
@@ -312,15 +303,6 @@ private:
 
     std::vector<P2PIP> connections;
 
-    /* In Game Mods */
-public:
-private:
-    void renderInGameModsTab();
-    void renderInGameModsTabGameEventMods();
-    void renderInGameModsTabBallMods();
-    void renderInGameModsTabPlayerMods();
-    void renderInGameModsTabCarPhysicsMods();
-
     /* Game Modes */
 public:
     template<class Ty>
@@ -336,8 +318,6 @@ public:
     }
 
 private:
-    void renderGameModesTab();
-
     size_t customGameModeSelected = 0;
     std::vector<std::shared_ptr<RocketGameMode>> customGameModes;
 };

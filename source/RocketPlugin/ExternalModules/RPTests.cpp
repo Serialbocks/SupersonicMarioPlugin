@@ -1,4 +1,4 @@
-#include "RocketPlugin.h"
+#include "SupersonicMarioPlugin.h"
 
 #include "ExternalModules.h"
 

@@ -1,15 +1,15 @@
 #pragma once
-class RocketPlugin;
+class SupersonicMarioPlugin;
 
 class RocketPluginModule
 {
-    friend RocketPlugin;
+    friend SupersonicMarioPlugin;
 public:
-    static RocketPlugin* Outer()
+    static SupersonicMarioPlugin* Outer()
     {
-        return rocketPlugin;
+        return supersonicMarioPlugin;
     }
 
 protected:
-    static RocketPlugin* rocketPlugin;
+    static SupersonicMarioPlugin* supersonicMarioPlugin;
 };

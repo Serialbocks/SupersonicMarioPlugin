@@ -1,7 +1,6 @@
 #pragma once
-#include "RocketPlugin.h"
-
-
+#include "SupersonicMarioplugin.h"
+class SupersonicMarioPlugin;
 class BaseConfig
 {
 public:
@@ -25,20 +24,20 @@ class RPConfig final : BaseConfig
 public:
     explicit RPConfig(std::string configUrl) : configUrl(std::move(configUrl)) {}
 
-    static bool ParseGameSettings(const std::string& data, class RocketPlugin* rocketPlugin);
+    static bool ParseGameSettings(const std::string& data, class SupersonicMarioPlugin* rocketPlugin);
     static bool ParseRumbleItems(const std::string& data, class CrazyRumble* crazyRumble);
     std::future<std::pair<bool, std::string>> RequestGameSettingConstants();
     std::future<std::pair<bool, std::string>> RequestRumbleConstants();
 
 private:
-    static void parseGameModes(simdjson::ondemand::document& doc, RocketPlugin::GameSetting& gameModes);
-    static void parseBotDifficulties(simdjson::ondemand::document& doc, RocketPlugin::GameSetting& botDifficulties);
+    static void parseGameModes(simdjson::ondemand::document& doc, SupersonicMarioPlugin::GameSetting& gameModes);
+    static void parseBotDifficulties(simdjson::ondemand::document& doc, SupersonicMarioPlugin::GameSetting& botDifficulties);
     static void parseAvailableMaps(simdjson::ondemand::document& doc, std::map<std::string, std::string>& maps);
     static void parseAvailableColors(simdjson::ondemand::document& doc, int& customColorHues,
         std::vector<ImVec4>& customColors, int& clubColorHues, std::vector<ImVec4>& clubColors,
         ImVec4& bluePrimaryColor, ImVec4& blueAccentColor, ImVec4& orangePrimaryColor, ImVec4& orangeAccentColor);
     static void parseAvailableMutators(simdjson::ondemand::document& doc,
-        std::vector<RocketPlugin::GameSetting>& mutators);
+        std::vector<SupersonicMarioPlugin::GameSetting>& mutators);
     std::future<bool> requestConfig();
 
     std::string configUrl;

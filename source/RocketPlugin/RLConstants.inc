@@ -1,9 +1,9 @@
 #pragma once
-#include "RocketPlugin.h"
+#include "SupersonicMarioPlugin.h"
 
 namespace RLConstants
 {
-	const RocketPlugin::GameSetting GAME_MODES {
+	const SupersonicMarioPlugin::GameSetting GAME_MODES {
 		"GameModes", "Game Modes", 0,
 		{ "Soccar",                    "Hoops",                         "Snow Day",                  "Rumble",                   "",     "Dropshot",                    "Heatseeker",                 "Gridiron" },
 		{ "TAGame.GameInfo_Soccar_TA", "TAGame.GameInfo_Basketball_TA", "TAGame.Gameinfo_Hockey_TA", "TAGame.GameInfo_Items_TA", "None", "TAGame.GameInfo_Breakout_TA", "TAGame.GameInfo_GodBall_TA", "TAGame.GameInfo_Football_TA" }
@@ -70,7 +70,7 @@ namespace RLConstants
 		{ "wasteland_s_p",           "Wasteland" }
 	};
 
-	const RocketPlugin::GameSetting BOT_DIFFICULTIES {
+	const SupersonicMarioPlugin::GameSetting BOT_DIFFICULTIES {
 		"BotDifficulty", "Bot Difficulty", 0,
 		{ "None",     "Beginner",  "Rookie",   "Pro",        "All-Star", "Unfair" },
 		{ "BotsNone", "BotsIntro", "BotsEasy", "BotsMedium", "BotsHard", "BotsUnfair" }
@@ -102,7 +102,7 @@ namespace RLConstants
 	const ImVec4 DEFAULT_ORANGE_ACCENT_COLOR =  IM_VEC3(0.902f, 0.235f, 0.098f);
 	#undef IM_VEC3
 
-	const std::vector<RocketPlugin::GameSetting> MUTATORS {
+	const std::vector<SupersonicMarioPlugin::GameSetting> MUTATORS {
 		{ "Free Play", "FreePlay", 0,
 			{ "Disable Free Play", "Enable Free Play" },
 			{ "",                  "FreePlay" } },
