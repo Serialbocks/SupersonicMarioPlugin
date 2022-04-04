@@ -28,8 +28,8 @@ MarioAudio::MarioAudio()
 
 MarioAudio::~MarioAudio()
 {
-	soloud->deinit();
-	delete soloud;
+	//soloud->deinit();
+	//delete soloud;
 	soloud = nullptr;
 }
 

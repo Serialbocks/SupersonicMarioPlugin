@@ -37,7 +37,7 @@ void SupersonicMarioPlugin::OnRender()
 #endif
 
     ImGui::SetNextWindowSizeConstraints(ImVec2(800, 600), ImVec2(FLT_MAX, FLT_MAX));
-    if (ImGui::Begin((menuTitle + "###RocketPlugin").c_str(), &isWindowOpen)) {
+    if (ImGui::Begin((menuTitle + "###SupersonicMarioPlugin").c_str(), &isWindowOpen)) {
         if (ImGui::BeginTabBar("#RPTabBar", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip)) {
             if (isHostingSm64Game())
             {

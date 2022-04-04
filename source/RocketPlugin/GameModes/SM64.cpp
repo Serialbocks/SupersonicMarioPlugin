@@ -134,17 +134,24 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 
 SM64::~SM64()
 {
+	
 	gameWrapper->UnregisterDrawables();
-	DestroySM64();
-	UnhookEvent(vehicleInputCheck);
-	UnhookEvent(initialCharacterSpawnCheck);
-	UnhookEvent(CharacterSpawnCheck);
-	UnhookEvent(preGameTickCheck);
-	UnhookEvent(endPreGameTickCheck);
-	UnhookEvent(clientEndPreGameTickCheck);
-	UnhookEvent(overtimeGameCheck);
-	UnhookEvent(clientOvertimeGameCheck);
+	//UnhookEvent(vehicleInputCheck);
+	//UnhookEvent(initialCharacterSpawnCheck);
+	//UnhookEvent(CharacterSpawnCheck);
+	//UnhookEvent(preGameTickCheck);
+	//UnhookEvent(endPreGameTickCheck);
+	//UnhookEvent(clientEndPreGameTickCheck);
+	//UnhookEvent(overtimeGameCheck);
+	//UnhookEvent(clientOvertimeGameCheck);
+	gameWrapper->UnhookEventPost("Function TAGame.EngineShare_TA.EventPostPhysicsStep");
+	gameWrapper->UnhookEventPost("Function TAGame.NetworkInputBuffer_TA.ClientAckFrame");
+	gameWrapper->UnhookEventPost("Function GameEvent_Soccar_TA.PostGoalScored.Tick");
 
+	remoteMariosSema.release();
+	matchSettingsSema.release();
+	marioMeshPoolSema.release();
+	DestroySM64();
 }
 
 void SM64::OnGameLeft(bool deleteMario)
@@ -670,9 +677,14 @@ void SM64::DestroySM64()
 		sm64_mario_delete(localMario.marioId);
 	}
 	localMario.marioId = -2;
-	//sm64_global_terminate();
+	sm64_global_terminate();
 	free(texture);
 	free(stemTexture);
+	for (int i = 0; i < remoteMarios.size(); i++)
+	{
+		remoteMarios[i]->sema.release();
+		delete remoteMarios[i];
+	}
 	delete renderer;
 	delete marioAudio;
 }
