@@ -2,7 +2,7 @@
 #include "Version.h"
 #include "Networking/Networking.h"
 
-#include "Modules/RocketPluginModule.h"
+#include "Modules/SupersonicMarioPluginModule.h"
 
 constexpr const char* PLUGIN_VERSION = VER_FILE_VERSION_STR;
 

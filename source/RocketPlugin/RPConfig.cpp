@@ -2,8 +2,7 @@
 // Online config for Rocket Plugin.
 //
 // Author:        Stanbroek
-// Version:       0.6.8 18/09/21
-// BMSDK version: 95
+// Modified by:   Serialbocks
 #include "RPConfig.h"
 
 constexpr int HttpStatusCodeSuccessOk = 200;

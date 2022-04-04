@@ -63,7 +63,7 @@
     <ClInclude Include="Networking\Networking.h">
       <Filter>Networking</Filter>
     </ClInclude>
-    <ClInclude Include="Modules\RocketPluginModule.h">
+    <ClInclude Include="Modules\SupersonicMarioPluginModule.h">
       <Filter>Modules</Filter>
     </ClInclude>
     <ClInclude Include="ExternalModules\ExternalModules.h">
@@ -182,7 +182,7 @@
     <ClCompile Include="SupersonicMarioPlugin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RocketPluginGUI.cpp">
+    <ClCompile Include="SupersonicMarioPluginGUI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="RPConfig.cpp">
@@ -200,7 +200,7 @@
     <ClCompile Include="Networking\UPnPClient.cpp">
       <Filter>Networking</Filter>
     </ClCompile>
-    <ClCompile Include="Modules\RocketPluginModule.cpp">
+    <ClCompile Include="Modules\SupersonicMarioPluginModule.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
     <ClCompile Include="ExternalModules\ExternalModules.cpp">

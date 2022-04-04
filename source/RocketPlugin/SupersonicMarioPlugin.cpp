@@ -1,6 +1,6 @@
 // SupersonicMarioPlugin.cpp
 //
-// Original Author: Stanbroek
+// Author:          Stanbroek
 // Modified by:     Serialbocks
 #include "RPConfig.h"
 #include "SupersonicMarioPlugin.h"

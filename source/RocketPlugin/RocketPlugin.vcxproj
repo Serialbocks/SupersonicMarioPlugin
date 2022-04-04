@@ -181,7 +181,7 @@
     <ClInclude Include="Modules\MarioAudio.h" />
     <ClInclude Include="Modules\Utils.h" />
     <ClInclude Include="RPConfig.h" />
-    <ClInclude Include="Modules\RocketPluginModule.h" />
+    <ClInclude Include="Modules\SupersonicMarioPluginModule.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="SupersonicMarioPlugin.h" />
     <ClInclude Include="Networking\Networking.h" />
@@ -241,13 +241,13 @@
     <ClCompile Include="Networking\TcpClient.cpp" />
     <ClCompile Include="Networking\TcpServer.cpp" />
     <ClCompile Include="RPConfig.cpp" />
-    <ClCompile Include="Modules\RocketPluginModule.cpp" />
+    <ClCompile Include="Modules\SupersonicMarioPluginModule.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SupersonicMarioPlugin.cpp" />
-    <ClCompile Include="RocketPluginGUI.cpp" />
+    <ClCompile Include="SupersonicMarioPluginGUI.cpp" />
     <ClCompile Include="Networking\Networking.cpp" />
     <ClCompile Include="Networking\P2PHost.cpp" />
     <ClCompile Include="Networking\UPnPClient.cpp" />

@@ -1,3 +1,6 @@
+// TcpClient.cpp
+// Author: Serialbocks
+
 #include "Networking.h"
 
 TcpClient* instance = nullptr;

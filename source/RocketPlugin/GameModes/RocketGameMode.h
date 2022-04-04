@@ -1,6 +1,6 @@
 #pragma once
 #include "SupersonicMarioPlugin.h"
-#include "Modules/RocketPluginModule.h"
+#include "Modules/SupersonicMarioPluginModule.h"
 
 
 class RocketGameMode : public RocketPluginModule

@@ -2,7 +2,7 @@
 // UDP hole punching using STUN for Rocket Plugin.
 //
 // Author:       Stanbroek
-// Version:      0.6.8 18/09/21
+// Modified by:  Serialbocks
 //
 // References:
 //  https://en.wikipedia.org/wiki/UDP_hole_punching
