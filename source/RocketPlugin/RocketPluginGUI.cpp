@@ -40,12 +40,11 @@ void SupersonicMarioPlugin::OnRender()
     ImGui::SetNextWindowSizeConstraints(ImVec2(800, 600), ImVec2(FLT_MAX, FLT_MAX));
     if (ImGui::Begin((menuTitle + "###RocketPlugin").c_str(), &isWindowOpen)) {
         if (ImGui::BeginTabBar("#RPTabBar", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip)) {
-            //bool hosting = GetSm64Instance()->IsActive();
-            //if (hosting)
-            //{
-            //    renderMatchOptionsTab();
-            //}
-            //else
+            if (isHostingSm64Game())
+            {
+                renderMatchOptionsTab();
+            }
+            else
             {
                 renderMultiplayerTab();
             }
@@ -230,9 +229,9 @@ bool SupersonicMarioPlugin::renderCustomMapsSelection(std::map<std::filesystem::
 
 void SupersonicMarioPlugin::renderMatchOptionsTab()
 {
-    //if (ImGui::BeginTabItem("Match Settings")) {
-    //    GetSm64Instance()->RenderOptions();
-    //}
+    if (ImGui::BeginTabItem("Match Settings")) {
+        renderSm64Options();
+    }
 }
 
 /// <summary>Renders the multiplayer tab.</summary>

@@ -438,6 +438,17 @@ void setTeamColor(int8_t& teamColor, const int8_t& newTeamColor)
     teamColor = newTeamColor;
 }
 
+//bool isHostingSm64Game();
+//void renderSm64Options();
+bool SupersonicMarioPlugin::isHostingSm64Game()
+{
+    return sm64->IsActive();
+}
+
+void SupersonicMarioPlugin::renderSm64Options()
+{
+    sm64->RenderOptions();
+}
 
 void SupersonicMarioPlugin::parseTeamArguments(const std::vector<std::string>& arguments)
 {
