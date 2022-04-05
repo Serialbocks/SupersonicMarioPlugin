@@ -1080,7 +1080,6 @@ void backgroundLoadData()
 {
 	self->utils.ParseObjFile(self->utils.GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj", &self->ballVertices);
 	self->backgroundLoadThreadFinished = true;
-	self->marioAudio->CheckAndModulateSounds();
 }
 
 inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
