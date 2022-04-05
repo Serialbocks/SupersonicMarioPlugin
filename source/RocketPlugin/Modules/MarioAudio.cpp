@@ -121,20 +121,6 @@ void MarioAudio::UpdateSounds(int soundMask,
 	*inSlideHandle = slideHandle;
 }
 
-void MarioAudio::CheckAndModulateSounds()
-{
-	// Check if first sound exists, and assume all do if the first does
-	//std::string soundPath = SOUND_DIR + marioSounds[0].wavPath;
-	//if (utils.FileExists(soundPath))
-	//	return;
-	//
-	//// Sound file doesn't exist, let's extract the sounds from the ROM
-	//std::string extractScript = EXTRACT_ASSETS_SCRIPT;
-	//int result = system(extractScript.c_str());
-	//
-	//loadSoundFiles();
-}
-
 void MarioAudio::loadSoundFiles()
 {
 	std::string soundDir = SOUND_DIR;
@@ -143,22 +129,4 @@ void MarioAudio::loadSoundFiles()
 		std::string soundPath = soundDir + marioSounds[i].wavPath;
 		marioSounds[i].wav.load(soundPath.c_str());
 	}
-}
-
-std::pair<size_t, size_t> MarioAudio::resample(double factor,
-	float* inBuffer,
-	size_t inBufferLen,
-	bool lastFlag,
-	float* outBuffer,
-	size_t outBufferLen)
-{
-	size_t idone, odone;
-	soxr_quality_spec_t q_spec;
-
-	q_spec = soxr_quality_spec(SOXR_HQ, SOXR_VR);
-	soxrHandle.reset(soxr_create(1, factor, 1, 0, 0, &q_spec, 0));
-	soxr_process(soxrHandle.get(),
-		inBuffer, (lastFlag ? ~inBufferLen : inBufferLen), &idone,
-		outBuffer, outBufferLen, &odone);
-	return { idone, odone };
 }

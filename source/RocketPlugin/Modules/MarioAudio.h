@@ -5,9 +5,6 @@
 #include "Utils.h"
 #include "MarioConfig.h"
 
-#include <soxr./src/soxr.h>
-#pragma comment(lib, "libsoxr.lib")
-
 #define ASSETS_DIR utils.GetBakkesmodFolderPath() + "data\\assets\\"
 #define SOUND_DIR ASSETS_DIR + "sound\\samples\\"
 
@@ -41,13 +38,6 @@
 #define SOUND_ACTION_TERRAIN_BODY_HIT_GROUND    0x00100000
 #define SOUND_MARIO_ATTACKED                    0x00200000
 
-struct soxr;
-extern "C" void soxr_delete(soxr*);
-struct soxr_deleter {
-	void operator () (soxr* p) const { if (p) soxr_delete(p); }
-};
-using soxrHandle = std::unique_ptr<soxr, soxr_deleter>;
-
 typedef struct MarioSound_t
 {
 	uint32_t mask;
@@ -71,14 +61,7 @@ public:
 		int *inSlideHandle,
 		int *yahooHandle,
 		uint32_t marioAction);
-	void CheckAndModulateSounds();
 private:
-	std::pair<size_t, size_t> resample(double factor,
-		float* inBuffer,
-		size_t inBufferLen,
-		bool lastFlag,
-		float* outBuffer,
-		size_t outBufferLen);
 	void loadSoundFiles();
 
 public:
@@ -110,6 +93,5 @@ private:
 		{ SOUND_MARIO_ATTACKED,						"sfx_mario/0A.wav",					1.0f},
 	};
 	Utils utils;
-	soxrHandle soxrHandle;
 };
 

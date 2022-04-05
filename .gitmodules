@@ -19,6 +19,3 @@
 [submodule "source/External/soloud"]
     path = source/External/soloud
     url = https://github.com/Serialbocks/soloud.git
-[submodule "source/External/soxr"]
-    path = source/External/soxr
-    url = https://github.com/chirlu/soxr.git
