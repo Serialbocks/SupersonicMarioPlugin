@@ -22,6 +22,7 @@
 #include "../Modules/MarioConfig.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_additions.h"
+#include "imgui/imgui_internal.h"
 #include "GameModes/RocketGameMode.h"
 #include "../../External/BakkesModSDK/include/bakkesmod/wrappers/PluginManagerWrapper.h"
 #include "Networking/Networking.h"

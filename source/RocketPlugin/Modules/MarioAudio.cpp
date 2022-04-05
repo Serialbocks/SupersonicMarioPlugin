@@ -24,6 +24,7 @@ MarioAudio::MarioAudio()
 
 	loadSoundFiles();
 	soloud->set3dListenerUp(0, 0, 1.0f);
+	MasterVolume = MarioConfig::getInstance().GetVolume();
 }
 
 MarioAudio::~MarioAudio()

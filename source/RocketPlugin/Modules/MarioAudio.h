@@ -3,6 +3,7 @@
 #include "soloud.h"
 #include "soloud_wav.h"
 #include "Utils.h"
+#include "MarioConfig.h"
 
 #include <soxr./src/soxr.h>
 #pragma comment(lib, "libsoxr.lib")

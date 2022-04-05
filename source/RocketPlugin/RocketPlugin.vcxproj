@@ -180,6 +180,7 @@
     <ClInclude Include="Graphics\Lighting.h" />
     <ClInclude Include="miniconf.h" />
     <ClInclude Include="Modules\MarioAudio.h" />
+    <ClInclude Include="Modules\MarioConfig.h" />
     <ClInclude Include="Modules\Utils.h" />
     <ClInclude Include="RPConfig.h" />
     <ClInclude Include="Modules\SupersonicMarioPluginModule.h" />
@@ -238,6 +239,7 @@
     <ClCompile Include="Graphics\Render.cpp" />
     <ClCompile Include="Graphics\Lighting.cpp" />
     <ClCompile Include="Modules\MarioAudio.cpp" />
+    <ClCompile Include="Modules\MarioConfig.cpp" />
     <ClCompile Include="Modules\Utils.cpp" />
     <ClCompile Include="Networking\TcpClient.cpp" />
     <ClCompile Include="Networking\TcpServer.cpp" />

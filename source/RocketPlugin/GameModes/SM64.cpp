@@ -606,6 +606,10 @@ void SM64::RenderPreferences()
 	{
 		ImGui::TextUnformatted("Preferences");
 		ImGui::SliderInt("Mario Volume", &marioAudio->MasterVolume, 0, 100);
+		if (ImGui::IsItemDeactivatedAfterChange())
+		{
+			MarioConfig::getInstance().SetVolume(marioAudio->MasterVolume);
+		}
 	}
 }
 

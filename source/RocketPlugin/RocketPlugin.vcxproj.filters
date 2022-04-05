@@ -180,6 +180,9 @@
     <ClInclude Include="miniconf.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Modules\MarioConfig.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SupersonicMarioPlugin.cpp">
@@ -358,6 +361,9 @@
     </ClCompile>
     <ClCompile Include="Networking\TcpServer.cpp">
       <Filter>Networking</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\MarioConfig.cpp">
+      <Filter>Modules</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
