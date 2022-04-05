@@ -178,6 +178,7 @@
     <ClInclude Include="Graphics\shaders.h" />
     <ClInclude Include="Graphics\surface_terrains.h" />
     <ClInclude Include="Graphics\Lighting.h" />
+    <ClInclude Include="miniconf.h" />
     <ClInclude Include="Modules\MarioAudio.h" />
     <ClInclude Include="Modules\Utils.h" />
     <ClInclude Include="RPConfig.h" />

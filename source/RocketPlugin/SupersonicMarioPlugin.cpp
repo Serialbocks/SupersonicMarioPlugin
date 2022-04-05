@@ -448,6 +448,12 @@ bool SupersonicMarioPlugin::isHostingSm64Game()
 void SupersonicMarioPlugin::renderSm64Options()
 {
     sm64->RenderOptions();
+    sm64->RenderPreferences();
+}
+
+void SupersonicMarioPlugin::renderSm64Preferences()
+{
+    sm64->RenderPreferences();
 }
 
 void SupersonicMarioPlugin::parseTeamArguments(const std::vector<std::string>& arguments)

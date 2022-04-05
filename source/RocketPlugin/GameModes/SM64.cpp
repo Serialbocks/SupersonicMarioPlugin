@@ -487,9 +487,6 @@ void SM64::sendSettingsIfHost(ServerWrapper server)
 	}
 }
 
-#define MIN_LIGHT_COORD -6000.0f
-#define MAX_LIGHT_COORD 6000.0f
-static int currentLightIndex = 0;
 /// <summary>Renders the available options for the game mode.</summary>
 void SM64::RenderOptions()
 {
@@ -600,6 +597,15 @@ void SM64::RenderOptions()
 		}
 
 		matchSettingsSema.release();
+	}
+}
+
+void SM64::RenderPreferences()
+{
+	if (marioAudio != nullptr)
+	{
+		ImGui::TextUnformatted("Preferences");
+		ImGui::SliderInt("Mario Volume", &marioAudio->MasterVolume, 0, 100);
 	}
 }
 
@@ -1419,16 +1425,6 @@ SM64MarioInstance::~SM64MarioInstance()
 	free(marioGeometry.color);
 	free(marioGeometry.normal);
 	free(marioGeometry.uv);
-}
-
-std::string SM64::bytesToHex(unsigned char* data, unsigned int len)
-{
-	std::stringstream ss;
-	ss << std::hex << std::setfill('0');
-	for (unsigned int i = 0; i < len; ++i)
-		ss << std::setw(2) << static_cast<unsigned>(data[i]);
-
-	return ss.str();
 }
 
 Mesh* SM64::getMeshFromPool()

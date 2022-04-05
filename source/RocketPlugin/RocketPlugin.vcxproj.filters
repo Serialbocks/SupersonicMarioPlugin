@@ -177,6 +177,9 @@
     <ClInclude Include="GameModes\RocketGameMode.h">
       <Filter>GameModes</Filter>
     </ClInclude>
+    <ClInclude Include="miniconf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SupersonicMarioPlugin.cpp">

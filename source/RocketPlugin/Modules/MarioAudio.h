@@ -80,6 +80,8 @@ private:
 		size_t outBufferLen);
 	void loadSoundFiles();
 
+public:
+	int MasterVolume = 70;
 private:
 	SoLoud::Wav testWav;
 	std::vector<MarioSound> marioSounds = {

@@ -47,7 +47,7 @@ void SupersonicMarioPlugin::OnRender()
             {
                 renderMultiplayerTab();
             }
-            
+            renderPreferencesTab();
             ImGui::EndTabBar();
         }
     }
@@ -230,6 +230,13 @@ void SupersonicMarioPlugin::renderMatchOptionsTab()
 {
     if (ImGui::BeginTabItem("Match Settings")) {
         renderSm64Options();
+    }
+}
+
+void SupersonicMarioPlugin::renderPreferencesTab()
+{
+    if (ImGui::BeginTabItem("Preferences")) {
+        renderSm64Preferences();
     }
 }
 

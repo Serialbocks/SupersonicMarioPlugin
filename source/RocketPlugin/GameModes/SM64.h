@@ -19,6 +19,7 @@
 #include "../Graphics/GraphicsTypes.h"
 #include "../Modules/Utils.h"
 #include "../Modules/MarioAudio.h"
+#include "../Modules/MarioConfig.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_additions.h"
 #include "GameModes/RocketGameMode.h"
@@ -85,6 +86,7 @@ public:
     bool IsActive() override;
     void Activate(bool active) override;
     std::string GetGameModeName() override;
+    void RenderPreferences();
 
     void InitSM64();
     void DestroySM64();
@@ -93,8 +95,6 @@ public:
     void OnGameLeft(bool deleteMario);
 
     void SendSettingsToClients();
-
-    std::string bytesToHex(unsigned char* data, unsigned int len);
 
 private:
     void onCharacterSpawn(ServerWrapper server);
