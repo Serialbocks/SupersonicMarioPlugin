@@ -5,7 +5,7 @@ miniconf::Config conf;
 
 MarioConfig::MarioConfig()
 {
-	conf.option(VOLUME_LOOKUP).shortflag("v").defaultValue(50).required(true).description("Volume");
+	conf.option(VOLUME_LOOKUP).shortflag("v").defaultValue(VOLUME_DEFAULT).required(true).description("Volume");
 	configPath = utils.GetBakkesmodFolderPath() + CONFIG_FILE_NAME;
 	conf.config(configPath);
 
