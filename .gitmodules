@@ -1,6 +1,6 @@
 [submodule "source/External/ImGui"]
 	path = source/External/ImGui
-	url = https://github.com/johnrackcoach/ImGui.git
+	url = https://github.com/Serialbocks/ImGui.git
 [submodule "source/External/fmt"]
 	path = source/External/fmt
 	url = https://github.com/fmtlib/fmt.git
@@ -10,18 +10,15 @@
 [submodule "source/External/simdjson"]
 	path = source/External/simdjson
 	url = https://github.com/simdjson/simdjson.git
-[submodule "source/External/libsm64"]
-    path = source/External/libsm64
-    url = https://github.com/johnrackcoach/libsm64.git
+[submodule "source/External/libsm64-supersonic-mario"]
+    path = source/External/libsm64-supersonic-mario
+    url = https://github.com/Serialbocks/libsm64-supersonic-mario.git
 [submodule "source/External/kiero"]
     path = source/External/kiero
-    url = https://github.com/johnrackcoach/kiero.git
-[submodule "source/External/NetcodeManager"]
-    path = source/External/NetcodeManager
-    url = https://github.com/CinderBlocc/NetcodeManager.git
+    url = https://github.com/Serialbocks/kiero.git
 [submodule "source/External/soloud"]
     path = source/External/soloud
-    url = https://github.com/johnrackcoach/soloud.git
+    url = https://github.com/Serialbocks/soloud.git
 [submodule "source/External/soxr"]
     path = source/External/soxr
     url = https://github.com/chirlu/soxr.git
