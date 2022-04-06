@@ -102,7 +102,7 @@ static inline bool GuardedFunction(const std::string& desc, Func lambda)
 		MessageBox(NULL,
 			TEXT("Addional info should be provided in the F6 console.\n")
 			TEXT("A crashdump should be located in \"%appdata%\\bakkesmod\\bakkesmod\\crashes\"."),
-			TEXT("Rocket Plugin Error"), MB_OK | MB_ICONERROR);
+			TEXT("Supersonic Mario Plugin Error"), MB_OK | MB_ICONERROR);
 	}
 
 	return false;
@@ -127,7 +127,7 @@ static inline bool GuardedFunction(const std::string& desc, Func lambda)
 #define CATCH_ONLOAD															\
 	CATCH_OVERRIDE_FUNCTION(void onLoad(), void OnLoad(), OnLoad,				\
 		, "Game thread exception:", SET_SE_TRANSLATOR;,							\
-		cvarManager->executeCommand("sleep 100; plugin unload RocketPlugin");)
+		cvarManager->executeCommand("sleep 100; plugin unload SupersonicMarioPlugin");)
 
 #define CATCH_ONUNLOAD														\
 	CATCH_OVERRIDE_FUNCTION(void onUnload(), void OnUnload(), OnUnload,		\
