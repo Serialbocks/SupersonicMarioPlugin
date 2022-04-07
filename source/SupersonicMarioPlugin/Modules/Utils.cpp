@@ -106,3 +106,34 @@ bool Utils::FileExists(std::string filename)
 	return (stat(filename.c_str(), &buffer) == 0);
 }
 
+std::unique_ptr<uint8_t[]> Utils::ReadAllBytes(const std::string& filePath, size_t& size)
+{
+	if (filePath.empty())
+	{
+		size = 0;
+		return nullptr;
+	}
+
+	WCHAR path[1024]{};
+	MultiByteToWideChar(CP_UTF8, 0, filePath.c_str(), -1, path, _countof(path));
+
+	FILE* file = _wfopen(path, L"rb");
+	if (!file)
+	{
+		size = 0;
+		return nullptr;
+	}
+
+	fseek(file, 0, SEEK_END);
+
+	size = ftell(file);
+
+	std::unique_ptr<uint8_t[]> data = std::make_unique<uint8_t[]>(size);
+	fseek(file, 0, SEEK_SET);
+	fread(data.get(), 1, size, file);
+
+	fclose(file);
+
+	return data;
+}
+

@@ -18,7 +18,6 @@
 #include "../Graphics/Mesh.h"
 #include "../Graphics/GraphicsTypes.h"
 #include "../Modules/Utils.h"
-#include "../Modules/MarioAudio.h"
 #include "../Modules/MarioConfig.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_additions.h"
@@ -32,6 +31,8 @@ extern "C" {
 }
 
 #include "../Graphics/level.h"
+
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
 
 #define SM64_NETCODE_BUF_LEN 1024
 #define MARIO_MESH_POOL_SIZE 10
@@ -117,7 +118,7 @@ private:
 
 public:
     SM64MarioInstance localMario;
-    MarioAudio* marioAudio = nullptr;
+    //MarioAudio* marioAudio = nullptr;
     std::shared_ptr<GameWrapper> gameWrapper;
     Vector cameraLoc = Vector(0, 0, 0);
     ControllerInput playerInputs;

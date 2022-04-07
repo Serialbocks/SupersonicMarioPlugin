@@ -47,6 +47,7 @@ namespace SupersonicMarioInstaller
             this.uxLicense = new System.Windows.Forms.TextBox();
             this.uxReviewTerms = new System.Windows.Forms.Label();
             this.uxAcceptLabel = new System.Windows.Forms.Label();
+            this.uxMYSYS2Page = new System.Windows.Forms.TabPage();
             this.uxTabs.SuspendLayout();
             this.uxWelcomePage.SuspendLayout();
             this.uxLicensePage.SuspendLayout();
@@ -135,6 +136,7 @@ namespace SupersonicMarioInstaller
             this.uxTabs.Controls.Add(this.uxWelcomePage);
             this.uxTabs.Controls.Add(this.uxLicensePage);
             this.uxTabs.Controls.Add(this.uxBakkesmodPage);
+            this.uxTabs.Controls.Add(this.uxMYSYS2Page);
             this.uxTabs.Location = new System.Drawing.Point(-1, 74);
             this.uxTabs.Name = "uxTabs";
             this.uxTabs.SelectedIndex = 0;
@@ -244,6 +246,16 @@ namespace SupersonicMarioInstaller
             this.uxAcceptLabel.Text = "If you accept the terms of the agreement, click I Agree to continue. You must acc" +
     "ept the agreement to install Supersonic Mario.";
             // 
+            // uxMYSYS2Page
+            // 
+            this.uxMYSYS2Page.Location = new System.Drawing.Point(4, 22);
+            this.uxMYSYS2Page.Name = "uxMYSYS2Page";
+            this.uxMYSYS2Page.Padding = new System.Windows.Forms.Padding(3);
+            this.uxMYSYS2Page.Size = new System.Drawing.Size(502, 236);
+            this.uxMYSYS2Page.TabIndex = 3;
+            this.uxMYSYS2Page.Text = "MYSYS2";
+            this.uxMYSYS2Page.UseVisualStyleBackColor = true;
+            // 
             // uxInstallerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -292,6 +304,7 @@ namespace SupersonicMarioInstaller
         private System.Windows.Forms.TextBox uxLicense;
         private System.Windows.Forms.Label uxReviewTerms;
         private System.Windows.Forms.Label uxAcceptLabel;
+        private System.Windows.Forms.TabPage uxMYSYS2Page;
     }
 }
 

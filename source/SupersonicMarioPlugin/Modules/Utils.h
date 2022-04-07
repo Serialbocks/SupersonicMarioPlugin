@@ -16,6 +16,10 @@ public:
 	std::vector<std::string> SplitStr(std::string str, char delimiter);
 	float Distance(Vector v1, Vector v2);
 	bool FileExists(std::string filename);
+	std::unique_ptr<uint8_t[]> ReadAllBytes(const std::string& filePath, size_t& size);
 
 
 };
+
+extern void initRom(const std::string& romFilePath);
+extern std::unique_ptr<uint8_t[]> rom;

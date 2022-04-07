@@ -25,8 +25,11 @@
 inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
 	SM64* instance);
-
 void MessageReceived(char* buf, int len);
+
+#define MINIAUDIO_IMPLEMENTATION
+#include <miniaudio.h>
+void initAudio();
 
 SM64* self = nullptr;
 
@@ -602,15 +605,15 @@ void SM64::RenderOptions()
 
 void SM64::RenderPreferences()
 {
-	if (marioAudio != nullptr)
-	{
-		ImGui::TextUnformatted("Preferences");
-		ImGui::SliderInt("Mario Volume", &marioAudio->MasterVolume, 0, 100);
-		if (ImGui::IsItemDeactivatedAfterChange())
-		{
-			MarioConfig::getInstance().SetVolume(marioAudio->MasterVolume);
-		}
-	}
+	//if (marioAudio != nullptr)
+	//{
+	//	ImGui::TextUnformatted("Preferences");
+	//	ImGui::SliderInt("Mario Volume", &marioAudio->MasterVolume, 0, 100);
+	//	if (ImGui::IsItemDeactivatedAfterChange())
+	//	{
+	//		MarioConfig::getInstance().SetVolume(marioAudio->MasterVolume);
+	//	}
+	//}
 }
 
 bool SM64::IsActive()
@@ -652,7 +655,9 @@ void SM64::InitSM64()
 	size_t romSize;
 	std::string bakkesmodFolderPath = utils.GetBakkesmodFolderPath();
 	std::string romPath = bakkesmodFolderPath + "data\\assets\\baserom.us.z64";
-	uint8_t* rom = utilsReadFileAlloc(romPath, &romSize);
+	uint8_t* uintRom = utilsReadFileAlloc(romPath, &romSize);
+
+	initRom(romPath);
 	if (rom == NULL)
 	{
 		return;
@@ -664,8 +669,9 @@ void SM64::InitSM64()
 	//sm64_global_terminate();
 	if (!sm64Initialized)
 	{
-		sm64_global_init(rom, texture, stemTexture, NULL);
+		sm64_global_init(rom.get(), texture, stemTexture, NULL);
 		sm64_static_surfaces_load(surfaces, surfaces_count);
+		initAudio();
 		sm64Initialized = true;
 	}
 
@@ -677,7 +683,7 @@ void SM64::InitSM64()
 	locationInit = false;
 
 	renderer = new Renderer();
-	marioAudio = new MarioAudio();
+	//marioAudio = new MarioAudio();
 }
 
 void SM64::DestroySM64()
@@ -696,7 +702,7 @@ void SM64::DestroySM64()
 		delete remoteMarios[i];
 	}
 	delete renderer;
-	delete marioAudio;
+	//delete marioAudio;
 }
 
 void SM64::onSetVehicleInput(CarWrapper car, void* params)
@@ -1001,6 +1007,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 
 	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - instance->cameraLoc.X;
 	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - instance->cameraLoc.Y;
+	
 
 	auto controllerInput = car.GetPlayerController().GetVehicleInput();
 	marioInstance->marioInputs.isBoosting = controllerInput.HoldingBoost && instance->currentBoostAount >= 0.01f;
@@ -1029,7 +1036,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 				remoteMarioInstance->marioBodyState.marioState.posY,
 				remoteMarioInstance->marioBodyState.marioState.posZ);
 
-			auto distance = instance->utils.Distance(localMarioVector, remoteMarioVector);
+			auto distance = self->utils.Distance(localMarioVector, remoteMarioVector);
 			if (distance < 100.0f && remoteMarioInstance->marioBodyState.action & ACT_FLAG_ATTACKING) // TODO if in our direction
 			{
 				marioInstance->marioInputs.attackInput.isAttacked = true;
@@ -1043,8 +1050,18 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 
 	marioInstance->marioInputs.bljInput =  instance->matchSettings.bljSetup;
 
+	instance->cameraLoc = camera.GetLocation();
+	auto relMarioVec = Vector(marioInstance->marioState.posX - instance->cameraLoc.X,
+		marioInstance->marioState.posZ - instance->cameraLoc.Y,
+		marioInstance->marioState.posY - instance->cameraLoc.Z);
+	auto quat = RotatorToQuat(camera.GetRotation()).conjugate();
+
+	Vector adjustVec = Vector(0, 1, 0);
+	Quat adjustQuat = RotatorToQuat(VectorToRotator(adjustVec));
+	Vector viewPosition = RotateVectorWithQuat(RotateVectorWithQuat(relMarioVec, quat), adjustQuat);
 	if (!self->gameWrapper->IsPaused())
 	{
+		sm64_mario_set_camera_to_object(viewPosition.X, viewPosition.Z, viewPosition.Y);
 		sm64_mario_tick(marioInstance->marioId,
 			&marioInstance->marioInputs,
 			&marioInstance->marioState,
@@ -1054,20 +1071,16 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 			true);
 	}
 
-	auto marioVector = Vector(marioInstance->marioState.posX, marioInstance->marioState.posZ, marioInstance->marioState.posY);
-	auto marioVel = Vector(marioInstance->marioState.velX, marioInstance->marioState.velZ, marioInstance->marioState.velY);
-	auto quat = RotatorToQuat(camera.GetRotation());
-	instance->cameraLoc = camera.GetLocation();
-	Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 
-	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
-		marioVector,
-		marioVel,
-		instance->cameraLoc,
-		cameraAt,
-		&marioInstance->slidingHandle,
-		&marioInstance->yahooHandle,
-		marioInstance->marioBodyState.action);
+
+	//instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
+	//	marioVector,
+	//	marioVel,
+	//	instance->cameraLoc,
+	//	cameraAt,
+	//	&marioInstance->slidingHandle,
+	//	&marioInstance->yahooHandle,
+	//	marioInstance->marioBodyState.action);
 
 	marioInstance->playerId = car.GetPRI().GetPlayerID();
 	memcpy(self->netcodeOutBuf, &marioInstance->playerId, sizeof(int));
@@ -1344,14 +1357,14 @@ void SM64::OnRender(CanvasWrapper canvas)
 		cameraLoc = camera.GetLocation();
 		Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 
-		marioAudio->UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
-			marioVector,
-			marioVel,
-			cameraLoc,
-			cameraAt,
-			&marioInstance->slidingHandle,
-			&marioInstance->yahooHandle,
-			marioInstance->marioBodyState.action);
+		//marioAudio->UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
+		//	marioVector,
+		//	marioVel,
+		//	cameraLoc,
+		//	cameraAt,
+		//	&marioInstance->slidingHandle,
+		//	&marioInstance->yahooHandle,
+		//	marioInstance->marioBodyState.action);
 
 		marioInstance->marioBodyState.marioState.soundMask = 0;
 
@@ -1503,4 +1516,59 @@ uint8_t* SM64::utilsReadFileAlloc(std::string path, size_t* fileLength)
 	return (uint8_t*)buffer;
 }
 
+ma_device device;
 
+void audioCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
+{
+	for (size_t i = 0; i < frameCount; i += DEFAULT_LEN_2CH)
+	{
+		const size_t count = min(i + DEFAULT_LEN_2CH, frameCount) - i;
+		sm64_create_next_audio_buffer((int16_t*)pOutput + i, count);
+	}
+
+	(void)pInput;
+}
+
+void initAudio()
+{
+	std::string assetsPath = self->utils.GetBakkesmodFolderPath() + "data\\assets\\";
+	size_t bankSetsSize, sequencesSize, soundDataCtlSize, soundDataTblSize;
+	std::string bankSetsPath = assetsPath + "bank_sets";
+	if (self->utils.FileExists(bankSetsPath))
+	{
+		auto bankSets = self->utils.ReadAllBytes(assetsPath + "bank_sets", bankSetsSize);
+		auto sequencesBin = self->utils.ReadAllBytes(assetsPath + "sequences.bin", sequencesSize);
+		auto soundDataCtl = self->utils.ReadAllBytes(assetsPath + "sound_data.ctl", soundDataCtlSize);
+		auto soundDataTbl = self->utils.ReadAllBytes(assetsPath + "sound_data.tbl", soundDataTblSize);
+
+		sm64_load_sound_data(bankSets.get(),
+			sequencesBin.get(),
+			soundDataCtl.get(),
+			soundDataTbl.get(),
+			bankSetsSize,
+			sequencesSize,
+			soundDataCtlSize,
+			soundDataTblSize);
+
+		//sm64_load_sound_data(uint8_t * bank_sets,
+		//	uint8_t * sequences_bin,
+		//	uint8_t * sound_data_ctl,
+		//	uint8_t * sound_data_tbl,
+		//	int bank_set_len,
+		//	int sequences_len,
+		//	int ctl_len,
+		//	int tbl_len)
+
+		ma_device_config deviceConfig = ma_device_config_init(ma_device_type_playback);
+		deviceConfig.sampleRate = 32000;
+		deviceConfig.periodSizeInFrames = 528;
+		deviceConfig.periods = 2;
+		deviceConfig.dataCallback = audioCallback;
+		deviceConfig.playback.format = ma_format_s16;
+		deviceConfig.playback.channels = 2;
+
+		ma_device_init(nullptr, &deviceConfig, &device);
+		ma_device_start(&device);
+	}
+
+}

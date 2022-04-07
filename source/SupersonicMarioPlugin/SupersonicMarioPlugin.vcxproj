@@ -72,7 +72,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>.\;..\External;..\External\BakkesModAdditions\include;..\External\BakkesModSDK\include;..\External\fmt\include;..\External\libsm64-supersonic-mario\dist\include;..\External\simdjson\singleheader;%(AdditionalIncludeDirectories);..\External\soloud\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\External;..\External\BakkesModAdditions\include;..\External\BakkesModSDK\include;..\External\fmt\include;..\External\libsm64-supersonic-mario\dist\include;..\External\miniaudio;..\External\simdjson\singleheader;%(AdditionalIncludeDirectories);..\External\soloud\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;WITH_MINIAUDIO</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -109,7 +109,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>false</TreatWarningAsError>
-      <AdditionalIncludeDirectories>.\;..\External;..\External\BakkesModAdditions\include;..\External\BakkesModSDK\include;..\External\fmt\include;..\External\libsm64-supersonic-mario\dist\include;..\External\simdjson\singleheader;..\External\libsm64\dist\include;%(AdditionalIncludeDirectories);..\External\soloud\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\External;..\External\BakkesModAdditions\include;..\External\BakkesModSDK\include;..\External\fmt\include;..\External\libsm64-supersonic-mario\dist\include;..\External\miniaudio;..\External\simdjson\singleheader;..\External\libsm64\dist\include;%(AdditionalIncludeDirectories);..\External\soloud\include</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;WITH_MINIAUDIO</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -161,13 +161,10 @@
     <ClInclude Include="..\External\kiero\minhook\src\hde\table32.h" />
     <ClInclude Include="..\External\kiero\minhook\src\hde\table64.h" />
     <ClInclude Include="..\External\kiero\minhook\src\trampoline.h" />
+    <ClInclude Include="..\External\miniaudio\miniaudio.h" />
     <ClInclude Include="..\External\simdjson\singleheader\simdjson.h" />
-    <ClInclude Include="..\External\soloud\src\audiosource\wav\dr_flac.h" />
-    <ClInclude Include="..\External\soloud\src\audiosource\wav\dr_mp3.h" />
-    <ClInclude Include="..\External\soloud\src\audiosource\wav\dr_wav.h" />
-    <ClInclude Include="..\External\soloud\src\audiosource\wav\stb_vorbis.h" />
-    <ClInclude Include="..\External\soloud\src\backend\miniaudio\miniaudio.h" />
     <ClInclude Include="..\External\soxr\src\soxr.h" />
+    <ClInclude Include="EndianSwap.h" />
     <ClInclude Include="ExternalModules\ExternalModules.h" />
     <ClInclude Include="GameModes\RocketGameMode.h" />
     <ClInclude Include="GameModes\SM64.h" />
@@ -179,7 +176,6 @@
     <ClInclude Include="Graphics\surface_terrains.h" />
     <ClInclude Include="Graphics\Lighting.h" />
     <ClInclude Include="miniconf.h" />
-    <ClInclude Include="Modules\MarioAudio.h" />
     <ClInclude Include="Modules\MarioConfig.h" />
     <ClInclude Include="Modules\Utils.h" />
     <ClInclude Include="SMPConfig.h" />
@@ -205,31 +201,6 @@
     <ClCompile Include="..\External\kiero\minhook\src\hook.c" />
     <ClCompile Include="..\External\kiero\minhook\src\trampoline.c" />
     <ClCompile Include="..\External\simdjson\singleheader\simdjson.cpp" />
-    <ClCompile Include="..\External\soloud\src\audiosource\wav\dr_impl.cpp" />
-    <ClCompile Include="..\External\soloud\src\audiosource\wav\soloud_wav.cpp" />
-    <ClCompile Include="..\External\soloud\src\audiosource\wav\soloud_wavstream.cpp" />
-    <ClCompile Include="..\External\soloud\src\audiosource\wav\stb_vorbis.c" />
-    <ClCompile Include="..\External\soloud\src\backend\miniaudio\soloud_miniaudio.cpp" />
-    <ClCompile Include="..\External\soloud\src\backend\winmm\soloud_winmm.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_audiosource.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_bus.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_core_3d.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_core_basicops.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_core_faderops.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_core_filterops.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_core_getters.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_core_setters.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_core_voicegroup.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_core_voiceops.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_fader.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_fft.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_fft_lut.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_file.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_filter.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_misc.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_queue.cpp" />
-    <ClCompile Include="..\External\soloud\src\core\soloud_thread.cpp" />
     <ClCompile Include="ExternalModules\ExternalFunctions.cpp" />
     <ClCompile Include="ExternalModules\ExternalModules.cpp" />
     <ClCompile Include="ExternalModules\SMPTests.cpp" />
@@ -238,8 +209,8 @@
     <ClCompile Include="Graphics\Mesh.cpp" />
     <ClCompile Include="Graphics\Render.cpp" />
     <ClCompile Include="Graphics\Lighting.cpp" />
-    <ClCompile Include="Modules\MarioAudio.cpp" />
     <ClCompile Include="Modules\MarioConfig.cpp" />
+    <ClCompile Include="Modules\Rom.cpp" />
     <ClCompile Include="Modules\Utils.cpp" />
     <ClCompile Include="Networking\TcpClient.cpp" />
     <ClCompile Include="Networking\TcpServer.cpp" />
