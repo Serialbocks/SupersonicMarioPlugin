@@ -240,6 +240,7 @@ void SM64::OnGameLeft(bool deleteMario)
 	}
 		
 	remoteMariosSema.release();
+	sm64_stop_continuous_sounds();
 }
 
 void SM64::moveCarToMario(std::string eventName)
@@ -1175,6 +1176,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		meshesInitialized = true;
 	}
+
+	sm64_audio_tick();
 
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame();
 	matchSettingsSema.acquire();
