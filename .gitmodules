@@ -11,11 +11,8 @@
 	path = source/External/simdjson
 	url = https://github.com/simdjson/simdjson.git
 [submodule "source/External/libsm64-supersonic-mario"]
-    path = source/External/libsm64-supersonic-mario
-    url = https://github.com/Serialbocks/libsm64-supersonic-mario.git
+	path = source/External/libsm64-supersonic-mario
+	url = https://github.com/Serialbocks/libsm64-supersonic-mario.git
 [submodule "source/External/kiero"]
-    path = source/External/kiero
-    url = https://github.com/Serialbocks/kiero.git
-[submodule "source/External/soloud"]
-    path = source/External/soloud
-    url = https://github.com/Serialbocks/soloud.git
+	path = source/External/kiero
+	url = https://github.com/Serialbocks/kiero.git
