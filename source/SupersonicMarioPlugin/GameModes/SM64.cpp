@@ -956,6 +956,25 @@ void SM64::onOvertimeStart(ServerWrapper server)
 	}
 }
 
+inline void setMarioCamPosition(SM64* instance, SM64MarioInstance* marioInstance)
+{
+	auto camera = instance->gameWrapper->GetCamera();
+	if (!camera.IsNull())
+	{
+		instance->cameraLoc = camera.GetLocation();
+	}
+
+	instance->cameraLoc = camera.GetLocation();
+	auto relMarioVec = Vector(marioInstance->marioState.posX - instance->cameraLoc.X,
+		marioInstance->marioState.posZ - instance->cameraLoc.Y,
+		marioInstance->marioState.posY - instance->cameraLoc.Z);
+	auto quat = RotatorToQuat(camera.GetRotation()).conjugate();
+	Quat adjustQuat = RotatorToQuat(VectorToRotator(Vector(0, -1, 0)));
+	Vector viewPosition = RotateVectorWithQuat(RotateVectorWithQuat(relMarioVec, quat), adjustQuat);
+
+	sm64_mario_set_camera_to_object(viewPosition.X, viewPosition.Z, viewPosition.Y);
+}
+
 inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
 	SM64* instance)
@@ -1010,6 +1029,8 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		marioInstance->marioInputs.stickX = NULL;
 		marioInstance->marioInputs.stickY = NULL;
 	}
+	marioInstance->marioInputs.isInput = true;
+	marioInstance->marioInputs.giveWingcap = true;
 
 	marioInstance->marioInputs.camLookX = marioInstance->marioState.posX - instance->cameraLoc.X;
 	marioInstance->marioInputs.camLookZ = marioInstance->marioState.posZ - instance->cameraLoc.Y;
@@ -1056,25 +1077,14 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 
 	marioInstance->marioInputs.bljInput =  instance->matchSettings.bljSetup;
 
-	instance->cameraLoc = camera.GetLocation();
-	auto relMarioVec = Vector(marioInstance->marioState.posX - instance->cameraLoc.X,
-		marioInstance->marioState.posZ - instance->cameraLoc.Y,
-		marioInstance->marioState.posY - instance->cameraLoc.Z);
-	auto quat = RotatorToQuat(camera.GetRotation()).conjugate();
-
-	Vector adjustVec = Vector(0, -1, 0);
-	Quat adjustQuat = RotatorToQuat(VectorToRotator(adjustVec));
-	Vector viewPosition = RotateVectorWithQuat(RotateVectorWithQuat(relMarioVec, quat), adjustQuat);
 	if (!self->gameWrapper->IsPaused())
 	{
-		sm64_mario_set_camera_to_object(viewPosition.X, viewPosition.Z, viewPosition.Y);
+		setMarioCamPosition(instance, marioInstance);
 		sm64_mario_tick(marioInstance->marioId,
 			&marioInstance->marioInputs,
 			&marioInstance->marioState,
 			&marioInstance->marioGeometry,
-			&marioInstance->marioBodyState,
-			true,
-			true);
+			&marioInstance->marioBodyState);
 	}
 
 	marioInstance->playerId = car.GetPRI().GetPlayerID();
@@ -1334,6 +1344,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 	}
 
 	// Loop through remote marios and render
+	auto remoteMarioIndex = 0;
 	for (auto const& [playerId, marioInstance] : remoteMarios)
 	{
 		marioInstance->sema.acquire();
@@ -1353,13 +1364,15 @@ void SM64::OnRender(CanvasWrapper canvas)
 				(int16_t)marioInstance->marioState.posZ);
 		}
 
+		marioInstance->marioInputs.isInput = false;
+		marioInstance->marioInputs.giveWingcap = false;
+		marioInstance->marioInputs.remoteMarioIndex = remoteMarioIndex++;
+		setMarioCamPosition(this, marioInstance);
 		sm64_mario_tick(marioInstance->marioId,
 			&marioInstance->marioInputs,
 			&marioInstance->marioBodyState.marioState,
 			&marioInstance->marioGeometry,
-			&marioInstance->marioBodyState,
-			false,
-			false);
+			&marioInstance->marioBodyState);
 
 		auto marioVector = Vector(marioInstance->marioBodyState.marioState.posX,
 			marioInstance->marioBodyState.marioState.posZ,
@@ -1371,7 +1384,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		cameraLoc = camera.GetLocation();
 		Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 
-		marioInstance->marioBodyState.marioState.soundMask = 0;
+		marioInstance->marioBodyState.marioState.soundBits = 0;
 
 		if (!marioInstance->CarActive)
 		{
