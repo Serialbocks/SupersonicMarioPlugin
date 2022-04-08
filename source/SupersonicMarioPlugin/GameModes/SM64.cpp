@@ -27,11 +27,17 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	SM64* instance);
 void MessageReceived(char* buf, int len);
 
+// Audio
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
 void initAudio();
 ma_device device;
 bool audioInitialized = false;
+std::unique_ptr<uint8_t[]> sequencesBin;
+std::unique_ptr<uint8_t[]> soundDataCtl;
+std::unique_ptr<uint8_t[]> soundDataTbl;
+std::string tempDir = std::filesystem::temp_directory_path().string();
+
 SM64* self = nullptr;
 
 SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, BakkesMod::Plugin::PluginInfo exports)
@@ -674,7 +680,6 @@ void SM64::InitSM64()
 	{
 		sm64_global_init(rom.get(), texture, stemTexture, NULL);
 		sm64_static_surfaces_load(surfaces, surfaces_count);
-		initAudio();
 		sm64Initialized = true;
 	}
 
@@ -1081,7 +1086,28 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 
 void backgroundLoadData()
 {
+	// Load mesh data
 	self->utils.ParseObjFile(self->utils.GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj", &self->ballVertices);
+
+	// Load audio assets from ROM
+	std::string bakkesmodFolderPath = self->utils.GetBakkesmodFolderPath();
+	std::string romPath = bakkesmodFolderPath + "data\\assets\\baserom.us.z64";
+	std::string extractAssetsPath = bakkesmodFolderPath + "data\\assets\\genfiles.exe";
+	std::string extractAssetsPathWithArgs = extractAssetsPath + " " + romPath;
+	if (!self->utils.FileExists(extractAssetsPath))
+	{
+		return;
+	}
+
+	STARTUPINFOA si;
+	PROCESS_INFORMATION pi;
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	ZeroMemory(&pi, sizeof(pi));
+	CreateProcessA(NULL, (LPSTR)extractAssetsPathWithArgs.c_str(), NULL, NULL,
+		FALSE, CREATE_NO_WINDOW, NULL, tempDir.c_str(), &si, &pi);
+	WaitForSingleObject(pi.hProcess, 10000);
+
 	self->backgroundLoadThreadFinished = true;
 }
 
@@ -1177,6 +1203,10 @@ void SM64::OnRender(CanvasWrapper canvas)
 		meshesInitialized = true;
 	}
 
+	if (!audioInitialized)
+	{
+		initAudio();
+	}
 	sm64_audio_tick();
 
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame();
@@ -1480,42 +1510,22 @@ void audioCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
 
 void initAudio()
 {
-	std::string bakkesmodFolderPath = self->utils.GetBakkesmodFolderPath();
-	std::string romPath = bakkesmodFolderPath + "data\\assets\\baserom.us.z64";
-	std::string extractAssetsPath = bakkesmodFolderPath + "data\\assets\\genfiles.exe";
-	std::string extractAssetsPathWithArgs = extractAssetsPath + " " + romPath;
-	if (!self->utils.FileExists(extractAssetsPath))
-	{
-		return;
-	}
-
-	std::string tempDir = std::filesystem::temp_directory_path().string();
 	std::string bankSetsPath = tempDir + "bank_sets";
 	std::string sequencesPath = tempDir + "sequences.bin";
 	std::string soundDataCtlPath = tempDir + "sound_data.ctl";
 	std::string soundDataTblPath = tempDir + "sound_data.tbl";
 
-	// additional information
-	STARTUPINFOA si;
-	PROCESS_INFORMATION pi;
 
-	// set the size of the structures
-	ZeroMemory(&si, sizeof(si));
-	si.cb = sizeof(si);
-	ZeroMemory(&pi, sizeof(pi));
-
-	CreateProcessA(NULL, (LPSTR)extractAssetsPathWithArgs.c_str(), NULL, NULL,
-		FALSE, CREATE_NO_WINDOW, NULL, tempDir.c_str(), &si, &pi);
-
-	WaitForSingleObject(pi.hProcess, 2000);
-
-	if (self->utils.FileExists(bankSetsPath))
+	if (self->utils.FileExists(bankSetsPath) &&
+		self->utils.FileExists(sequencesPath) &&
+		self->utils.FileExists(soundDataCtlPath) &&
+		self->utils.FileExists(soundDataTblPath))
 	{
 		size_t bankSetsSize, sequencesSize, soundDataCtlSize, soundDataTblSize;
 		auto bankSets = self->utils.ReadAllBytes(bankSetsPath, bankSetsSize);
-		auto sequencesBin = self->utils.ReadAllBytes(sequencesPath, sequencesSize);
-		auto soundDataCtl = self->utils.ReadAllBytes(soundDataCtlPath, soundDataCtlSize);
-		auto soundDataTbl = self->utils.ReadAllBytes(soundDataTblPath, soundDataTblSize);
+		sequencesBin = self->utils.ReadAllBytes(sequencesPath, sequencesSize);
+		soundDataCtl = self->utils.ReadAllBytes(soundDataCtlPath, soundDataCtlSize);
+		soundDataTbl = self->utils.ReadAllBytes(soundDataTblPath, soundDataTblSize);
 
 		sm64_load_sound_data(bankSets.get(),
 			sequencesBin.get(),
@@ -1530,7 +1540,6 @@ void initAudio()
 		std::remove(sequencesPath.c_str());
 		std::remove(soundDataCtlPath.c_str());
 		std::remove(soundDataTblPath.c_str());
-
 
 		ma_device_config deviceConfig = ma_device_config_init(ma_device_type_playback);
 		deviceConfig.sampleRate = 32000;
