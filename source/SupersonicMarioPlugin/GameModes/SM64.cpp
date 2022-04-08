@@ -257,25 +257,25 @@ void SM64::moveCarToMario(std::string eventName)
 	{
 		return;
 	}
-
+	
 	auto camera = gameWrapper->GetCamera();
 	if (camera.IsNull()) return;
-
+	
 	auto server = gameWrapper->GetGameEventAsServer();
 	if (server.IsNull())
 	{
 		server = gameWrapper->GetCurrentGameState();
 	}
-
+	
 	if (server.IsNull()) return;
-
+	
 	auto car = gameWrapper->GetLocalCar();
 	if (car.IsNull()) return;
-
+	
 	auto marioInstance = &localMario;
-
+	
 	marioInstance->sema.acquire();
-
+	
 	if (marioInstance->marioId >= 0)
 	{
 		auto marioState = &marioInstance->marioBodyState.marioState;
@@ -294,10 +294,10 @@ void SM64::moveCarToMario(std::string eventName)
 		carRot.Pitch = carRotation.Pitch;
 		car.SetRotation(carRot);
 	}
-
+	
 	marioInstance->sema.release();
-
-
+	
+	
 	if (!isHost)
 	{
 		remoteMariosSema.acquire();
@@ -308,12 +308,12 @@ void SM64::moveCarToMario(std::string eventName)
 			auto isLocalPlayer = player.IsLocalPlayerPRI();
 			if (isLocalPlayer) continue;
 			auto playerId = player.GetPlayerID();
-
+	
 			if (remoteMarios.count(playerId) > 0)
 			{
 				marioInstance = remoteMarios[playerId];
 				marioInstance->sema.acquire();
-
+	
 				if (marioInstance->marioId >= 0)
 				{
 					auto marioState = &marioInstance->marioBodyState.marioState;
@@ -327,7 +327,7 @@ void SM64::moveCarToMario(std::string eventName)
 					carRot.Pitch = carRotation.Pitch;
 					car.SetRotation(carRot);
 				}
-
+	
 				marioInstance->sema.release();
 			}
 		}
@@ -1057,7 +1057,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		marioInstance->marioState.posY - instance->cameraLoc.Z);
 	auto quat = RotatorToQuat(camera.GetRotation()).conjugate();
 
-	Vector adjustVec = Vector(0, 1, 0);
+	Vector adjustVec = Vector(0, -1, 0);
 	Quat adjustQuat = RotatorToQuat(VectorToRotator(adjustVec));
 	Vector viewPosition = RotateVectorWithQuat(RotateVectorWithQuat(relMarioVec, quat), adjustQuat);
 	if (!self->gameWrapper->IsPaused())
@@ -1244,10 +1244,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 			auto remoteMario = remoteMarios[playerId];
 			remoteMario->CarActive = true;
 			remoteMario->teamIndex = teamIndex;
-			if (remoteMario->mesh != nullptr)
-			{
-				//remoteMario->mesh->ShowNameplate(L"", car.GetLocation());
-			}
 			if (isHost && remoteMario->colorIndex < 0)
 			{
 				remoteMario->colorIndex = getColorIndexFromPool(teamIndex);
@@ -1271,10 +1267,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 		if (marioInstance->mesh == nullptr)
 		{
 			marioInstance->mesh = getMeshFromPool();
-		}
-		else
-		{
-			//marioInstance->mesh->ShowNameplate(L"", car.GetLocation());
 		}
 
 		if(!isHost)
