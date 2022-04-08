@@ -6,3 +6,7 @@ dist/*
 build/*
 __pycache__/*
 extract_assets.spec
+bank_sets
+*.ctl
+*.tbl
+*.bin

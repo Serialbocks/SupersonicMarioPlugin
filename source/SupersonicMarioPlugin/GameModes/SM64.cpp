@@ -655,7 +655,6 @@ void SM64::InitSM64()
 	size_t romSize;
 	std::string bakkesmodFolderPath = utils.GetBakkesmodFolderPath();
 	std::string romPath = bakkesmodFolderPath + "data\\assets\\baserom.us.z64";
-	uint8_t* uintRom = utilsReadFileAlloc(romPath, &romSize);
 
 	initRom(romPath);
 	if (rom == NULL)
@@ -683,7 +682,6 @@ void SM64::InitSM64()
 	locationInit = false;
 
 	renderer = new Renderer();
-	//marioAudio = new MarioAudio();
 }
 
 void SM64::DestroySM64()
@@ -702,7 +700,6 @@ void SM64::DestroySM64()
 		delete remoteMarios[i];
 	}
 	delete renderer;
-	//delete marioAudio;
 }
 
 void SM64::onSetVehicleInput(CarWrapper car, void* params)
@@ -1071,17 +1068,6 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 			true);
 	}
 
-
-
-	//instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
-	//	marioVector,
-	//	marioVel,
-	//	instance->cameraLoc,
-	//	cameraAt,
-	//	&marioInstance->slidingHandle,
-	//	&marioInstance->yahooHandle,
-	//	marioInstance->marioBodyState.action);
-
 	marioInstance->playerId = car.GetPRI().GetPlayerID();
 	memcpy(self->netcodeOutBuf, &marioInstance->playerId, sizeof(int));
 	memcpy(self->netcodeOutBuf + sizeof(int), &marioInstance->marioBodyState, sizeof(struct SM64MarioBodyState));
@@ -1357,15 +1343,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 		cameraLoc = camera.GetLocation();
 		Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 
-		//marioAudio->UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
-		//	marioVector,
-		//	marioVel,
-		//	cameraLoc,
-		//	cameraAt,
-		//	&marioInstance->slidingHandle,
-		//	&marioInstance->yahooHandle,
-		//	marioInstance->marioBodyState.action);
-
 		marioInstance->marioBodyState.marioState.soundMask = 0;
 
 		if (!marioInstance->CarActive)
@@ -1517,7 +1494,6 @@ uint8_t* SM64::utilsReadFileAlloc(std::string path, size_t* fileLength)
 }
 
 ma_device device;
-
 void audioCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
 	for (size_t i = 0; i < frameCount; i += DEFAULT_LEN_2CH)
@@ -1531,15 +1507,42 @@ void audioCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uin
 
 void initAudio()
 {
-	std::string assetsPath = self->utils.GetBakkesmodFolderPath() + "data\\assets\\";
-	size_t bankSetsSize, sequencesSize, soundDataCtlSize, soundDataTblSize;
-	std::string bankSetsPath = assetsPath + "bank_sets";
+	std::string bakkesmodFolderPath = self->utils.GetBakkesmodFolderPath();
+	std::string romPath = bakkesmodFolderPath + "data\\assets\\baserom.us.z64";
+	std::string extractAssetsPath = bakkesmodFolderPath + "data\\assets\\genfiles.exe";
+	std::string extractAssetsPathWithArgs = extractAssetsPath + " " + romPath;
+	if (!self->utils.FileExists(extractAssetsPath))
+	{
+		return;
+	}
+
+	std::string tempDir = std::filesystem::temp_directory_path().string();
+	std::string bankSetsPath = tempDir + "bank_sets";
+	std::string sequencesPath = tempDir + "sequences.bin";
+	std::string soundDataCtlPath = tempDir + "sound_data.ctl";
+	std::string soundDataTblPath = tempDir + "sound_data.tbl";
+
+	// additional information
+	STARTUPINFOA si;
+	PROCESS_INFORMATION pi;
+
+	// set the size of the structures
+	ZeroMemory(&si, sizeof(si));
+	si.cb = sizeof(si);
+	ZeroMemory(&pi, sizeof(pi));
+
+	CreateProcessA(NULL, (LPSTR)extractAssetsPathWithArgs.c_str(), NULL, NULL,
+		FALSE, CREATE_NO_WINDOW, NULL, tempDir.c_str(), &si, &pi);
+
+	WaitForSingleObject(pi.hProcess, 2000);
+
 	if (self->utils.FileExists(bankSetsPath))
 	{
-		auto bankSets = self->utils.ReadAllBytes(assetsPath + "bank_sets", bankSetsSize);
-		auto sequencesBin = self->utils.ReadAllBytes(assetsPath + "sequences.bin", sequencesSize);
-		auto soundDataCtl = self->utils.ReadAllBytes(assetsPath + "sound_data.ctl", soundDataCtlSize);
-		auto soundDataTbl = self->utils.ReadAllBytes(assetsPath + "sound_data.tbl", soundDataTblSize);
+		size_t bankSetsSize, sequencesSize, soundDataCtlSize, soundDataTblSize;
+		auto bankSets = self->utils.ReadAllBytes(bankSetsPath, bankSetsSize);
+		auto sequencesBin = self->utils.ReadAllBytes(sequencesPath, sequencesSize);
+		auto soundDataCtl = self->utils.ReadAllBytes(soundDataCtlPath, soundDataCtlSize);
+		auto soundDataTbl = self->utils.ReadAllBytes(soundDataTblPath, soundDataTblSize);
 
 		sm64_load_sound_data(bankSets.get(),
 			sequencesBin.get(),
@@ -1550,14 +1553,11 @@ void initAudio()
 			soundDataCtlSize,
 			soundDataTblSize);
 
-		//sm64_load_sound_data(uint8_t * bank_sets,
-		//	uint8_t * sequences_bin,
-		//	uint8_t * sound_data_ctl,
-		//	uint8_t * sound_data_tbl,
-		//	int bank_set_len,
-		//	int sequences_len,
-		//	int ctl_len,
-		//	int tbl_len)
+		std::remove(bankSetsPath.c_str());
+		std::remove(sequencesPath.c_str());
+		std::remove(soundDataCtlPath.c_str());
+		std::remove(soundDataTblPath.c_str());
+
 
 		ma_device_config deviceConfig = ma_device_config_init(ma_device_type_playback);
 		deviceConfig.sampleRate = 32000;

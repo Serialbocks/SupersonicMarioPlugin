@@ -11,6 +11,9 @@
 #include <shlwapi.h>
 #include <stdlib.h>
 #include <math.h>
+#include <filesystem>
+#include <cstdio>
+#include <Windows.h>
 
 #include "shlobj.h"
 
