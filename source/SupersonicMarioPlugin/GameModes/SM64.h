@@ -113,7 +113,6 @@ private:
     void onGoalScored(std::string eventName);
     void menuPushed(ServerWrapper server);
     void menuPopped(ServerWrapper server);
-    uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
     Mesh* getMeshFromPool();
     void addMeshToPool(Mesh*);
     int getColorIndexFromPool(int teamIndex);

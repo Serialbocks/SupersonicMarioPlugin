@@ -30,7 +30,8 @@ void MessageReceived(char* buf, int len);
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
 void initAudio();
-
+ma_device device;
+bool audioInitialized = false;
 SM64* self = nullptr;
 
 SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> cm, BakkesMod::Plugin::PluginInfo exports)
@@ -605,15 +606,17 @@ void SM64::RenderOptions()
 
 void SM64::RenderPreferences()
 {
-	//if (marioAudio != nullptr)
-	//{
-	//	ImGui::TextUnformatted("Preferences");
-	//	ImGui::SliderInt("Mario Volume", &marioAudio->MasterVolume, 0, 100);
-	//	if (ImGui::IsItemDeactivatedAfterChange())
-	//	{
-	//		MarioConfig::getInstance().SetVolume(marioAudio->MasterVolume);
-	//	}
-	//}
+	if (audioInitialized)
+	{
+		int intVol = (int)(device.masterVolumeFactor * 100);
+		ImGui::TextUnformatted("Preferences");
+		ImGui::SliderInt("Mario Volume", &intVol, 0, 100);
+		if (ImGui::IsItemDeactivatedAfterChange())
+		{
+			MarioConfig::getInstance().SetVolume(intVol);
+		}
+		device.masterVolumeFactor = intVol / 100.0f;
+	}
 }
 
 bool SM64::IsActive()
@@ -1469,31 +1472,6 @@ void SM64::addColorIndexToPool(int colorIndex)
 	colorPool->insert(colorPool->begin(), colorIndex);
 }
 
-uint8_t* SM64::utilsReadFileAlloc(std::string path, size_t* fileLength)
-{
-	FILE* f;
-	fopen_s(&f, path.c_str(), "rb");
-
-	if (!f) return NULL;
-
-	fseek(f, 0, SEEK_END);
-	size_t length = (size_t)ftell(f);
-	rewind(f);
-	uint8_t* buffer = (uint8_t*)malloc(length + 1);
-	if (buffer != NULL)
-	{
-		fread(buffer, 1, length, f);
-		buffer[length] = 0;
-	}
-
-	fclose(f);
-
-	if (fileLength) *fileLength = length;
-
-	return (uint8_t*)buffer;
-}
-
-ma_device device;
 void audioCallback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
 	for (size_t i = 0; i < frameCount; i += DEFAULT_LEN_2CH)
@@ -1569,6 +1547,11 @@ void initAudio()
 
 		ma_device_init(nullptr, &deviceConfig, &device);
 		ma_device_start(&device);
+
+		int initialVolume = MarioConfig::getInstance().GetVolume();
+		device.masterVolumeFactor = initialVolume / 100.0f;
+
+		audioInitialized = true;
 	}
 
 }
