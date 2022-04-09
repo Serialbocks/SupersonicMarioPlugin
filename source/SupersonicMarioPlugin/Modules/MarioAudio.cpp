@@ -6,32 +6,22 @@
 
 static SoLoud::Soloud* soloud = nullptr;
 
-void onExit(void)
-{
-	if (soloud != nullptr)
-	{
-		// Ensure the process fully ends... not great but here we are
-		abort();
-		soloud->deinit();
-	}
-}
-
 MarioAudio::MarioAudio()
 {
-	atexit(onExit);
-	soloud = new SoLoud::Soloud();
-	soloud->init(SoLoud::Soloud::FLAGS::LEFT_HANDED_3D);
+	if (soloud == nullptr)
+	{
+		soloud = new SoLoud::Soloud();
+		soloud->init(SoLoud::Soloud::FLAGS::LEFT_HANDED_3D);
 
-	loadSoundFiles();
-	soloud->set3dListenerUp(0, 0, 1.0f);
-	MasterVolume = MarioConfig::getInstance().GetVolume();
+		loadSoundFiles();
+		soloud->set3dListenerUp(0, 0, 1.0f);
+		MasterVolume = MarioConfig::getInstance().GetVolume();
+	}
 }
 
 MarioAudio::~MarioAudio()
 {
-	//soloud->deinit();
-	//delete soloud;
-	soloud = nullptr;
+
 }
 
 static volatile float speedPlaybackFactor = 0.01f;
