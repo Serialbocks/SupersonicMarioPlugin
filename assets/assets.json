@@ -34,6 +34,7 @@
 "sound/samples/sfx_4/07.aiff": [0,{"jp":["@sound",24],"us":["@sound",24],"eu":["@sound",24]}],
 "sound/samples/sfx_4/08.aiff": [0,{"jp":["@sound",25],"us":["@sound",25],"eu":["@sound",25]}],
 "sound/samples/sfx_4/09.aiff": [0,{"jp":["@sound",26],"us":["@sound",26],"eu":["@sound",26]}],
+"sound/samples/sfx_5/09.aiff": [0,{"jp":["@sound",36],"us":["@sound",36],"eu":["@sound",36],"sh":["@sound",36]}],
 "sound/samples/sfx_mario/00.aiff": [0,{"jp":["@sound",83],"us":["@sound",84],"eu":["@sound",84]}],
 "sound/samples/sfx_mario/01.aiff": [0,{"jp":["@sound",84],"us":["@sound",85],"eu":["@sound",85]}],
 "sound/samples/sfx_mario/02.aiff": [0,{"jp":["@sound",85],"us":["@sound",86],"eu":["@sound",86]}],
