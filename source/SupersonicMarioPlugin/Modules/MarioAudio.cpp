@@ -5,7 +5,10 @@
 #define ATTEN_ROLLOFF_FACTOR_LIN 0
 #define PLAYBACK_SPEED_FACTOR 0.01f
 
+static MarioAudio* self = nullptr;
 static SoLoud::Soloud* soloud = nullptr;
+
+void loadSoundFiles();
 
 MarioAudio::MarioAudio()
 {
@@ -14,9 +17,11 @@ MarioAudio::MarioAudio()
 		soloud = new SoLoud::Soloud();
 		soloud->init(SoLoud::Soloud::FLAGS::LEFT_HANDED_3D);
 
-		loadSoundFiles();
 		soloud->set3dListenerUp(0, 0, 1.0f);
 		MasterVolume = MarioConfig::getInstance().GetVolume();
+		self = this;
+		std::thread loadSoundThread(loadSoundFiles);
+		loadSoundThread.detach();
 	}
 }
 
@@ -34,6 +39,13 @@ void MarioAudio::UpdateSounds(int soundMask,
 	int *yahooHandle,
 	uint32_t marioAction)
 {
+	bool soundsLoadedCpy = false;
+	loadSoundSema.acquire();
+	soundsLoadedCpy = soundsLoaded;
+	loadSoundSema.release();
+
+	if (!soundsLoadedCpy) return;
+
 	if (marioAction == ACT_WALL_KICK_AIR)
 	{
 		marioSounds[SOUND_MARIO_UH_INDEX].wav.stop();
@@ -112,38 +124,90 @@ void MarioAudio::UpdateSounds(int soundMask,
 	*inSlideHandle = slideHandle;
 }
 
-void MarioAudio::loadSoundFiles()
+
+
+void loadSoundFiles()
 {
-	std::string soundDir = SOUND_DIR;
-	for (auto i = 0; i < marioSounds.size(); i++)
+	std::string bakkesmodFolderPath = self->utils.GetBakkesmodFolderPath();
+	std::string assetsPath = bakkesmodFolderPath + "data\\assets";
+	std::string extractAssetsPath = assetsPath + "\\extract_assets.exe";
+	std::string romPath = assetsPath + "\\baserom.us.z64";
+	std::string tempDir = std::filesystem::temp_directory_path().string() + "supersonic-mario";
+
+	// Wrap each argument in quotes in case user has a space in their windows username
+	std::string extractAssetsPathWithArgs = "\"" + extractAssetsPath + "\" \"" + assetsPath + "\" \"" + tempDir + "\" \"" + romPath + "\"";
+
+	STARTUPINFOA si;
+	PROCESS_INFORMATION pi;
+	if (self->utils.FileExists(extractAssetsPath) &&
+		self->utils.FileExists(romPath))
 	{
-		std::string soundPath = soundDir + marioSounds[i].wavPath;
-		marioSounds[i].wav.load(soundPath.c_str());
+		ZeroMemory(&si, sizeof(si));
+		si.cb = sizeof(si);
+		ZeroMemory(&pi, sizeof(pi));
+		CreateProcessA(NULL, (LPSTR)extractAssetsPathWithArgs.c_str(), NULL, NULL,
+			FALSE, CREATE_NO_WINDOW, NULL, tempDir.c_str(), &si, &pi);
+		WaitForSingleObject(pi.hProcess, 20000);
 	}
 
-	// Resample certain sounds where altering playback speed isn't good enough to make it sound like the original
-	doubleResample(&marioSounds[SOUND_MARIO_YAHOO_INDEX].wav, 4160, 1.04f, 10992, 0.96f);
-	doubleResample(&marioSounds[SOUND_MARIO_HOOHOO_INDEX].wav, 2560, 1.0f, 7392, 0.83f);
-
-	// Handle mario landing doubling of step sound
-	auto stepGrass = &marioSounds[SOUND_ACTION_TERRAIN_LANDING_INDEX].wav;
-	size_t doubleStepGrassSize = (size_t)stepGrass->mSampleCount * 2 * sizeof(float);
-	float* doubleStepGrass = (float*)malloc(doubleStepGrassSize);
-
-	if (doubleStepGrass != nullptr)
+	std::string soundDir = tempDir + "\\sound\\samples";
+	for (auto i = 0; i < self->marioSounds.size(); i++)
 	{
-		ZeroMemory(doubleStepGrass, doubleStepGrassSize);
-		memcpy(doubleStepGrass, stepGrass->mData, stepGrass->mSampleCount * sizeof(float));
-		memcpy(&(doubleStepGrass[stepGrass->mSampleCount]), stepGrass->mData, stepGrass->mSampleCount * sizeof(float));
+		std::string soundPath = soundDir + self->marioSounds[i].wavPath;
+		MarioSound* marioSound = &self->marioSounds[i];
 
-		stepGrass->mData = doubleStepGrass;
-		stepGrass->mSampleCount *= 2;
+		if (self->utils.FileExists(soundPath))
+		{
+			marioSound->wav.load(soundPath.c_str());
 
-		doubleResample(stepGrass, 1216, 0.82f, 1216, 1.03f);
+			// Resample certain sounds where altering playback speed isn't good enough to make it sound like the original
+			switch (marioSound->mask)
+			{
+			case SOUND_MARIO_YAHOO:
+				self->doubleResample(&marioSound->wav, 4160, 1.04f, 10992, 0.96f);
+				break;
+			case SOUND_MARIO_HOOHOO:
+				self->doubleResample(&marioSound->wav, 2560, 1.0f, 7392, 0.83f);
+				break;
+			case SOUND_ACTION_TERRAIN_LANDING:
+			{
+				// Handle mario landing doubling of step sound
+				auto stepGrass = &marioSound->wav;
+				size_t doubleStepGrassSize = (size_t)stepGrass->mSampleCount * 2 * sizeof(float);
+				float* doubleStepGrass = (float*)malloc(doubleStepGrassSize);
 
-		marioSounds[SOUND_ACTION_TERRAIN_BODY_HIT_GROUND_INDEX].wav.mData = stepGrass->mData;
-		marioSounds[SOUND_ACTION_TERRAIN_BODY_HIT_GROUND_INDEX].wav.mSampleCount = stepGrass->mSampleCount;
+				if (doubleStepGrass != nullptr)
+				{
+					ZeroMemory(doubleStepGrass, doubleStepGrassSize);
+					memcpy(doubleStepGrass, stepGrass->mData, stepGrass->mSampleCount * sizeof(float));
+					memcpy(&(doubleStepGrass[stepGrass->mSampleCount]), stepGrass->mData, stepGrass->mSampleCount * sizeof(float));
+
+					stepGrass->mData = doubleStepGrass;
+					stepGrass->mSampleCount *= 2;
+
+					self->doubleResample(stepGrass, 1216, 0.82f, 1216, 1.03f);
+				}
+			}
+				break;
+			case SOUND_ACTION_TERRAIN_BODY_HIT_GROUND:
+				marioSound->wav.mData = self->marioSounds[SOUND_ACTION_TERRAIN_LANDING_INDEX].wav.mData;
+				marioSound->wav.mSampleCount = self->marioSounds[SOUND_ACTION_TERRAIN_LANDING_INDEX].wav.mSampleCount;
+				break;
+			default:
+				break;
+			}
+		}
+
 	}
+
+	if (self->utils.FileExists(tempDir))
+	{
+		std::filesystem::remove_all(tempDir);
+	}
+
+	self->loadSoundSema.acquire();
+	self->soundsLoaded = true;
+	self->loadSoundSema.release();
 }
 
 void MarioAudio::doubleResample(SoLoud::Wav* targetSoundWav,
@@ -152,10 +216,10 @@ void MarioAudio::doubleResample(SoLoud::Wav* targetSoundWav,
 	size_t secondResampleSourceCount,
 	float secondResampleFactor)
 {
-	size_t firstResampleDestCount = (size_t)firstResampleSourceCount * firstResampleFactor;
+	size_t firstResampleDestCount = firstResampleSourceCount * (double)firstResampleFactor;
 	float* firstResampleSource = targetSoundWav->mData;
 
-	size_t secondResampleDestCount = (size_t)secondResampleSourceCount * secondResampleFactor;
+	size_t secondResampleDestCount = secondResampleSourceCount * (double)secondResampleFactor;
 	float* secondResampleSource = &(firstResampleSource[firstResampleSourceCount]);
 
 	float* resampleDest = (float*)malloc((firstResampleDestCount + secondResampleDestCount) * sizeof(float));

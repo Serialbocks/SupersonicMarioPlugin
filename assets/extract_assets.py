@@ -804,10 +804,10 @@ def main():
     new_version = 6
     basePath = sys.argv[1]
     destPath = sys.argv[2]
+    romPath = sys.argv[3]
 
     if not os.path.isdir(destPath):
-        print('Could not find bakkesmod installation. Please install bakkesmod.')
-        return
+        os.makedirs(destPath)
 
     soundPath = os.path.join(destPath, "sound")
     if os.path.isdir(soundPath):
@@ -890,7 +890,7 @@ def main():
     # Load ROMs
     roms = {}
     for lang in langs:
-        fname = os.path.join(basePath, "baserom." + lang + ".z64")
+        fname = romPath
         try:
             with open(fname, "rb") as f:
                 roms[lang] = f.read()
@@ -898,7 +898,7 @@ def main():
             print("Failed to open " + fname + ". Please ensure it exists!")
             sys.exit(1)
         sha1 = hashlib.sha1(roms[lang]).hexdigest()
-        with open(os.path.join(basePath, "sm64." + lang + ".sha1"), "r") as f:
+        with open(os.path.join(basePath, "rom-hash.sha1"), "r") as f:
             expected_sha1 = f.read().split()[0]
         if sha1 != expected_sha1:
             print(
@@ -980,16 +980,5 @@ def main():
     with open(os.path.join(basePath, ".assets-local.txt"), "w") as f:
         f.write(output)
 
-    import shutil
-    assetsToCopy = ['baserom.us.z64', 'ROCKETBALL.obj', 'transparent.png']
-    for asset in assetsToCopy:
-        src = os.path.join(basePath, asset)
-        dst = os.path.join(destPath, asset)
-        shutil.copy(src, dst)
-
-
-    print('')
-    print('')
-    print('Assets installed successfully!')
 
 main()
