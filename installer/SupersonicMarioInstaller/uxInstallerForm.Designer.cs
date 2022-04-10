@@ -39,17 +39,23 @@ namespace SupersonicMarioInstaller
             this.uxBanner = new System.Windows.Forms.Label();
             this.uxTabs = new System.Windows.Forms.TabControl();
             this.uxWelcomePage = new System.Windows.Forms.TabPage();
+            this.uxWelcomeMessage = new System.Windows.Forms.Label();
             this.uxLicensePage = new System.Windows.Forms.TabPage();
+            this.uxAcceptLabel = new System.Windows.Forms.Label();
+            this.uxReviewTerms = new System.Windows.Forms.Label();
+            this.uxLicense = new System.Windows.Forms.TextBox();
+            this.uxBakkesmodPage = new System.Windows.Forms.TabPage();
             this.uxNext = new System.Windows.Forms.Button();
             this.uxBack = new System.Windows.Forms.Button();
-            this.uxWelcomeMessage = new System.Windows.Forms.Label();
-            this.uxBakkesmodPage = new System.Windows.Forms.TabPage();
-            this.uxLicense = new System.Windows.Forms.TextBox();
-            this.uxReviewTerms = new System.Windows.Forms.Label();
-            this.uxAcceptLabel = new System.Windows.Forms.Label();
+            this.uxMYSYS2Page = new System.Windows.Forms.TabPage();
+            this.uxBakkesLabel = new System.Windows.Forms.Label();
+            this.uxInstallBakkesmod = new System.Windows.Forms.Button();
+            this.uxBakkesProgress = new System.Windows.Forms.ProgressBar();
+            this.uxBakkesStatus = new System.Windows.Forms.Label();
             this.uxTabs.SuspendLayout();
             this.uxWelcomePage.SuspendLayout();
             this.uxLicensePage.SuspendLayout();
+            this.uxBakkesmodPage.SuspendLayout();
             this.SuspendLayout();
             // 
             // uxDivider2
@@ -135,6 +141,7 @@ namespace SupersonicMarioInstaller
             this.uxTabs.Controls.Add(this.uxWelcomePage);
             this.uxTabs.Controls.Add(this.uxLicensePage);
             this.uxTabs.Controls.Add(this.uxBakkesmodPage);
+            this.uxTabs.Controls.Add(this.uxMYSYS2Page);
             this.uxTabs.Location = new System.Drawing.Point(-1, 74);
             this.uxTabs.Name = "uxTabs";
             this.uxTabs.SelectedIndex = 0;
@@ -152,6 +159,16 @@ namespace SupersonicMarioInstaller
             this.uxWelcomePage.TabIndex = 0;
             this.uxWelcomePage.Text = "Welcome";
             // 
+            // uxWelcomeMessage
+            // 
+            this.uxWelcomeMessage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.uxWelcomeMessage.Location = new System.Drawing.Point(12, 14);
+            this.uxWelcomeMessage.Name = "uxWelcomeMessage";
+            this.uxWelcomeMessage.Size = new System.Drawing.Size(481, 166);
+            this.uxWelcomeMessage.TabIndex = 0;
+            this.uxWelcomeMessage.Text = resources.GetString("uxWelcomeMessage.Text");
+            // 
             // uxLicensePage
             // 
             this.uxLicensePage.Controls.Add(this.uxAcceptLabel);
@@ -164,6 +181,56 @@ namespace SupersonicMarioInstaller
             this.uxLicensePage.TabIndex = 1;
             this.uxLicensePage.Text = "License";
             this.uxLicensePage.UseVisualStyleBackColor = true;
+            // 
+            // uxAcceptLabel
+            // 
+            this.uxAcceptLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.uxAcceptLabel.Location = new System.Drawing.Point(12, 187);
+            this.uxAcceptLabel.Name = "uxAcceptLabel";
+            this.uxAcceptLabel.Size = new System.Drawing.Size(484, 34);
+            this.uxAcceptLabel.TabIndex = 2;
+            this.uxAcceptLabel.Text = "If you accept the terms of the agreement, click I Agree to continue. You must acc" +
+    "ept the agreement to install Supersonic Mario.";
+            // 
+            // uxReviewTerms
+            // 
+            this.uxReviewTerms.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.uxReviewTerms.Location = new System.Drawing.Point(12, 7);
+            this.uxReviewTerms.Name = "uxReviewTerms";
+            this.uxReviewTerms.Size = new System.Drawing.Size(481, 23);
+            this.uxReviewTerms.TabIndex = 1;
+            this.uxReviewTerms.Text = "Please review the license terms before installing Supersonic Mario.";
+            // 
+            // uxLicense
+            // 
+            this.uxLicense.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.uxLicense.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.uxLicense.Location = new System.Drawing.Point(12, 33);
+            this.uxLicense.Multiline = true;
+            this.uxLicense.Name = "uxLicense";
+            this.uxLicense.ReadOnly = true;
+            this.uxLicense.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.uxLicense.Size = new System.Drawing.Size(481, 140);
+            this.uxLicense.TabIndex = 0;
+            this.uxLicense.TabStop = false;
+            this.uxLicense.Text = resources.GetString("uxLicense.Text");
+            // 
+            // uxBakkesmodPage
+            // 
+            this.uxBakkesmodPage.Controls.Add(this.uxBakkesStatus);
+            this.uxBakkesmodPage.Controls.Add(this.uxBakkesProgress);
+            this.uxBakkesmodPage.Controls.Add(this.uxInstallBakkesmod);
+            this.uxBakkesmodPage.Controls.Add(this.uxBakkesLabel);
+            this.uxBakkesmodPage.Location = new System.Drawing.Point(4, 22);
+            this.uxBakkesmodPage.Name = "uxBakkesmodPage";
+            this.uxBakkesmodPage.Padding = new System.Windows.Forms.Padding(3);
+            this.uxBakkesmodPage.Size = new System.Drawing.Size(502, 236);
+            this.uxBakkesmodPage.TabIndex = 2;
+            this.uxBakkesmodPage.Text = "Bakkesmod";
+            this.uxBakkesmodPage.UseVisualStyleBackColor = true;
             // 
             // uxNext
             // 
@@ -188,61 +255,56 @@ namespace SupersonicMarioInstaller
             this.uxBack.Visible = false;
             this.uxBack.Click += new System.EventHandler(this.uxBack_Click);
             // 
-            // uxWelcomeMessage
+            // uxMYSYS2Page
             // 
-            this.uxWelcomeMessage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.uxMYSYS2Page.Location = new System.Drawing.Point(4, 22);
+            this.uxMYSYS2Page.Name = "uxMYSYS2Page";
+            this.uxMYSYS2Page.Padding = new System.Windows.Forms.Padding(3);
+            this.uxMYSYS2Page.Size = new System.Drawing.Size(502, 236);
+            this.uxMYSYS2Page.TabIndex = 3;
+            this.uxMYSYS2Page.Text = "MYSYS2";
+            this.uxMYSYS2Page.UseVisualStyleBackColor = true;
+            // 
+            // uxBakkesLabel
+            // 
+            this.uxBakkesLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.uxWelcomeMessage.Location = new System.Drawing.Point(12, 14);
-            this.uxWelcomeMessage.Name = "uxWelcomeMessage";
-            this.uxWelcomeMessage.Size = new System.Drawing.Size(481, 166);
-            this.uxWelcomeMessage.TabIndex = 0;
-            this.uxWelcomeMessage.Text = resources.GetString("uxWelcomeMessage.Text");
+            this.uxBakkesLabel.Location = new System.Drawing.Point(9, 3);
+            this.uxBakkesLabel.Name = "uxBakkesLabel";
+            this.uxBakkesLabel.Size = new System.Drawing.Size(484, 39);
+            this.uxBakkesLabel.TabIndex = 0;
+            this.uxBakkesLabel.Text = "No installation of bakkesmod has been detected. To continue, click the button to " +
+    "Download and Install bakkesmod, or do so yourself from https://www.bakkesmod.com" +
+    "/ and restart this installer.\r\n";
             // 
-            // uxBakkesmodPage
+            // uxInstallBakkesmod
             // 
-            this.uxBakkesmodPage.Location = new System.Drawing.Point(4, 22);
-            this.uxBakkesmodPage.Name = "uxBakkesmodPage";
-            this.uxBakkesmodPage.Padding = new System.Windows.Forms.Padding(3);
-            this.uxBakkesmodPage.Size = new System.Drawing.Size(502, 236);
-            this.uxBakkesmodPage.TabIndex = 2;
-            this.uxBakkesmodPage.Text = "Bakkesmod";
-            this.uxBakkesmodPage.UseVisualStyleBackColor = true;
-            // 
-            // uxLicense
-            // 
-            this.uxLicense.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.uxInstallBakkesmod.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.uxLicense.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.uxLicense.Location = new System.Drawing.Point(12, 33);
-            this.uxLicense.Multiline = true;
-            this.uxLicense.Name = "uxLicense";
-            this.uxLicense.ReadOnly = true;
-            this.uxLicense.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.uxLicense.Size = new System.Drawing.Size(481, 140);
-            this.uxLicense.TabIndex = 0;
-            this.uxLicense.TabStop = false;
-            this.uxLicense.Text = resources.GetString("uxLicense.Text");
+            this.uxInstallBakkesmod.Location = new System.Drawing.Point(172, 114);
+            this.uxInstallBakkesmod.Name = "uxInstallBakkesmod";
+            this.uxInstallBakkesmod.Size = new System.Drawing.Size(157, 57);
+            this.uxInstallBakkesmod.TabIndex = 1;
+            this.uxInstallBakkesmod.Text = "Install Bakkesmod";
+            this.uxInstallBakkesmod.UseVisualStyleBackColor = true;
+            this.uxInstallBakkesmod.Click += new System.EventHandler(this.uxInstallBakkesmod_Click);
             // 
-            // uxReviewTerms
+            // uxBakkesProgress
             // 
-            this.uxReviewTerms.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.uxBakkesProgress.Location = new System.Drawing.Point(3, 83);
+            this.uxBakkesProgress.Name = "uxBakkesProgress";
+            this.uxBakkesProgress.Size = new System.Drawing.Size(490, 23);
+            this.uxBakkesProgress.TabIndex = 2;
+            this.uxBakkesProgress.Visible = false;
+            // 
+            // uxBakkesStatus
+            // 
+            this.uxBakkesStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.uxReviewTerms.Location = new System.Drawing.Point(12, 7);
-            this.uxReviewTerms.Name = "uxReviewTerms";
-            this.uxReviewTerms.Size = new System.Drawing.Size(481, 23);
-            this.uxReviewTerms.TabIndex = 1;
-            this.uxReviewTerms.Text = "Please review the license terms before installing Supersonic Mario.";
-            // 
-            // uxAcceptLabel
-            // 
-            this.uxAcceptLabel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.uxAcceptLabel.Location = new System.Drawing.Point(12, 187);
-            this.uxAcceptLabel.Name = "uxAcceptLabel";
-            this.uxAcceptLabel.Size = new System.Drawing.Size(484, 34);
-            this.uxAcceptLabel.TabIndex = 2;
-            this.uxAcceptLabel.Text = "If you accept the terms of the agreement, click I Agree to continue. You must acc" +
-    "ept the agreement to install Supersonic Mario.";
+            this.uxBakkesStatus.Location = new System.Drawing.Point(6, 57);
+            this.uxBakkesStatus.Name = "uxBakkesStatus";
+            this.uxBakkesStatus.Size = new System.Drawing.Size(487, 23);
+            this.uxBakkesStatus.TabIndex = 3;
             // 
             // uxInstallerForm
             // 
@@ -269,6 +331,7 @@ namespace SupersonicMarioInstaller
             this.uxWelcomePage.ResumeLayout(false);
             this.uxLicensePage.ResumeLayout(false);
             this.uxLicensePage.PerformLayout();
+            this.uxBakkesmodPage.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -292,6 +355,11 @@ namespace SupersonicMarioInstaller
         private System.Windows.Forms.TextBox uxLicense;
         private System.Windows.Forms.Label uxReviewTerms;
         private System.Windows.Forms.Label uxAcceptLabel;
+        private System.Windows.Forms.TabPage uxMYSYS2Page;
+        private System.Windows.Forms.Label uxBakkesLabel;
+        private System.Windows.Forms.Button uxInstallBakkesmod;
+        private System.Windows.Forms.ProgressBar uxBakkesProgress;
+        private System.Windows.Forms.Label uxBakkesStatus;
     }
 }
 
