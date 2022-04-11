@@ -81,6 +81,7 @@ public:
 		int *inSlideHandle,
 		int *yahooHandle,
 		uint32_t marioAction);
+	void CheckReinit();
 	void doubleResample(SoLoud::Wav* targetSoundWav,
 		size_t firstResampleSourceCount,
 		float firstResampleFactor,
@@ -122,6 +123,7 @@ public:
 		{ SOUND_MARIO_ATTACKED,						"\\sfx_mario\\0A.wav",					1.0f},
 	};
 	bool soundsLoaded = false;
+	bool soundsLoadSuccess = false;
 	std::counting_semaphore<1> loadSoundSema{ 1 };
 
 private:

@@ -25,6 +25,17 @@ MarioAudio::MarioAudio()
 	}
 }
 
+void MarioAudio::CheckReinit()
+{
+	loadSoundSema.acquire();
+	if (soundsLoaded && !soundsLoadSuccess)
+	{
+		std::thread loadSoundThread(loadSoundFiles);
+		loadSoundThread.detach();
+	}
+	loadSoundSema.release();
+}
+
 void MarioAudio::UpdateSounds(int soundMask,
 	Vector sourcePos,
 	Vector sourceVel,
@@ -123,6 +134,9 @@ void MarioAudio::UpdateSounds(int soundMask,
 
 void loadSoundFiles()
 {
+	self->loadSoundSema.acquire();
+	self->soundsLoadSuccess = false;
+	self->loadSoundSema.release();
 	std::string bakkesmodFolderPath = Utils::GetBakkesmodFolderPath();
 	std::string assetsPath = bakkesmodFolderPath + "data\\assets";
 	std::string extractAssetsPath = assetsPath + "\\extract_assets.exe";
@@ -158,6 +172,10 @@ void loadSoundFiles()
 
 		if (Utils::FileExists(soundPath))
 		{
+			self->loadSoundSema.acquire();
+			self->soundsLoadSuccess = true;
+			self->loadSoundSema.release();
+
 			marioSound->wav.load(soundPath.c_str());
 
 			// Resample certain sounds where altering playback speed isn't good enough to make it sound like the original

@@ -26,6 +26,7 @@
 #include "GameModes/RocketGameMode.h"
 #include "../../External/BakkesModSDK/include/bakkesmod/wrappers/PluginManagerWrapper.h"
 #include "Networking/Networking.h"
+#include "xxHash/xxhash.h"
 
 extern "C" {
     #include "libsm64.h"
@@ -148,6 +149,7 @@ public:
         0.983f, 0.0f, 0.717f, 0.0f, 0.0f, 0.0f
     };
     int menuStackCount = 0;
+    bool Sm64Initialized = false;
 
 private:
     /* SM64 Members */
@@ -157,7 +159,6 @@ private:
     bool locationInit;
     Mesh* marioMesh = nullptr;
     Mesh* ballMesh = nullptr;
-    bool sm64Initialized = false;
     bool meshesInitialized = false;
     struct SM64MarioBodyState marioBodyStateIn;
     std::shared_ptr<CVarManagerWrapper> cvarManager;

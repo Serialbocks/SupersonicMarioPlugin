@@ -456,6 +456,11 @@ void SupersonicMarioPlugin::renderSm64Preferences()
     sm64->RenderPreferences();
 }
 
+bool SupersonicMarioPlugin::sm64Initialized()
+{
+    return sm64->Sm64Initialized;
+}
+
 void SupersonicMarioPlugin::parseTeamArguments(const std::vector<std::string>& arguments)
 {
     if (arguments.size() < 6) {

@@ -186,6 +186,7 @@ private:
     bool isHostingSm64Game();
     void renderSm64Options();
     void renderSm64Preferences();
+    bool sm64Initialized();
     void refreshGameSettingsConstants();
     bool renderCustomMapsSelection(std::map<std::filesystem::path, std::string>& customMaps,
         std::filesystem::path& currentCustomMap, bool& refreshCustomMaps, bool includeWorkshopMaps = true,

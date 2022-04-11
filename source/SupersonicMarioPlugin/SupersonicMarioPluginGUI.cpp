@@ -264,6 +264,13 @@ void SupersonicMarioPlugin::renderMultiplayerTab()
 /// <summary>Renders the host section in game multiplayer tab.</summary>
 void SupersonicMarioPlugin::renderMultiplayerTabHost()
 {
+    if (!sm64Initialized())
+    {
+        ImGui::Banner(
+            "Could not load the SM64 ROM or is not a valid SM64 US version ROM. Please check your ROM path in the Preferences tab.",
+            IM_COL32_ERROR_BANNER);
+        return;
+    }
     const ImVec2 hostGameTabSize = { -ImGui::GetFrameWidthWithSpacing() * 6,
                                      -ImGui::GetFrameHeightWithSpacing() + 23 };
     if (ImGui::BeginChild("#HostGame", hostGameTabSize, true)) {
@@ -833,6 +840,10 @@ void BeginHostStatusBorder(const Networking::DestAddrType addrType, const Networ
 /// <summary>Renders the join section in game multiplayer tab.</summary>
 void SupersonicMarioPlugin::renderMultiplayerTabJoin()
 {
+    if (!sm64Initialized())
+    {
+        return;
+    }
     if (ImGui::BeginChild("#JoinGame", ImVec2(0, 0), true)) {
         ImGui::PushItemWidth(-5);
         ImGui::Indent(5);

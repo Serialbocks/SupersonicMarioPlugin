@@ -21,6 +21,7 @@
 #define PUNCH_BALL_VEL_VERT 250.0f
 #define DIVE_BALL_VEL_HORIZ 639.0f
 #define DIVE_BALL_VEL_VERT 166.6f
+#define IM_COL32_ERROR_BANNER (ImColor(211,  47,  47, 255))
 
 inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
@@ -136,14 +137,6 @@ SM64::~SM64()
 {
 	
 	gameWrapper->UnregisterDrawables();
-	//UnhookEvent(vehicleInputCheck);
-	//UnhookEvent(initialCharacterSpawnCheck);
-	//UnhookEvent(CharacterSpawnCheck);
-	//UnhookEvent(preGameTickCheck);
-	//UnhookEvent(endPreGameTickCheck);
-	//UnhookEvent(clientEndPreGameTickCheck);
-	//UnhookEvent(overtimeGameCheck);
-	//UnhookEvent(clientOvertimeGameCheck);
 	gameWrapper->UnhookEventPost("Function TAGame.EngineShare_TA.EventPostPhysicsStep");
 	gameWrapper->UnhookEventPost("Function TAGame.NetworkInputBuffer_TA.ClientAckFrame");
 	gameWrapper->UnhookEventPost("Function GameEvent_Soccar_TA.PostGoalScored.Tick");
@@ -152,6 +145,11 @@ SM64::~SM64()
 	matchSettingsSema.release();
 	marioMeshPoolSema.release();
 	DestroySM64();
+	for (int i = 0; i < remoteMarios.size(); i++)
+	{
+		remoteMarios[i]->sema.release();
+		delete remoteMarios[i];
+	}
 }
 
 void SM64::OnGameLeft(bool deleteMario)
@@ -586,11 +584,34 @@ void SM64::RenderOptions()
 void SM64::RenderPreferences()
 {
 	MarioAudio* marioAudio = &MarioAudio::getInstance();
+	MarioConfig* marioConfig = &MarioConfig::getInstance();
+
 	ImGui::TextUnformatted("Preferences");
 	ImGui::SliderInt("Mario Volume", &marioAudio->MasterVolume, 0, 100);
 	if (ImGui::IsItemDeactivatedAfterChange())
 	{
 		MarioConfig::getInstance().SetVolume(marioAudio->MasterVolume);
+	}
+	matchSettingsSema.acquire();
+	bool inSm64Game = matchSettings.isInSm64Game;
+	matchSettingsSema.release();
+	if (!inSm64Game)
+	{
+		std::string romPath = marioConfig->GetRomPath();
+		if (ImGui::InputText("ROM Path", &romPath)) {
+			marioConfig->SetRomPath(romPath);
+			if (Sm64Initialized)
+			{
+				DestroySM64();
+			}
+			InitSM64();
+		}
+		if (!Sm64Initialized)
+		{
+			ImGui::Banner(
+				"Could not load the SM64 ROM or is not a valid SM64 US version ROM.",
+				IM_COL32_ERROR_BANNER);
+		}
 	}
 }
 
@@ -628,6 +649,8 @@ void SM64::Activate(const bool active)
 	isActive = active;
 }
 
+
+constexpr XXH128_hash_t ROM_HASH = { 0x8a90daa33e09a265, 0xc2d257a56ce0d963 };
 void SM64::InitSM64()
 {
 	size_t romSize;
@@ -638,14 +661,20 @@ void SM64::InitSM64()
 		return;
 	}
 
+	const auto romHash = XXH3_128bits(rom, romSize);
+	if (!XXH128_isEqual(romHash, ROM_HASH))
+	{
+		return;
+	}
+
+	MarioAudio::getInstance().CheckReinit();
+
 	texture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
 
-	//sm64_global_terminate();
-	if (!sm64Initialized)
+	if (!Sm64Initialized)
 	{
 		sm64_global_init(rom, texture, NULL, NULL);
 		sm64_static_surfaces_load(surfaces, surfaces_count);
-		sm64Initialized = true;
 	}
 
 	cameraPos[0] = 0.0f;
@@ -655,7 +684,8 @@ void SM64::InitSM64()
 
 	locationInit = false;
 
-	renderer = new Renderer();
+	renderer = &Renderer::getInstance();
+	Sm64Initialized = true;
 }
 
 void SM64::DestroySM64()
@@ -667,12 +697,7 @@ void SM64::DestroySM64()
 	localMario.marioId = -2;
 	sm64_global_terminate();
 	free(texture);
-	for (int i = 0; i < remoteMarios.size(); i++)
-	{
-		remoteMarios[i]->sema.release();
-		delete remoteMarios[i];
-	}
-	delete renderer;
+	Sm64Initialized = false;
 }
 
 void SM64::onSetVehicleInput(CarWrapper car, void* params)

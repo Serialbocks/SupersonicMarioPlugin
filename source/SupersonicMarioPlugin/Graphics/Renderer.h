@@ -23,8 +23,11 @@ class Mesh;
 class Renderer
 {
 public:
-	Renderer();
-	~Renderer();
+	static Renderer& getInstance()
+	{
+		static Renderer instance;
+		return instance;
+	}
 	Mesh* CreateMesh(size_t maxTriangles,
 		uint8_t* inTexture = nullptr,
 		uint8_t* inAltTexture = nullptr,
@@ -46,6 +49,8 @@ public:
 private:
 
 private:
+	Renderer();
+	~Renderer();
 	void Render();
 	void CreatePipeline();
 	Microsoft::WRL::ComPtr<ID3DBlob> LoadShader(const char* shaderData, std::string targetShaderVersion, std::string shaderEntry);

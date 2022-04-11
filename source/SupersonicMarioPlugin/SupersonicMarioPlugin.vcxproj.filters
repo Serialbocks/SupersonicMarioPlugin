@@ -43,6 +43,9 @@
     <Filter Include="External\soloud">
       <UniqueIdentifier>{ea841503-df1f-4b6f-8672-ec7183aee2a8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External\xxHash">
+      <UniqueIdentifier>{8fe1ec9c-4598-4520-b2ef-a2bd268948ec}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SupersonicMarioPlugin.h">
@@ -182,6 +185,9 @@
     </ClInclude>
     <ClInclude Include="Modules\MarioConfig.h">
       <Filter>Modules</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\xxHash\xxhash.h">
+      <Filter>External\xxHash</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -361,6 +367,9 @@
     </ClCompile>
     <ClCompile Include="Modules\MarioConfig.cpp">
       <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="..\External\xxHash\xxhash.c">
+      <Filter>External\xxHash</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
