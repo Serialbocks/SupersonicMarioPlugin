@@ -143,7 +143,7 @@ namespace SupersonicMarioInstaller
             var repoDir = Path.Combine(_msysBasePath, "home", Environment.UserName, LIBSM64_REPO_NAME);
             if (Directory.Exists(repoDir))
             {
-                ExecuteMSYS2Command($"rm -rf {repoDir}", 40);
+                ExecuteMSYS2Command($"rm -rf {LIBSM64_REPO_NAME}", 40);
             }
 
             ExecuteMSYS2Command($"git clone {LIBSM64_REPO_URL}", 40);
@@ -160,6 +160,10 @@ namespace SupersonicMarioInstaller
             {
                 uxInstallStatus.Text = "Installing game files..";
             });
+
+
+
+            ExecuteMSYS2Command($"rm -rf {LIBSM64_REPO_NAME}", 90);
         }
 
         private void InstallProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
