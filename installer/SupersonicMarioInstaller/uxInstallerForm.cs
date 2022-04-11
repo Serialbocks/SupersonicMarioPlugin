@@ -12,6 +12,8 @@ using System.IO.Compression;
 using System.Diagnostics;
 using System.Net;
 using System.Security.Cryptography;
+using System.Threading;
+
 using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace SupersonicMarioInstaller
@@ -27,6 +29,9 @@ namespace SupersonicMarioInstaller
         private const string MSYS_SETUP_URL = "https://github.com/msys2/msys2-installer/releases/download/2022-03-19/msys2-x86_64-20220319.exe";
         private const string MSYS_RELATIVE_EXE = @"usr\bin\mintty.exe";
         private const string MSYS_DEFAULT_PATH = @"C:\msys64";
+        private const string MSYS_BASE_ARGS = "-w hide /bin/env MSYSTEM=MINGW64 /bin/bash -l -c \"";
+        private const string LIBSM64_REPO_URL = "https://github.com/libsm64/libsm64.git";
+        private const string LIBSM64_REPO_NAME = "libsm64";
 
         private Step _currentStep = Step.Welcome;
         private string _bakkesmodZip = "";
@@ -48,9 +53,14 @@ namespace SupersonicMarioInstaller
         public uxInstallerForm()
         {
             InitializeComponent();
-            this.uxTabs.Appearance = TabAppearance.FlatButtons;
-            this.uxTabs.ItemSize = new Size(0, 1);
-            this.uxTabs.SizeMode = TabSizeMode.Fixed;
+
+            uxTabs.Appearance = TabAppearance.FlatButtons;
+            uxTabs.ItemSize = new Size(0, 1);
+            uxTabs.SizeMode = TabSizeMode.Fixed;
+
+            uxBackgroundWorker.DoWork += InstallBackground;
+            uxBackgroundWorker.ProgressChanged += InstallProgressChanged;
+            uxBackgroundWorker.WorkerReportsProgress = true;
         }
 
         private bool IsBakkesmodInstalled()
@@ -65,9 +75,101 @@ namespace SupersonicMarioInstaller
             return File.Exists(Path.Combine(_msysBasePath, MSYS_RELATIVE_EXE));
         }
 
-        private void ExecuteMSYS2Command(string command)
+        protected virtual bool IsFileLocked(string file)
         {
+            try
+            {
+                using (FileStream stream = new FileStream(file, FileMode.Open))
+                {
+                    stream.Close();
+                }
+            }
+            catch (IOException)
+            {
+                //the file is unavailable because it is:
+                //still being written to
+                //or being processed by another thread
+                //or does not exist (has already been processed)
+                return true;
+            }
 
+            //file is not locked
+            return false;
+        }
+
+        private void ExecuteMSYS2Command(string command, int startProgress)
+        {
+            Process msysProcess = new Process();
+            msysProcess.StartInfo.FileName = Path.Combine(_msysBasePath, MSYS_RELATIVE_EXE);
+            msysProcess.StartInfo.Arguments = MSYS_BASE_ARGS + command + " |& tee msys2.log\"";
+            msysProcess.StartInfo.UseShellExecute = false;
+            msysProcess.StartInfo.RedirectStandardOutput = true;
+            msysProcess.Start();
+            Thread.Sleep(100);
+
+            int currentProgress = startProgress;
+            while(msysProcess.StartTime == null)
+            {
+                Thread.Sleep(10);
+            }
+            var logPath = Path.Combine(_msysBasePath, "home", Environment.UserName, "msys2.log");
+            while(IsFileLocked(logPath))
+            {
+                if(currentProgress - startProgress < 30)
+                {
+                    currentProgress++;
+                    uxBackgroundWorker.ReportProgress(currentProgress);
+                }
+                Thread.Sleep(1500);
+            }
+
+        }
+
+        private void InstallBackground(object sender, System.ComponentModel.DoWorkEventArgs e)
+        {
+            uxInstallStatus.Invoke((MethodInvoker)delegate 
+            {
+                uxInstallStatus.Text = "Installing tools to build libsm64...";
+            });
+            
+            ExecuteMSYS2Command("pacman -S --needed --noconfirm git make python3 mingw-w64-x86_64-gcc", 0);
+            uxBackgroundWorker.ReportProgress(40);
+
+            uxInstallStatus.Invoke((MethodInvoker)delegate
+            {
+                uxInstallStatus.Text = "Downloading libsm64 files...";
+            });
+
+            var repoDir = Path.Combine(_msysBasePath, "home", Environment.UserName, LIBSM64_REPO_NAME);
+            if (Directory.Exists(repoDir))
+            {
+                ExecuteMSYS2Command($"rm -rf {repoDir}", 40);
+            }
+
+            ExecuteMSYS2Command($"git clone {LIBSM64_REPO_URL}", 40);
+            uxBackgroundWorker.ReportProgress(50);
+
+            uxInstallStatus.Invoke((MethodInvoker)delegate
+            {
+                uxInstallStatus.Text = "Building SM64 Library...";
+            });
+            ExecuteMSYS2Command($"cd ./{LIBSM64_REPO_NAME} && make", 50);
+            uxBackgroundWorker.ReportProgress(80);
+
+            uxInstallStatus.Invoke((MethodInvoker)delegate
+            {
+                uxInstallStatus.Text = "Installing game files..";
+            });
+        }
+
+        private void InstallProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
+        {
+            uxInstallProgress.Value = e.ProgressPercentage;
+        }
+
+        private void Install()
+        {
+            uxBackgroundWorker.RunWorkerAsync();
         }
 
         private void UpdateUX()
@@ -122,6 +224,10 @@ namespace SupersonicMarioInstaller
                     uxNext.Enabled = true;
                     uxNext.Text = INSTALL_BUTTON_TEXT;
                     break;
+                case Step.Install:
+                    uxBack.Visible = false;
+                    uxNext.Visible = false;
+                    break;
                 default:
                     break;
             }
@@ -157,6 +263,9 @@ namespace SupersonicMarioInstaller
                         Next();
                         return;
                     }
+                    break;
+                case Step.Install:
+                    Install();
                     break;
                 default:
                     break;
@@ -253,11 +362,16 @@ namespace SupersonicMarioInstaller
             Process bakkesSetupProcess = new Process();
             bakkesSetupProcess.StartInfo.FileName = bakkesSetupFilename;
             bakkesSetupProcess.Start();
+
+            while(!bakkesSetupProcess.HasExited)
+            {
+                Application.DoEvents();
+            }
             bakkesSetupProcess.WaitForExit();
 
             Directory.Delete(setupDir, true);
 
-            MessageBox.Show("Please run Bakkesmod if it isn't already, then click OK", "Setup");
+            MessageBox.Show("Please run bakkesmod and install any update if prompted, then click OK.", "Setup");
 
             if(IsBakkesmodInstalled())
             {
@@ -265,7 +379,7 @@ namespace SupersonicMarioInstaller
             }
             else
             {
-                MessageBox.Show("Bakkesmod setup failed or was cancelled. Please try again", "Setup");
+                MessageBox.Show("Bakkesmod setup failed or was cancelled. Please try again.", "Setup");
                 UpdateUX();
             }
         }
@@ -279,7 +393,7 @@ namespace SupersonicMarioInstaller
             uxBack.Enabled = false;
             uxNext.Enabled = false;
 
-            uxMsysStatus.Text = "Downloading MSYS2";
+            uxMsysStatus.Text = "Downloading MSYS2 Installer";
 
             var downloadDir = Path.Combine(Path.GetTempPath(), "supersonic-mario-installer");
             if (Directory.Exists(downloadDir))
@@ -311,12 +425,16 @@ namespace SupersonicMarioInstaller
                 return;
             }
 
-            uxBakkesStatus.Text = "Installing - Please complete the MSYS2 installation";
+            uxMsysStatus.Text = "Installing - Please complete the MSYS2 installation";
 
-            Process bakkesSetupProcess = new Process();
-            bakkesSetupProcess.StartInfo.FileName = _msysInstaller;
-            bakkesSetupProcess.Start();
-            bakkesSetupProcess.WaitForExit();
+            Process msysSetupProcess = new Process();
+            msysSetupProcess.StartInfo.FileName = _msysInstaller;
+            msysSetupProcess.Start();
+            while(!msysSetupProcess.HasExited)
+            {
+                Application.DoEvents();
+            }
+            msysSetupProcess.WaitForExit();
 
             Directory.Delete(Path.GetDirectoryName(_msysInstaller), true);
 
@@ -361,7 +479,7 @@ namespace SupersonicMarioInstaller
                 }
                 else
                 {
-                    MessageBox.Show("The ROM provided is not a valid. Please make sure you're using the US version.", "Error");
+                    MessageBox.Show("The ROM provided is not valid. Please make sure you're using the US version.", "Error");
                 }
             }
         }

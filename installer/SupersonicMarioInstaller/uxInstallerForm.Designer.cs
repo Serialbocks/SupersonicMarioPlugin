@@ -45,6 +45,7 @@ namespace SupersonicMarioInstaller
             this.uxReviewTerms = new System.Windows.Forms.Label();
             this.uxLicense = new System.Windows.Forms.TextBox();
             this.uxRomSelectPage = new System.Windows.Forms.TabPage();
+            this.uxRomNote = new System.Windows.Forms.Label();
             this.uxRomBrowse = new System.Windows.Forms.Button();
             this.uxRomPath = new System.Windows.Forms.TextBox();
             this.uxROMInstructions = new System.Windows.Forms.Label();
@@ -66,7 +67,9 @@ namespace SupersonicMarioInstaller
             this.uxNext = new System.Windows.Forms.Button();
             this.uxBack = new System.Windows.Forms.Button();
             this.uxOpenFileDialog = new System.Windows.Forms.OpenFileDialog();
-            this.uxRomNote = new System.Windows.Forms.Label();
+            this.uxInstallProgress = new System.Windows.Forms.ProgressBar();
+            this.uxInstallStatus = new System.Windows.Forms.Label();
+            this.uxBackgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.uxTabs.SuspendLayout();
             this.uxWelcomePage.SuspendLayout();
             this.uxLicensePage.SuspendLayout();
@@ -74,6 +77,7 @@ namespace SupersonicMarioInstaller
             this.uxBakkesmodPage.SuspendLayout();
             this.uxMSYS2Page.SuspendLayout();
             this.uxPreinstallPage.SuspendLayout();
+            this.uxInstallPage.SuspendLayout();
             this.SuspendLayout();
             // 
             // uxDivider2
@@ -254,6 +258,17 @@ namespace SupersonicMarioInstaller
             this.uxRomSelectPage.Text = "ROM";
             this.uxRomSelectPage.UseVisualStyleBackColor = true;
             // 
+            // uxRomNote
+            // 
+            this.uxRomNote.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.uxRomNote.Location = new System.Drawing.Point(9, 99);
+            this.uxRomNote.Name = "uxRomNote";
+            this.uxRomNote.Size = new System.Drawing.Size(488, 37);
+            this.uxRomNote.TabIndex = 3;
+            this.uxRomNote.Text = "Note: If this ROM path changes, it will need to be updated within the mod\'s in-ga" +
+    "me settings menu (F3)";
+            // 
             // uxRomBrowse
             // 
             this.uxRomBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -269,6 +284,7 @@ namespace SupersonicMarioInstaller
             // 
             this.uxRomPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.uxRomPath.BackColor = System.Drawing.SystemColors.ButtonHighlight;
             this.uxRomPath.Location = new System.Drawing.Point(9, 53);
             this.uxRomPath.Name = "uxRomPath";
             this.uxRomPath.ReadOnly = true;
@@ -425,6 +441,8 @@ namespace SupersonicMarioInstaller
             // 
             // uxInstallPage
             // 
+            this.uxInstallPage.Controls.Add(this.uxInstallStatus);
+            this.uxInstallPage.Controls.Add(this.uxInstallProgress);
             this.uxInstallPage.Location = new System.Drawing.Point(4, 22);
             this.uxInstallPage.Name = "uxInstallPage";
             this.uxInstallPage.Padding = new System.Windows.Forms.Padding(3);
@@ -470,15 +488,22 @@ namespace SupersonicMarioInstaller
             // 
             this.uxOpenFileDialog.Filter = "z64 files (*.z64)|*.z64";
             // 
-            // uxRomNote
+            // uxInstallProgress
             // 
-            this.uxRomNote.AutoSize = true;
-            this.uxRomNote.Location = new System.Drawing.Point(9, 99);
-            this.uxRomNote.Name = "uxRomNote";
-            this.uxRomNote.Size = new System.Drawing.Size(488, 13);
-            this.uxRomNote.TabIndex = 3;
-            this.uxRomNote.Text = "Note: If this ROM path changes, it will need to be updated within the mod\'s in-ga" +
-    "me settings menu (F3)";
+            this.uxInstallProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.uxInstallProgress.Location = new System.Drawing.Point(9, 68);
+            this.uxInstallProgress.Name = "uxInstallProgress";
+            this.uxInstallProgress.Size = new System.Drawing.Size(481, 23);
+            this.uxInstallProgress.TabIndex = 0;
+            // 
+            // uxInstallStatus
+            // 
+            this.uxInstallStatus.AutoSize = true;
+            this.uxInstallStatus.Location = new System.Drawing.Point(9, 49);
+            this.uxInstallStatus.Name = "uxInstallStatus";
+            this.uxInstallStatus.Size = new System.Drawing.Size(0, 13);
+            this.uxInstallStatus.TabIndex = 1;
             // 
             // uxInstallerForm
             // 
@@ -512,6 +537,8 @@ namespace SupersonicMarioInstaller
             this.uxMSYS2Page.PerformLayout();
             this.uxPreinstallPage.ResumeLayout(false);
             this.uxPreinstallPage.PerformLayout();
+            this.uxInstallPage.ResumeLayout(false);
+            this.uxInstallPage.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -555,6 +582,9 @@ namespace SupersonicMarioInstaller
         private System.Windows.Forms.ProgressBar uxMSYSProgress;
         private System.Windows.Forms.Label uxPreinstallLabel;
         private System.Windows.Forms.Label uxRomNote;
+        private System.Windows.Forms.Label uxInstallStatus;
+        private System.Windows.Forms.ProgressBar uxInstallProgress;
+        private System.ComponentModel.BackgroundWorker uxBackgroundWorker;
     }
 }
 
