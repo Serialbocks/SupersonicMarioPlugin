@@ -11,6 +11,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Diagnostics;
 using System.Net;
+using System.Security.Cryptography;
+using Microsoft.WindowsAPICodePack.Dialogs;
 
 namespace SupersonicMarioInstaller
 {
@@ -18,20 +20,29 @@ namespace SupersonicMarioInstaller
     {
         private const string NEXT_BUTTON_TEXT = "Next >";
         private const string AGREE_BUTTON_TEXT = "I Agree";
-        private const string BACK_BUTTON_TEXT = "< Back";
+        private const string INSTALL_BUTTON_TEXT = "Install";
 
+        private const string SM64_MD5 = "20b854b239203baf6c961b850a4a51a2";
         private const string BAKKESMOD_SETUP_URL = "https://github.com/bakkesmodorg/BakkesModInjectorCpp/releases/latest/download/BakkesModSetup.zip";
+        private const string MSYS_SETUP_URL = "https://github.com/msys2/msys2-installer/releases/download/2022-03-19/msys2-x86_64-20220319.exe";
+        private const string MSYS_RELATIVE_EXE = @"usr\bin\mintty.exe";
+        private const string MSYS_DEFAULT_PATH = @"C:\msys64";
 
         private Step _currentStep = Step.Welcome;
         private string _bakkesmodZip = "";
+        private string _msysInstaller = "";
+        private string _msysBasePath = MSYS_DEFAULT_PATH;
 
         enum Step
         {
             Welcome,
             License,
+            ROM,
             Bakkesmod,
-            MYSYS2,
-            Install
+            MSYS2,
+            Preinstall,
+            Install,
+            Postinstall
         };
 
         public uxInstallerForm()
@@ -49,6 +60,16 @@ namespace SupersonicMarioInstaller
             return Directory.Exists(bakkesmodPath);
         }
 
+        private bool IsMSYS2Installed()
+        {
+            return File.Exists(Path.Combine(_msysBasePath, MSYS_RELATIVE_EXE));
+        }
+
+        private void ExecuteMSYS2Command(string command)
+        {
+
+        }
+
         private void UpdateUX()
         {
             switch(_currentStep)
@@ -64,6 +85,13 @@ namespace SupersonicMarioInstaller
                     uxNext.Enabled = true;
                     uxNext.Text = AGREE_BUTTON_TEXT;
                     break;
+                case Step.ROM:
+                    uxBack.Visible = true;
+                    uxNext.Visible = true;
+                    uxOpenFileDialog.Filter = "z64 files (*.z64)|*.z64";
+                    uxNext.Enabled = uxRomPath.Text.Length > 0;
+                    uxNext.Text = NEXT_BUTTON_TEXT;
+                    break;
                 case Step.Bakkesmod:
                     uxBack.Visible = true;
                     uxNext.Visible = true;
@@ -75,12 +103,24 @@ namespace SupersonicMarioInstaller
                     uxBakkesProgress.Visible = false;
                     uxNext.Text = NEXT_BUTTON_TEXT;
                     break;
-                case Step.MYSYS2:
+                case Step.MSYS2:
                     uxBack.Visible = true;
                     uxNext.Visible = true;
                     uxBack.Enabled = true;
                     uxNext.Enabled = false;
+                    uxMsys2Label.Visible = true;
+                    uxInstallMsys2.Visible = true;
+                    uxSelectMsysInstallDir.Visible = true;
+                    uxMSYSProgress.Visible = false;
+                    uxMsysStatus.Text = "";
                     uxNext.Text = NEXT_BUTTON_TEXT;
+                    break;
+                case Step.Preinstall:
+                    uxBack.Visible = true;
+                    uxNext.Visible = true;
+                    uxBack.Enabled = true;
+                    uxNext.Enabled = true;
+                    uxNext.Text = INSTALL_BUTTON_TEXT;
                     break;
                 default:
                     break;
@@ -107,7 +147,15 @@ namespace SupersonicMarioInstaller
                 case Step.Bakkesmod:
                     if (IsBakkesmodInstalled())
                     {
-                        _currentStep++;
+                        Next();
+                        return;
+                    }
+                    break;
+                case Step.MSYS2:
+                    if(IsMSYS2Installed())
+                    {
+                        Next();
+                        return;
                     }
                     break;
                 default:
@@ -132,7 +180,15 @@ namespace SupersonicMarioInstaller
                 case Step.Bakkesmod:
                     if (IsBakkesmodInstalled())
                     {
-                        _currentStep--;
+                        Back();
+                        return;
+                    }
+                    break;
+                case Step.MSYS2:
+                    if (IsMSYS2Installed())
+                    {
+                        Back();
+                        return;
                     }
                     break;
                 default:
@@ -169,11 +225,11 @@ namespace SupersonicMarioInstaller
             {
                 client.DownloadProgressChanged += BakkesDownloadProgressChanged;
                 client.DownloadFileCompleted += new AsyncCompletedEventHandler(BakkesDownloadComplete);
-                client.DownloadFileAsync(new System.Uri(BAKKESMOD_SETUP_URL), _bakkesmodZip);
+                client.DownloadFileAsync(new Uri(BAKKESMOD_SETUP_URL), _bakkesmodZip);
             }
         }
 
-        void BakkesDownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
+        private void BakkesDownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
         {
             uxBakkesProgress.Value = e.ProgressPercentage;
         }
@@ -211,6 +267,114 @@ namespace SupersonicMarioInstaller
             {
                 MessageBox.Show("Bakkesmod setup failed or was cancelled. Please try again", "Setup");
                 UpdateUX();
+            }
+        }
+
+        private void uxInstallMsys2_Click(object sender, EventArgs e)
+        {
+            uxMsys2Label.Visible = false;
+            uxInstallMsys2.Visible = false;
+            uxSelectMsysInstallDir.Visible = false;
+            uxMSYSProgress.Visible = true;
+            uxBack.Enabled = false;
+            uxNext.Enabled = false;
+
+            uxMsysStatus.Text = "Downloading MSYS2";
+
+            var downloadDir = Path.Combine(Path.GetTempPath(), "supersonic-mario-installer");
+            if (Directory.Exists(downloadDir))
+            {
+                Directory.Delete(downloadDir, true);
+            }
+            Directory.CreateDirectory(downloadDir);
+
+            _msysInstaller = Path.Combine(downloadDir, "msys2-x86_64-20220319.exe");
+            using (var client = new WebClient())
+            {
+                client.DownloadProgressChanged += MsysDownloadProgressChanged;
+                client.DownloadFileCompleted += new AsyncCompletedEventHandler(MsysDownloadComplete);
+                client.DownloadFileAsync(new Uri(MSYS_SETUP_URL), _msysInstaller);
+            }
+        }
+
+        private void MsysDownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e)
+        {
+            uxMSYSProgress.Value = e.ProgressPercentage;
+        }
+
+        private void MsysDownloadComplete(object sender, AsyncCompletedEventArgs e)
+        {
+            if (e.Cancelled || e.Error != null)
+            {
+                MessageBox.Show("MSYS2 download failed. Check your connection and try again.", "Setup");
+                UpdateUX();
+                return;
+            }
+
+            uxBakkesStatus.Text = "Installing - Please complete the MSYS2 installation";
+
+            Process bakkesSetupProcess = new Process();
+            bakkesSetupProcess.StartInfo.FileName = _msysInstaller;
+            bakkesSetupProcess.Start();
+            bakkesSetupProcess.WaitForExit();
+
+            Directory.Delete(Path.GetDirectoryName(_msysInstaller), true);
+
+            if (IsMSYS2Installed())
+            {
+                Next();
+            }
+            else
+            {
+                UpdateUX();
+            }
+        }
+
+        private void uxSelectMsysInstallDir_Click(object sender, EventArgs e)
+        {
+            CommonOpenFileDialog dialog = new CommonOpenFileDialog();
+            dialog.IsFolderPicker = true;
+            if(dialog.ShowDialog() == CommonFileDialogResult.Ok)
+            {
+                _msysBasePath = dialog.FileName;
+                if(IsMSYS2Installed())
+                {
+                    Next();
+                }
+                else
+                {
+                    _msysBasePath = MSYS_DEFAULT_PATH;
+                    MessageBox.Show("Provided path was not a valid installation of MSYS2", "Error");
+                }
+            }
+        }
+
+        private void uxRomBrowse_Click(object sender, EventArgs e)
+        {
+            if(uxOpenFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string md5 = CalculateMD5(uxOpenFileDialog.FileName);
+                if(md5 == SM64_MD5)
+                {
+                    uxRomPath.Text = uxOpenFileDialog.FileName;
+                    uxNext.Enabled = true;
+                }
+                else
+                {
+                    MessageBox.Show("The ROM provided is not a valid. Please make sure you're using the US version.", "Error");
+                }
+            }
+        }
+
+        private string CalculateMD5(string filename)
+        {
+            using (var md5 = MD5.Create())
+            {
+                using (var stream = File.OpenRead(filename))
+                {
+                    var hash = md5.ComputeHash(stream);
+                    return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+                }
             }
         }
     }

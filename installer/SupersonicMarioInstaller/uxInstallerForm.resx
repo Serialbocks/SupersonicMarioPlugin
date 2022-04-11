@@ -120,7 +120,7 @@
   <data name="uxWelcomeMessage.Text" xml:space="preserve">
     <value>This setup will guide you through the installation of the Supersonic Mario mod for Rocket League.
 
-This mod contains no SM64 assets, so you will need a cardridge jump of the US version of Super Mario 64 in Z64 format to install and play the mod.  You will also need Bakkesmod and MYSYS2, which this installer can help you get.
+This mod contains no SM64 assets, so you will need a cardridge jump of the US version of Super Mario 64 in Z64 format to install and play the mod. You will also need MYSYS2 to build the sm64 library and bakkesmod to inject the mod. This installer can get these things for you.
 
 Click Next to continue.</value>
   </data>
@@ -148,6 +148,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.</value>
   </data>
+  <data name="uxMsys2Label.Text" xml:space="preserve">
+    <value>Please click one of the following buttons to either download and install MSYS2 or select an existing MSYS2 installation directory.
+
+Note: If you install MSYS2 and choose a folder other than the default (c:/msys64) then you will have to specify the directory after installation.</value>
+  </data>
+  <metadata name="uxOpenFileDialog.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>
