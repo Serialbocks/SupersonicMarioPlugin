@@ -23,6 +23,7 @@ namespace SupersonicMarioInstaller
         private const string NEXT_BUTTON_TEXT = "Next >";
         private const string AGREE_BUTTON_TEXT = "I Agree";
         private const string INSTALL_BUTTON_TEXT = "Install";
+        private const string FINISH_BUTTON_TEXT = "Finish";
 
         private const string SM64_MD5 = "20b854b239203baf6c961b850a4a51a2";
         private const string BAKKESMOD_SETUP_URL = "https://github.com/bakkesmodorg/BakkesModInjectorCpp/releases/latest/download/BakkesModSetup.zip";
@@ -75,28 +76,6 @@ namespace SupersonicMarioInstaller
             return File.Exists(Path.Combine(_msysBasePath, MSYS_RELATIVE_EXE));
         }
 
-        protected virtual bool IsFileLocked(string file)
-        {
-            try
-            {
-                using (FileStream stream = new FileStream(file, FileMode.Open))
-                {
-                    stream.Close();
-                }
-            }
-            catch (IOException)
-            {
-                //the file is unavailable because it is:
-                //still being written to
-                //or being processed by another thread
-                //or does not exist (has already been processed)
-                return true;
-            }
-
-            //file is not locked
-            return false;
-        }
-
         private void ExecuteMSYS2Command(string command, int startProgress)
         {
             Process msysProcess = new Process();
@@ -112,8 +91,8 @@ namespace SupersonicMarioInstaller
             {
                 Thread.Sleep(10);
             }
-            var logPath = Path.Combine(_msysBasePath, "home", Environment.UserName, "msys2.log");
-            while(IsFileLocked(logPath))
+
+            while(msysProcess.StandardOutput.ReadLine() != null)
             {
                 if(currentProgress - startProgress < 30)
                 {
@@ -127,9 +106,10 @@ namespace SupersonicMarioInstaller
 
         private void InstallBackground(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
+            uxBackgroundWorker.ReportProgress(10);
             uxInstallStatus.Invoke((MethodInvoker)delegate 
             {
-                uxInstallStatus.Text = "Installing tools to build libsm64...";
+                uxInstallStatus.Text = "Installing tools to build libsm64 (this step may take some time)...";
             });
             
             ExecuteMSYS2Command("pacman -S --needed --noconfirm git make python3 mingw-w64-x86_64-gcc", 0);
@@ -147,23 +127,58 @@ namespace SupersonicMarioInstaller
             }
 
             ExecuteMSYS2Command($"git clone {LIBSM64_REPO_URL}", 40);
-            uxBackgroundWorker.ReportProgress(50);
+            uxBackgroundWorker.ReportProgress(60);
 
             uxInstallStatus.Invoke((MethodInvoker)delegate
             {
                 uxInstallStatus.Text = "Building SM64 Library...";
             });
-            ExecuteMSYS2Command($"cd ./{LIBSM64_REPO_NAME} && make", 50);
-            uxBackgroundWorker.ReportProgress(80);
+
+            ExecuteMSYS2Command($"cd ./{LIBSM64_REPO_NAME} && make", 60);
+            uxBackgroundWorker.ReportProgress(85);
 
             uxInstallStatus.Invoke((MethodInvoker)delegate
             {
                 uxInstallStatus.Text = "Installing game files..";
             });
 
+            var appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var bakkesmodPath = Path.Combine(appdata, "bakkesmod/bakkesmod");
+            var assetsPath = Path.Combine(bakkesmodPath, "data/assets");
+            var libsPath = Path.Combine(bakkesmodPath, "libs");
+            var pluginsPath = Path.Combine(bakkesmodPath, "plugins");
+            var ffmpegPath = Path.Combine(assetsPath, "ffmpeg");
+            if(!Directory.Exists(ffmpegPath))
+            {
+                Directory.CreateDirectory(ffmpegPath);
+            }
 
-
+            // Install built sm64.dll
+            var sm64DllSource = Path.Combine(repoDir, "dist/sm64.dll");
+            var sm64DllDest = Path.Combine(libsPath, "sm64.dll");
+            File.Copy(sm64DllSource, sm64DllDest, true);
             ExecuteMSYS2Command($"rm -rf {LIBSM64_REPO_NAME}", 90);
+
+            // Install resources
+            File.WriteAllBytes(Path.Combine(pluginsPath, "SupersonicMario.dll"), Properties.Resources.SupersonicMario);
+
+            File.WriteAllBytes(Path.Combine(libsPath, "sm64.lib"), Properties.Resources.sm64);
+            File.WriteAllBytes(Path.Combine(libsPath, "libsoxr.dll"), Properties.Resources.libsoxr_dll);
+            File.WriteAllBytes(Path.Combine(libsPath, "libsoxr.lib"), Properties.Resources.libsoxr_lib);
+            File.WriteAllBytes(Path.Combine(libsPath, "libsoxr.LICENSE"), Properties.Resources.libsoxr_LICENSE);
+
+            File.WriteAllBytes(Path.Combine(assetsPath, "aifc_decode.exe"), Properties.Resources.aifc_decode);
+            File.WriteAllBytes(Path.Combine(assetsPath, "assets.json"), Properties.Resources.assets);
+            File.WriteAllBytes(Path.Combine(assetsPath, "extract_assets.exe"), Properties.Resources.extract_assets);
+            File.WriteAllBytes(Path.Combine(assetsPath, "ROCKETBALL.obj"), Properties.Resources.ROCKETBALL);
+            File.WriteAllBytes(Path.Combine(assetsPath, "rom-hash.sha1"), Properties.Resources.rom_hash);
+            File.WriteAllBytes(Path.Combine(assetsPath, "sm64tools.LICENSE"), Properties.Resources.sm64tools_LICENSE);
+            File.WriteAllBytes(Path.Combine(assetsPath, "transparent.png"), Properties.Resources.transparent);
+
+            uxInstallStatus.Invoke((MethodInvoker)delegate
+            {
+                Next();
+            });
         }
 
         private void InstallProgressChanged(object sender, System.ComponentModel.ProgressChangedEventArgs e)
@@ -232,6 +247,11 @@ namespace SupersonicMarioInstaller
                     uxBack.Visible = false;
                     uxNext.Visible = false;
                     break;
+                case Step.Postinstall:
+                    uxNext.Visible = false;
+                    uxBack.Visible = false;
+                    uxCancel.Text = FINISH_BUTTON_TEXT;
+                    break;
                 default:
                     break;
             }
@@ -239,6 +259,10 @@ namespace SupersonicMarioInstaller
 
         private void uxCancel_Click(object sender, EventArgs e)
         {
+            if(_currentStep == Step.Postinstall)
+            {
+                Application.Exit();
+            }
             var dialogResult = MessageBox.Show("Are you sure you want to exit the installation?",
                 "Exit Installer",
                 MessageBoxButtons.YesNo);

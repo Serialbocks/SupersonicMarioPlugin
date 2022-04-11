@@ -36,7 +36,6 @@ namespace SupersonicMarioInstaller
             this.uxInstallerTitle = new System.Windows.Forms.Label();
             this.uxDivider1 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.uxBanner = new System.Windows.Forms.Label();
             this.uxTabs = new System.Windows.Forms.TabControl();
             this.uxWelcomePage = new System.Windows.Forms.TabPage();
             this.uxWelcomeMessage = new System.Windows.Forms.Label();
@@ -63,13 +62,15 @@ namespace SupersonicMarioInstaller
             this.uxPreinstallPage = new System.Windows.Forms.TabPage();
             this.uxPreinstallLabel = new System.Windows.Forms.Label();
             this.uxInstallPage = new System.Windows.Forms.TabPage();
+            this.uxInstallStatus = new System.Windows.Forms.Label();
+            this.uxInstallProgress = new System.Windows.Forms.ProgressBar();
             this.uxPostInstallPage = new System.Windows.Forms.TabPage();
             this.uxNext = new System.Windows.Forms.Button();
             this.uxBack = new System.Windows.Forms.Button();
             this.uxOpenFileDialog = new System.Windows.Forms.OpenFileDialog();
-            this.uxInstallProgress = new System.Windows.Forms.ProgressBar();
-            this.uxInstallStatus = new System.Windows.Forms.Label();
             this.uxBackgroundWorker = new System.ComponentModel.BackgroundWorker();
+            this.uxBanner = new System.Windows.Forms.Label();
+            this.uxPostInstallMessage = new System.Windows.Forms.Label();
             this.uxTabs.SuspendLayout();
             this.uxWelcomePage.SuspendLayout();
             this.uxLicensePage.SuspendLayout();
@@ -78,6 +79,7 @@ namespace SupersonicMarioInstaller
             this.uxMSYS2Page.SuspendLayout();
             this.uxPreinstallPage.SuspendLayout();
             this.uxInstallPage.SuspendLayout();
+            this.uxPostInstallPage.SuspendLayout();
             this.SuspendLayout();
             // 
             // uxDivider2
@@ -144,16 +146,6 @@ namespace SupersonicMarioInstaller
             this.label1.Size = new System.Drawing.Size(132, 13);
             this.label1.TabIndex = 9;
             this.label1.Text = "A mod by Serialbocks";
-            // 
-            // uxBanner
-            // 
-            this.uxBanner.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.uxBanner.BackColor = System.Drawing.Color.White;
-            this.uxBanner.Image = global::SupersonicMarioInstaller.Properties.Resources.banner_small;
-            this.uxBanner.Location = new System.Drawing.Point(332, 9);
-            this.uxBanner.Name = "uxBanner";
-            this.uxBanner.Size = new System.Drawing.Size(164, 52);
-            this.uxBanner.TabIndex = 10;
             // 
             // uxTabs
             // 
@@ -451,8 +443,26 @@ namespace SupersonicMarioInstaller
             this.uxInstallPage.Text = "Install";
             this.uxInstallPage.UseVisualStyleBackColor = true;
             // 
+            // uxInstallStatus
+            // 
+            this.uxInstallStatus.AutoSize = true;
+            this.uxInstallStatus.Location = new System.Drawing.Point(9, 49);
+            this.uxInstallStatus.Name = "uxInstallStatus";
+            this.uxInstallStatus.Size = new System.Drawing.Size(0, 13);
+            this.uxInstallStatus.TabIndex = 1;
+            // 
+            // uxInstallProgress
+            // 
+            this.uxInstallProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.uxInstallProgress.Location = new System.Drawing.Point(9, 68);
+            this.uxInstallProgress.Name = "uxInstallProgress";
+            this.uxInstallProgress.Size = new System.Drawing.Size(481, 23);
+            this.uxInstallProgress.TabIndex = 0;
+            // 
             // uxPostInstallPage
             // 
+            this.uxPostInstallPage.Controls.Add(this.uxPostInstallMessage);
             this.uxPostInstallPage.Location = new System.Drawing.Point(4, 22);
             this.uxPostInstallPage.Name = "uxPostInstallPage";
             this.uxPostInstallPage.Padding = new System.Windows.Forms.Padding(3);
@@ -488,22 +498,24 @@ namespace SupersonicMarioInstaller
             // 
             this.uxOpenFileDialog.Filter = "z64 files (*.z64)|*.z64";
             // 
-            // uxInstallProgress
+            // uxBanner
             // 
-            this.uxInstallProgress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.uxInstallProgress.Location = new System.Drawing.Point(9, 68);
-            this.uxInstallProgress.Name = "uxInstallProgress";
-            this.uxInstallProgress.Size = new System.Drawing.Size(481, 23);
-            this.uxInstallProgress.TabIndex = 0;
+            this.uxBanner.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.uxBanner.BackColor = System.Drawing.Color.White;
+            this.uxBanner.Image = global::SupersonicMarioInstaller.Properties.Resources.banner_small;
+            this.uxBanner.Location = new System.Drawing.Point(332, 9);
+            this.uxBanner.Name = "uxBanner";
+            this.uxBanner.Size = new System.Drawing.Size(164, 52);
+            this.uxBanner.TabIndex = 10;
             // 
-            // uxInstallStatus
+            // uxPostInstallMessage
             // 
-            this.uxInstallStatus.AutoSize = true;
-            this.uxInstallStatus.Location = new System.Drawing.Point(9, 49);
-            this.uxInstallStatus.Name = "uxInstallStatus";
-            this.uxInstallStatus.Size = new System.Drawing.Size(0, 13);
-            this.uxInstallStatus.TabIndex = 1;
+            this.uxPostInstallMessage.AutoSize = true;
+            this.uxPostInstallMessage.Location = new System.Drawing.Point(9, 3);
+            this.uxPostInstallMessage.Name = "uxPostInstallMessage";
+            this.uxPostInstallMessage.Size = new System.Drawing.Size(275, 13);
+            this.uxPostInstallMessage.TabIndex = 0;
+            this.uxPostInstallMessage.Text = "Installation completed successfully.  Click \"Finish\" to exit.";
             // 
             // uxInstallerForm
             // 
@@ -539,6 +551,8 @@ namespace SupersonicMarioInstaller
             this.uxPreinstallPage.PerformLayout();
             this.uxInstallPage.ResumeLayout(false);
             this.uxInstallPage.PerformLayout();
+            this.uxPostInstallPage.ResumeLayout(false);
+            this.uxPostInstallPage.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -585,6 +599,7 @@ namespace SupersonicMarioInstaller
         private System.Windows.Forms.Label uxInstallStatus;
         private System.Windows.Forms.ProgressBar uxInstallProgress;
         private System.ComponentModel.BackgroundWorker uxBackgroundWorker;
+        private System.Windows.Forms.Label uxPostInstallMessage;
     }
 }
 

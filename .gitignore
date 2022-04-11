@@ -98,6 +98,8 @@ StyleCopReport.xml
 *.svclog
 *.scc
 
+!installer/SupersonicMarioInstaller/Resources/ROCKETBALL.obj
+
 # Chutzpah Test files
 _Chutzpah*
 
