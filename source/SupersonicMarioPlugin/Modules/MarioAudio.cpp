@@ -58,7 +58,7 @@ void MarioAudio::UpdateSounds(int soundMask,
 		auto marioSound = &marioSounds[i];
 		if (marioSound->mask & soundMask)
 		{
-			float distance = utils.Distance(sourcePos, listenerPos);
+			float distance = Utils::Distance(sourcePos, listenerPos);
 			float volume = marioSound->volume - (distance * ATTEN_ROLLOFF_FACTOR_LIN) - pow(distance * ATTEN_ROLLOFF_FACTOR_EXP, 2);
 			volume = volume <= 0.0f ? 0.0f : volume;
 			volume *= MasterVolume / 100.0f;
@@ -128,7 +128,7 @@ void MarioAudio::UpdateSounds(int soundMask,
 
 void loadSoundFiles()
 {
-	std::string bakkesmodFolderPath = self->utils.GetBakkesmodFolderPath();
+	std::string bakkesmodFolderPath = Utils::GetBakkesmodFolderPath();
 	std::string assetsPath = bakkesmodFolderPath + "data\\assets";
 	std::string extractAssetsPath = assetsPath + "\\extract_assets.exe";
 	std::string romPath = MarioConfig::getInstance().GetRomPath();
@@ -137,15 +137,15 @@ void loadSoundFiles()
 	// Wrap each argument in quotes in case user has a space in their windows username
 	std::string extractAssetsPathWithArgs = "\"" + extractAssetsPath + "\" \"" + assetsPath + "\" \"" + tempDir + "\" \"" + romPath + "\"";
 
-	if (!self->utils.FileExists(tempDir))
+	if (!Utils::FileExists(tempDir))
 	{
 		std::filesystem::create_directories(tempDir);
 	}
 
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
-	if (self->utils.FileExists(extractAssetsPath) &&
-		self->utils.FileExists(romPath))
+	if (Utils::FileExists(extractAssetsPath) &&
+		Utils::FileExists(romPath))
 	{
 		ZeroMemory(&si, sizeof(si));
 		si.cb = sizeof(si);
@@ -161,7 +161,7 @@ void loadSoundFiles()
 		std::string soundPath = soundDir + self->marioSounds[i].wavPath;
 		MarioSound* marioSound = &self->marioSounds[i];
 
-		if (self->utils.FileExists(soundPath))
+		if (Utils::FileExists(soundPath))
 		{
 			marioSound->wav.load(soundPath.c_str());
 
@@ -205,7 +205,7 @@ void loadSoundFiles()
 
 	}
 
-	if (self->utils.FileExists(tempDir))
+	if (Utils::FileExists(tempDir))
 	{
 		std::filesystem::remove_all(tempDir);
 	}

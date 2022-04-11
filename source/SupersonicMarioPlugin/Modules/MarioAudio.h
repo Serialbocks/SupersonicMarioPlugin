@@ -92,7 +92,6 @@ private:
 
 public:
 	int MasterVolume = 70;
-	Utils utils;
 	std::vector<MarioSound> marioSounds = {
 		{ SOUND_MARIO_YAH,							"\\sfx_mario\\02.wav",					0.91f},
 		{ SOUND_MARIO_WAH,							"\\sfx_mario\\01.wav",					0.85f},

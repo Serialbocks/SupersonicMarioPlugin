@@ -794,7 +794,7 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 							marioInstance->marioBodyState.marioState.posY);
 						Vector ballVector = ball.GetLocation();
 						Vector ballVelocity = ball.GetVelocity();
-						float distance = utils.Distance(marioVector, ballVector);
+						float distance = Utils::Distance(marioVector, ballVector);
 
 						float dx = ballVector.X - marioVector.X;
 						float dy = ballVector.Y - marioVector.Y;
@@ -1009,7 +1009,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 				remoteMarioInstance->marioBodyState.marioState.posY,
 				remoteMarioInstance->marioBodyState.marioState.posZ);
 
-			auto distance = instance->utils.Distance(localMarioVector, remoteMarioVector);
+			auto distance = Utils::Distance(localMarioVector, remoteMarioVector);
 			if (distance < 100.0f && remoteMarioInstance->marioBodyState.action & ACT_FLAG_ATTACKING) // TODO if in our direction
 			{
 				marioInstance->marioInputs.attackInput.isAttacked = true;
@@ -1058,7 +1058,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 
 void backgroundLoadData()
 {
-	self->utils.ParseObjFile(self->utils.GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj", &self->ballVertices);
+	Utils::ParseObjFile(Utils::GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj", &self->ballVertices);
 	self->backgroundLoadThreadFinished = true;
 }
 

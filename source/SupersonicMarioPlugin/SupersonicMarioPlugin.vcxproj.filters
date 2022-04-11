@@ -272,9 +272,6 @@
     <ClCompile Include="Graphics\level.c">
       <Filter>Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Modules\Utils.cpp">
-      <Filter>Modules</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\Lighting.cpp">
       <Filter>Graphics</Filter>
     </ClCompile>

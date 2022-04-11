@@ -55,7 +55,6 @@ private:
 		size_t inTexSize = 0,
 		uint16_t inTexWidth = 0,
 		uint16_t inTexHeight = 0);
-	Utils utils;
 	float rotRoll, rotPitch, rotYaw = 0.0f;
 	float quatX, quatY, quatZ, quatW = 0.0f;
 

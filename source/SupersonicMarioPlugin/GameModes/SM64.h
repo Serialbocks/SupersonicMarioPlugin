@@ -126,7 +126,6 @@ public:
     std::vector<Vertex> ballVertices;
     bool backgroundLoadThreadStarted = false;
     bool backgroundLoadThreadFinished = false;
-    Utils utils;
     Rotator carRotation;
     char netcodeOutBuf[SM64_NETCODE_BUF_LEN];
     std::vector<Mesh*> marioMeshPool;

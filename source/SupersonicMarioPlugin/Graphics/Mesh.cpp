@@ -250,7 +250,7 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	}
 	else if (IsTransparent)
 	{
-		std::string texturePath = utils.GetBakkesmodFolderPath() + "data\\assets\\transparent.png";
+		std::string texturePath = Utils::GetBakkesmodFolderPath() + "data\\assets\\transparent.png";
 		std::wstring texturePathWide(texturePath.begin(), texturePath.end());
 		DirectX::CreateWICTextureFromFile(this->device.Get(), texturePathWide.c_str(), nullptr, TextureResourceView.GetAddressOf());
 	}

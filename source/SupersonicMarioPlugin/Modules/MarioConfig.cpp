@@ -2,15 +2,14 @@
 #include "miniconf.h"
 
 miniconf::Config conf;
-Utils utils;
 
-static std::string defaultRomPath = utils.GetBakkesmodFolderPath() + "data\\assets\\baserom.us.z64";
+static std::string defaultRomPath = Utils::GetBakkesmodFolderPath() + "data\\assets\\baserom.us.z64";
 
 MarioConfig::MarioConfig()
 {
 	conf.option(VOLUME_LOOKUP).shortflag("v").defaultValue(VOLUME_DEFAULT).required(true).description("Volume");
 	conf.option(ROM_LOOKUP).shortflag("r").defaultValue(defaultRomPath).required(true).description("Rom");
-	configPath = utils.GetBakkesmodFolderPath() + CONFIG_FILE_NAME;
+	configPath = Utils::GetBakkesmodFolderPath() + CONFIG_FILE_NAME;
 	conf.config(configPath);
 }
 

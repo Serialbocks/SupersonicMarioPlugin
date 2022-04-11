@@ -44,7 +44,6 @@ public:
 	HWND Window = nullptr;
 
 private:
-	Utils utils;
 
 private:
 	void Render();

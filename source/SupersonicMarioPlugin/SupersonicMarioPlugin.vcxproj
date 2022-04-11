@@ -240,7 +240,6 @@
     <ClCompile Include="Graphics\Lighting.cpp" />
     <ClCompile Include="Modules\MarioAudio.cpp" />
     <ClCompile Include="Modules\MarioConfig.cpp" />
-    <ClCompile Include="Modules\Utils.cpp" />
     <ClCompile Include="Networking\TcpClient.cpp" />
     <ClCompile Include="Networking\TcpServer.cpp" />
     <ClCompile Include="SMPConfig.cpp" />
