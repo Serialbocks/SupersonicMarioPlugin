@@ -31,8 +31,8 @@ namespace SupersonicMarioInstaller
         private const string MSYS_RELATIVE_EXE = @"usr\bin\mintty.exe";
         private const string MSYS_DEFAULT_PATH = @"C:\msys64";
         private const string MSYS_BASE_ARGS = "-w hide /bin/env MSYSTEM=MINGW64 /bin/bash -l -c \"";
-        private const string LIBSM64_REPO_URL = "https://github.com/libsm64/libsm64.git";
-        private const string LIBSM64_REPO_NAME = "libsm64";
+        private const string LIBSM64_REPO_URL = "https://github.com/Serialbocks/libsm64-supersonic-mario.git";
+        private const string LIBSM64_REPO_NAME = "libsm64-supersonic-mario";
         private const string DEFAULT_PLUGIN_CONFIG = "volume,50\r\nrom,";
 
         private Step _currentStep = Step.Welcome;
