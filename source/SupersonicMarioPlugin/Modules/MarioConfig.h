@@ -7,6 +7,7 @@
 // Config file keys
 #define VOLUME_LOOKUP "volume"
 #define VOLUME_DEFAULT 50
+#define ROM_LOOKUP "rom"
 
 class MarioConfig
 {
@@ -18,10 +19,11 @@ public:
 	}
 	void SetVolume(int volume);
 	int GetVolume();
+	void SetRomPath(std::string romPath);
+	std::string GetRomPath();
 
 private:
 	MarioConfig();
-	Utils utils;
 	std::string configPath;
 	
 };

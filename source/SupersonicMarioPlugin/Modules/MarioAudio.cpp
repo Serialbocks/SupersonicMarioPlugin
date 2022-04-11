@@ -131,7 +131,7 @@ void loadSoundFiles()
 	std::string bakkesmodFolderPath = self->utils.GetBakkesmodFolderPath();
 	std::string assetsPath = bakkesmodFolderPath + "data\\assets";
 	std::string extractAssetsPath = assetsPath + "\\extract_assets.exe";
-	std::string romPath = assetsPath + "\\baserom.us.z64";
+	std::string romPath = MarioConfig::getInstance().GetRomPath();
 	std::string tempDir = std::filesystem::temp_directory_path().string() + "supersonic-mario";
 
 	// Wrap each argument in quotes in case user has a space in their windows username

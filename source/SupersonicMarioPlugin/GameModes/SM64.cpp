@@ -633,8 +633,7 @@ void SM64::Activate(const bool active)
 void SM64::InitSM64()
 {
 	size_t romSize;
-	std::string bakkesmodFolderPath = utils.GetBakkesmodFolderPath();
-	std::string romPath = bakkesmodFolderPath + "data\\assets\\baserom.us.z64";
+	std::string romPath = MarioConfig::getInstance().GetRomPath();
 	uint8_t* rom = utilsReadFileAlloc(romPath, &romSize);
 	if (rom == NULL)
 	{

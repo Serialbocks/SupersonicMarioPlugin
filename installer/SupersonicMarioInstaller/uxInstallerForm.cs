@@ -33,6 +33,7 @@ namespace SupersonicMarioInstaller
         private const string MSYS_BASE_ARGS = "-w hide /bin/env MSYSTEM=MINGW64 /bin/bash -l -c \"";
         private const string LIBSM64_REPO_URL = "https://github.com/libsm64/libsm64.git";
         private const string LIBSM64_REPO_NAME = "libsm64";
+        private const string DEFAULT_PLUGIN_CONFIG = "volume,50\r\nrom,";
 
         private Step _currentStep = Step.Welcome;
         private string _bakkesmodZip = "";
@@ -144,7 +145,8 @@ namespace SupersonicMarioInstaller
 
             var appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var bakkesmodPath = Path.Combine(appdata, "bakkesmod/bakkesmod");
-            var assetsPath = Path.Combine(bakkesmodPath, "data/assets");
+            var dataPath = Path.Combine(bakkesmodPath, "data");
+            var assetsPath = Path.Combine(dataPath, "assets");
             var libsPath = Path.Combine(bakkesmodPath, "libs");
             var pluginsPath = Path.Combine(bakkesmodPath, "plugins");
             var ffmpegPath = Path.Combine(assetsPath, "ffmpeg");
@@ -176,6 +178,10 @@ namespace SupersonicMarioInstaller
             File.WriteAllBytes(Path.Combine(assetsPath, "transparent.png"), Properties.Resources.transparent);
             File.WriteAllBytes(Path.Combine(ffmpegPath, "ffmpeg.exe"), Properties.Resources.ffmpeg);
             File.WriteAllBytes(Path.Combine(ffmpegPath, "ffmpeg.LICENSE"), Properties.Resources.ffmpeg_LICENSE);
+
+            // Copy game config
+            var cfgContents = DEFAULT_PLUGIN_CONFIG + uxRomPath.Text + "\r\n";
+            File.WriteAllText(Path.Combine(dataPath, "supersonicmario.cfg"), cfgContents);
 
             uxInstallStatus.Invoke((MethodInvoker)delegate
             {
