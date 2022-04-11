@@ -117,7 +117,6 @@ private:
 
 public:
     SM64MarioInstance localMario;
-    MarioAudio* marioAudio = nullptr;
     std::shared_ptr<GameWrapper> gameWrapper;
     Vector cameraLoc = Vector(0, 0, 0);
     ControllerInput playerInputs;

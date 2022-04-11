@@ -25,11 +25,6 @@ MarioAudio::MarioAudio()
 	}
 }
 
-MarioAudio::~MarioAudio()
-{
-
-}
-
 void MarioAudio::UpdateSounds(int soundMask,
 	Vector sourcePos,
 	Vector sourceVel,

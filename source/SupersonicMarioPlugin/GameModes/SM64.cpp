@@ -585,14 +585,12 @@ void SM64::RenderOptions()
 
 void SM64::RenderPreferences()
 {
-	if (marioAudio != nullptr)
+	MarioAudio* marioAudio = &MarioAudio::getInstance();
+	ImGui::TextUnformatted("Preferences");
+	ImGui::SliderInt("Mario Volume", &marioAudio->MasterVolume, 0, 100);
+	if (ImGui::IsItemDeactivatedAfterChange())
 	{
-		ImGui::TextUnformatted("Preferences");
-		ImGui::SliderInt("Mario Volume", &marioAudio->MasterVolume, 0, 100);
-		if (ImGui::IsItemDeactivatedAfterChange())
-		{
-			MarioConfig::getInstance().SetVolume(marioAudio->MasterVolume);
-		}
+		MarioConfig::getInstance().SetVolume(marioAudio->MasterVolume);
 	}
 }
 
@@ -658,7 +656,6 @@ void SM64::InitSM64()
 	locationInit = false;
 
 	renderer = new Renderer();
-	marioAudio = new MarioAudio();
 }
 
 void SM64::DestroySM64()
@@ -676,7 +673,6 @@ void SM64::DestroySM64()
 		delete remoteMarios[i];
 	}
 	delete renderer;
-	delete marioAudio;
 }
 
 void SM64::onSetVehicleInput(CarWrapper car, void* params)
@@ -1040,7 +1036,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	instance->cameraLoc = camera.GetLocation();
 	Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 
-	instance->marioAudio->UpdateSounds(marioInstance->marioState.soundMask,
+	MarioAudio::getInstance().UpdateSounds(marioInstance->marioState.soundMask,
 		marioVector,
 		marioVel,
 		instance->cameraLoc,
@@ -1323,7 +1319,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		cameraLoc = camera.GetLocation();
 		Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 
-		marioAudio->UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
+		MarioAudio::getInstance().UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
 			marioVector,
 			marioVel,
 			cameraLoc,

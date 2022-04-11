@@ -67,8 +67,12 @@ typedef struct MarioSound_t
 class MarioAudio
 {
 public:
-	MarioAudio();
-	~MarioAudio();
+	static MarioAudio& getInstance()
+	{
+		static MarioAudio instance;
+		return instance;
+	}
+	
 	void UpdateSounds(int soundMask,
 		Vector sourcePos,
 		Vector sourceVel,
@@ -83,6 +87,7 @@ public:
 		size_t secondResampleSourceCount,
 		float secondResampleFactor);
 private:
+	MarioAudio();
 	std::pair<size_t, size_t> resample(double factor,
 		float* inBuffer,
 		size_t inBufferLen,
