@@ -174,6 +174,8 @@ namespace SupersonicMarioInstaller
             File.WriteAllBytes(Path.Combine(assetsPath, "rom-hash.sha1"), Properties.Resources.rom_hash);
             File.WriteAllBytes(Path.Combine(assetsPath, "sm64tools.LICENSE"), Properties.Resources.sm64tools_LICENSE);
             File.WriteAllBytes(Path.Combine(assetsPath, "transparent.png"), Properties.Resources.transparent);
+            File.WriteAllBytes(Path.Combine(ffmpegPath, "ffmpeg.exe"), Properties.Resources.ffmpeg);
+            File.WriteAllBytes(Path.Combine(ffmpegPath, "ffmpeg.LICENSE"), Properties.Resources.ffmpeg_LICENSE);
 
             uxInstallStatus.Invoke((MethodInvoker)delegate
             {

@@ -137,6 +137,11 @@ void loadSoundFiles()
 	// Wrap each argument in quotes in case user has a space in their windows username
 	std::string extractAssetsPathWithArgs = "\"" + extractAssetsPath + "\" \"" + assetsPath + "\" \"" + tempDir + "\" \"" + romPath + "\"";
 
+	if (!self->utils.FileExists(tempDir))
+	{
+		std::filesystem::create_directories(tempDir);
+	}
+
 	STARTUPINFOA si;
 	PROCESS_INFORMATION pi;
 	if (self->utils.FileExists(extractAssetsPath) &&

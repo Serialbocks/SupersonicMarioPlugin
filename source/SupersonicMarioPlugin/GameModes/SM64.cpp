@@ -417,7 +417,6 @@ void MatchSettingsMessageReceived(char* buf, int len)
 		{
 			marioInstance->sema.acquire();
 			marioInstance->colorIndex = colorIndex;
-			marioInstance->isStem = self->matchSettings.playerStemFlags[i];
 			marioInstance->sema.release();
 		}
 	}
@@ -451,7 +450,6 @@ void SM64::SendSettingsToClients()
 		{
 			matchSettings.playerIds[matchSettings.playerCount] = localMario.playerId;
 			matchSettings.playerColorIndices[matchSettings.playerCount] = localMario.colorIndex;
-			matchSettings.playerStemFlags[matchSettings.playerCount] = localMario.isStem;
 			matchSettings.playerCount++;
 		}
 		localMario.sema.release();
@@ -464,7 +462,6 @@ void SM64::SendSettingsToClients()
 			{
 				matchSettings.playerIds[matchSettings.playerCount] = playerId;
 				matchSettings.playerColorIndices[matchSettings.playerCount] = marioInstance->colorIndex;
-				matchSettings.playerStemFlags[matchSettings.playerCount] = marioInstance->isStem;
 				matchSettings.playerCount++;
 			}
 			marioInstance->sema.release();
@@ -572,20 +569,6 @@ void SM64::RenderOptions()
 
 				if (marioInstance == nullptr) continue;
 
-				std::string playerName = player.GetPlayerName().ToString() + " Stem Mode";
-
-				marioInstance->sema.acquire();
-				
-				
-				bool oldStem = marioInstance->isStem;
-				ImGui::Checkbox(playerName.c_str(), &marioInstance->isStem);
-				marioInstance->sema.release();
-
-				if (oldStem != marioInstance->isStem)
-				{
-					needToSendMatchUpdate = true;
-				}
-
 			}
 			remoteMariosSema.release();
 
@@ -659,12 +642,11 @@ void SM64::InitSM64()
 	}
 
 	texture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
-	stemTexture = (uint8_t*)malloc(SM64_TEXTURE_SIZE);
 
 	//sm64_global_terminate();
 	if (!sm64Initialized)
 	{
-		sm64_global_init(rom, texture, stemTexture, NULL);
+		sm64_global_init(rom, texture, NULL, NULL);
 		sm64_static_surfaces_load(surfaces, surfaces_count);
 		sm64Initialized = true;
 	}
@@ -689,7 +671,6 @@ void SM64::DestroySM64()
 	localMario.marioId = -2;
 	sm64_global_terminate();
 	free(texture);
-	free(stemTexture);
 	for (int i = 0; i < remoteMarios.size(); i++)
 	{
 		remoteMarios[i]->sema.release();
@@ -1135,7 +1116,6 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 				self->teamColors[trueIndex + 5]);
 		}
 
-		marioInstance->mesh->SetShowAltTexture(marioInstance->isStem);
 		marioInstance->mesh->RenderUpdateVertices(marioInstance->marioGeometry.numTrianglesUsed, &camera);
 	}
 	marioInstance->sema.release();
@@ -1164,7 +1144,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		{
 			marioMeshPool.push_back(renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
 				texture,
-				stemTexture,
+				nullptr,
 				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
 				SM64_TEXTURE_WIDTH,
 				SM64_TEXTURE_HEIGHT));

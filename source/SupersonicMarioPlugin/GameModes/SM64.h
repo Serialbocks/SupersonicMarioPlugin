@@ -154,7 +154,6 @@ public:
 private:
     /* SM64 Members */
     uint8_t* texture = nullptr;
-    uint8_t* stemTexture = nullptr;
     vec3 cameraPos;
     float cameraRot;
     bool locationInit;
