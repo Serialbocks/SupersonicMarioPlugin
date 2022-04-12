@@ -105,8 +105,27 @@ namespace SupersonicMarioInstaller
 
         }
 
+        private void CloseProcess(string processName)
+        {
+            var process = new Process();
+            process.StartInfo.FileName = "CMD.exe";
+            process.StartInfo.Arguments = "/C taskkill /F /IM " + processName;
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.CreateNoWindow = true;
+            process.Start();
+        }
+
         private void InstallBackground(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
+            uxInstallStatus.Invoke((MethodInvoker)delegate
+            {
+                uxInstallStatus.Text = "Closing Rocket League and Bakkesmod...";
+            });
+            CloseProcess("RocketLeague.exe");
+            CloseProcess("BakkesMod.exe");
+            Thread.Sleep(1000);
+
             uxBackgroundWorker.ReportProgress(10);
             uxInstallStatus.Invoke((MethodInvoker)delegate 
             {
@@ -150,7 +169,23 @@ namespace SupersonicMarioInstaller
             var libsPath = Path.Combine(bakkesmodPath, "libs");
             var pluginsPath = Path.Combine(bakkesmodPath, "plugins");
             var ffmpegPath = Path.Combine(assetsPath, "ffmpeg");
-            if(!Directory.Exists(ffmpegPath))
+            if(!Directory.Exists(dataPath))
+            {
+                Directory.CreateDirectory(dataPath);
+            }
+            if (!Directory.Exists(assetsPath))
+            {
+                Directory.CreateDirectory(assetsPath);
+            }
+            if (!Directory.Exists(libsPath))
+            {
+                Directory.CreateDirectory(libsPath);
+            }
+            if (!Directory.Exists(pluginsPath))
+            {
+                Directory.CreateDirectory(pluginsPath);
+            }
+            if (!Directory.Exists(ffmpegPath))
             {
                 Directory.CreateDirectory(ffmpegPath);
             }
@@ -301,7 +336,16 @@ namespace SupersonicMarioInstaller
                     }
                     break;
                 case Step.Install:
-                    Install();
+                    if (MessageBox.Show("To continue, this setup will close any running instance of Rocket League and Bakkesmod. Is that okay?",
+                        "Setup", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        Install();
+                    }
+                    else
+                    {
+                        Back();
+                        return;
+                    }
                     break;
                 default:
                     break;
@@ -407,17 +451,7 @@ namespace SupersonicMarioInstaller
 
             Directory.Delete(setupDir, true);
 
-            MessageBox.Show("Please run bakkesmod and install any update if prompted, then click OK.", "Setup");
-
-            if(IsBakkesmodInstalled())
-            {
-                Next();
-            }
-            else
-            {
-                MessageBox.Show("Bakkesmod setup failed or was cancelled. Please try again.", "Setup");
-                UpdateUX();
-            }
+            Next();
         }
 
         private void uxInstallMsys2_Click(object sender, EventArgs e)
