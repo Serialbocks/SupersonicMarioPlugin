@@ -176,7 +176,23 @@ void loadSoundFiles()
 			self->soundsLoadSuccess = true;
 			self->loadSoundSema.release();
 
-			marioSound->wav.load(soundPath.c_str());
+			AudioFile<float> audioFile;
+			audioFile.load(soundPath);
+
+			auto wavData = &marioSound->wav;
+			wavData->mBaseSamplerate = audioFile.getSampleRate();
+			wavData->mSampleCount = audioFile.getNumSamplesPerChannel();
+			wavData->mChannels = audioFile.getNumChannels();
+
+			wavData->mData = (float*)malloc((size_t)wavData->mSampleCount * wavData->mChannels * sizeof(float));
+			ZeroMemory(wavData->mData, (size_t)wavData->mSampleCount * wavData->mChannels * sizeof(float));
+			for (int j = 0; j < wavData->mChannels; j++)
+			{
+				for (int k = 0; k < wavData->mSampleCount; k++)
+				{
+					wavData->mData[(j + 1) * k] = audioFile.samples[j][k];
+				}
+			}
 
 			// Resample certain sounds where altering playback speed isn't good enough to make it sound like the original
 			switch (marioSound->mask)

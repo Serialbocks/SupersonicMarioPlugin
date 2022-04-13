@@ -222,7 +222,6 @@
     <None Include="Resources\assets.json" />
     <None Include="Resources\libsoxr.lib" />
     <None Include="Resources\libsoxr.LICENSE" />
-    <None Include="Resources\ffmpeg.LICENSE" />
     <None Include="Resources\ROCKETBALL.obj" />
     <None Include="Resources\rom-hash.sha1" />
     <None Include="Resources\sm64.lib" />
@@ -242,9 +241,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\transparent" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\ffmpeg.exe" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\SupersonicMario.dll" />

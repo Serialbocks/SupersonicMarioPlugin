@@ -172,7 +172,6 @@ namespace SupersonicMarioInstaller
             var assetsPath = Path.Combine(dataPath, "assets");
             var libsPath = Path.Combine(bakkesmodPath, "libs");
             var pluginsPath = Path.Combine(bakkesmodPath, "plugins");
-            var ffmpegPath = Path.Combine(assetsPath, "ffmpeg");
             if(!Directory.Exists(dataPath))
             {
                 Directory.CreateDirectory(dataPath);
@@ -188,10 +187,6 @@ namespace SupersonicMarioInstaller
             if (!Directory.Exists(pluginsPath))
             {
                 Directory.CreateDirectory(pluginsPath);
-            }
-            if (!Directory.Exists(ffmpegPath))
-            {
-                Directory.CreateDirectory(ffmpegPath);
             }
 
             // Install built sm64.dll
@@ -215,8 +210,6 @@ namespace SupersonicMarioInstaller
             File.WriteAllBytes(Path.Combine(assetsPath, "rom-hash.sha1"), Properties.Resources.rom_hash);
             File.WriteAllBytes(Path.Combine(assetsPath, "sm64tools.LICENSE"), Properties.Resources.sm64tools_LICENSE);
             File.WriteAllBytes(Path.Combine(assetsPath, "transparent.png"), Properties.Resources.transparent);
-            File.WriteAllBytes(Path.Combine(ffmpegPath, "ffmpeg.exe"), Properties.Resources.ffmpeg);
-            File.WriteAllBytes(Path.Combine(ffmpegPath, "ffmpeg.LICENSE"), Properties.Resources.ffmpeg_LICENSE);
 
             // Copy game config
             var cfgContents = DEFAULT_PLUGIN_CONFIG + uxRomPath.Text + "\r\n";

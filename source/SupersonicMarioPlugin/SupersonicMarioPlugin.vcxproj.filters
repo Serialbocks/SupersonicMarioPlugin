@@ -46,6 +46,9 @@
     <Filter Include="External\xxHash">
       <UniqueIdentifier>{8fe1ec9c-4598-4520-b2ef-a2bd268948ec}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External\AudioFile">
+      <UniqueIdentifier>{115018b0-aa2f-4b57-a066-c5d0116f018b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SupersonicMarioPlugin.h">
@@ -188,6 +191,9 @@
     </ClInclude>
     <ClInclude Include="..\External\xxHash\xxhash.h">
       <Filter>External\xxHash</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\AudioFile\AudioFile.h">
+      <Filter>External\AudioFile</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -143,6 +143,7 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\External\AudioFile\AudioFile.h" />
     <ClInclude Include="..\External\ImGui\imconfig.h" />
     <ClInclude Include="..\External\ImGui\imgui.h" />
     <ClInclude Include="..\External\ImGui\imgui_additions.h" />

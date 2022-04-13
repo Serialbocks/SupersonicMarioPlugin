@@ -4,6 +4,7 @@
 #include "soloud_wav.h"
 #include "Utils.h"
 #include "MarioConfig.h"
+#include "AudioFile/AudioFile.h"
 #include <semaphore>
 #include <thread>
 #include <filesystem>
@@ -99,28 +100,28 @@ private:
 public:
 	int MasterVolume = 70;
 	std::vector<MarioSound> marioSounds = {
-		{ SOUND_MARIO_YAH,							"\\sfx_mario\\02.wav",					0.91f},
-		{ SOUND_MARIO_WAH,							"\\sfx_mario\\01.wav",					0.85f},
-		{ SOUND_MARIO_HOO,							"\\sfx_mario\\00.wav",					1.08f},
-		{ SOUND_MARIO_YAHOO,						"\\sfx_mario\\04.wav",					1.0f},
-		{ SOUND_MARIO_HOOHOO,						"\\sfx_mario_peach\\01.wav",			1.0f},
-		{ SOUND_MARIO_PUNCH_YAH,					"\\sfx_mario\\02.wav",					0.91f},
-		{ SOUND_MARIO_PUNCH_WAH,					"\\sfx_mario\\01.wav",					0.85f},
-		{ SOUND_MARIO_PUNCH_HOO,					"\\sfx_mario_peach\\09.wav",			1.05f},
-		{ SOUND_ACTION_TERRAIN_STEP,				"\\sfx_terrain\\01_step_grass.wav",		0.0f,		0.50f},
-		{ SOUND_ACTION_SPIN,						"\\sfx_1\\00_twirl.wav",				1.14f,		0.85f},
-		{ SOUND_ACTION_TERRAIN_HEAVY_LANDING,		"\\sfx_1\\05_heavy_landing.wav",		1.13f},
-		{ SOUND_MARIO_GROUND_POUND_WAH,				"\\sfx_mario\\07.wav",					0.86f},
-		{ SOUND_ACTION_SIDE_FLIP_UNK,				"\\sfx_1\\00_twirl.wav",				1.14f},
-		{ SOUND_MARIO_HAHA,							"\\sfx_mario\\03.wav",					1.0f},
-		{ SOUND_ACTION_TERRAIN_LANDING,				"\\sfx_terrain\\01_step_grass.wav",		1.0f,		0.50f},
-		{ SOUND_MOVING_TERRAIN_SLIDE,				"\\sfx_4\\00.wav",						1.05f,		0.30f},
-		{ SOUND_ACTION_BONK,						"\\sfx_5\\09.wav",						0.80f,		0.50f},
-		{ SOUND_MARIO_UH,							"\\sfx_mario\\05.wav",					1.0f},
-		{ SOUND_MARIO_DOH,							"\\sfx_mario\\10.wav",					1.09f},
-		{ SOUND_MARIO_OOOF,							"\\sfx_mario\\0B.wav",					0.91f},
-		{ SOUND_ACTION_TERRAIN_BODY_HIT_GROUND,		"\\sfx_terrain\\01_step_grass.wav",		1.0f,		0.75f},
-		{ SOUND_MARIO_ATTACKED,						"\\sfx_mario\\0A.wav",					1.0f},
+		{ SOUND_MARIO_YAH,							"\\sfx_mario\\02.aiff",					0.91f},
+		{ SOUND_MARIO_WAH,							"\\sfx_mario\\01.aiff",					0.85f},
+		{ SOUND_MARIO_HOO,							"\\sfx_mario\\00.aiff",					1.08f},
+		{ SOUND_MARIO_YAHOO,						"\\sfx_mario\\04.aiff",					1.0f},
+		{ SOUND_MARIO_HOOHOO,						"\\sfx_mario_peach\\01.aiff",			1.0f},
+		{ SOUND_MARIO_PUNCH_YAH,					"\\sfx_mario\\02.aiff",					0.91f},
+		{ SOUND_MARIO_PUNCH_WAH,					"\\sfx_mario\\01.aiff",					0.85f},
+		{ SOUND_MARIO_PUNCH_HOO,					"\\sfx_mario_peach\\09.aiff",			1.05f},
+		{ SOUND_ACTION_TERRAIN_STEP,				"\\sfx_terrain\\01_step_grass.aiff",	0.0f,		0.50f},
+		{ SOUND_ACTION_SPIN,						"\\sfx_1\\00_twirl.aiff",				1.14f,		0.85f},
+		{ SOUND_ACTION_TERRAIN_HEAVY_LANDING,		"\\sfx_1\\05_heavy_landing.aiff",		1.13f},
+		{ SOUND_MARIO_GROUND_POUND_WAH,				"\\sfx_mario\\07.aiff",					0.86f},
+		{ SOUND_ACTION_SIDE_FLIP_UNK,				"\\sfx_1\\00_twirl.aiff",				1.14f},
+		{ SOUND_MARIO_HAHA,							"\\sfx_mario\\03.aiff",					1.0f},
+		{ SOUND_ACTION_TERRAIN_LANDING,				"\\sfx_terrain\\01_step_grass.aiff",	1.0f,		0.50f},
+		{ SOUND_MOVING_TERRAIN_SLIDE,				"\\sfx_4\\00.aiff",						1.05f,		0.30f},
+		{ SOUND_ACTION_BONK,						"\\sfx_5\\09.aiff",						0.80f,		0.50f},
+		{ SOUND_MARIO_UH,							"\\sfx_mario\\05.aiff",					1.0f},
+		{ SOUND_MARIO_DOH,							"\\sfx_mario\\10.aiff",					1.09f},
+		{ SOUND_MARIO_OOOF,							"\\sfx_mario\\0B.aiff",					0.91f},
+		{ SOUND_ACTION_TERRAIN_BODY_HIT_GROUND,		"\\sfx_terrain\\01_step_grass.aiff",	1.0f,		0.75f},
+		{ SOUND_MARIO_ATTACKED,						"\\sfx_mario\\0A.aiff",					1.0f},
 	};
 	bool soundsLoaded = false;
 	bool soundsLoadSuccess = false;

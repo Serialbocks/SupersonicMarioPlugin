@@ -103,26 +103,6 @@ namespace SupersonicMarioInstaller.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] ffmpeg {
-            get {
-                object obj = ResourceManager.GetObject("ffmpeg", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] ffmpeg_LICENSE {
-            get {
-                object obj = ResourceManager.GetObject("ffmpeg-LICENSE", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
         internal static byte[] libsoxr_dll {
             get {
                 object obj = ResourceManager.GetObject("libsoxr-dll", resourceCulture);

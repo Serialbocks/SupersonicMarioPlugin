@@ -606,14 +606,14 @@ def disassemble_main(inArgs, basePath, destPath):
                         created_dirs.add(dir)
                     write_aiff(entry, filename, basePath)
 
-                    wavFilename = filename[0:len(filename) - 5] + ".wav"
-                    ffmpegDir = os.path.join(basePath, "ffmpeg")
-                    ffmpeg = os.path.join(ffmpegDir, "ffmpeg.exe")
-                    try:
-                        subprocess.run(['powershell.exe', '-windowstyle', 'hidden', ffmpeg, '-y', '-i',  filename, wavFilename], check=True, capture_output=False)
-                    except:
-                        traceback.print_exc()
-                    os.remove(filename)
+                    #wavFilename = filename[0:len(filename) - 5] + ".wav"
+                    #ffmpegDir = os.path.join(basePath, "ffmpeg")
+                    #ffmpeg = os.path.join(ffmpegDir, "ffmpeg.exe")
+                    #try:
+                    #    subprocess.run(['powershell.exe', '-windowstyle', 'hidden', ffmpeg, '-y', '-i',  filename, wavFilename], check=True, capture_output=False)
+                    #except:
+                    #    traceback.print_exc()
+                    #os.remove(filename)
         return
 
     # Generate aiff files

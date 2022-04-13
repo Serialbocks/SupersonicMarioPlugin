@@ -22,3 +22,6 @@
 [submodule "source/External/soxr"]
     path = source/External/soxr
     url = https://github.com/chirlu/soxr.git
+[submodule "source/External/AudioFile"]
+    path = source/External/AudioFile
+    url = https://github.com/adamstark/AudioFile.git
