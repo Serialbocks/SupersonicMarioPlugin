@@ -35,7 +35,7 @@ namespace SupersonicMarioInstaller
             this.uxTopBanner = new System.Windows.Forms.Label();
             this.uxInstallerTitle = new System.Windows.Forms.Label();
             this.uxDivider1 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
+            this.uxBySerialbocks = new System.Windows.Forms.Label();
             this.uxTabs = new System.Windows.Forms.TabControl();
             this.uxWelcomePage = new System.Windows.Forms.TabPage();
             this.uxWelcomeMessage = new System.Windows.Forms.Label();
@@ -65,12 +65,14 @@ namespace SupersonicMarioInstaller
             this.uxInstallStatus = new System.Windows.Forms.Label();
             this.uxInstallProgress = new System.Windows.Forms.ProgressBar();
             this.uxPostInstallPage = new System.Windows.Forms.TabPage();
+            this.uxPostInstallMessage = new System.Windows.Forms.Label();
             this.uxNext = new System.Windows.Forms.Button();
             this.uxBack = new System.Windows.Forms.Button();
             this.uxOpenFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.uxBackgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.uxBanner = new System.Windows.Forms.Label();
-            this.uxPostInstallMessage = new System.Windows.Forms.Label();
+            this.uxVersion = new System.Windows.Forms.Label();
+            this.uxCredits = new System.Windows.Forms.Label();
             this.uxTabs.SuspendLayout();
             this.uxWelcomePage.SuspendLayout();
             this.uxLicensePage.SuspendLayout();
@@ -119,7 +121,7 @@ namespace SupersonicMarioInstaller
             this.uxInstallerTitle.AutoSize = true;
             this.uxInstallerTitle.BackColor = System.Drawing.SystemColors.ButtonHighlight;
             this.uxInstallerTitle.Font = new System.Drawing.Font("Verdana", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.uxInstallerTitle.Location = new System.Drawing.Point(12, 19);
+            this.uxInstallerTitle.Location = new System.Drawing.Point(12, 9);
             this.uxInstallerTitle.Name = "uxInstallerTitle";
             this.uxInstallerTitle.Size = new System.Drawing.Size(236, 18);
             this.uxInstallerTitle.TabIndex = 7;
@@ -136,16 +138,15 @@ namespace SupersonicMarioInstaller
             this.uxDivider1.Size = new System.Drawing.Size(510, 2);
             this.uxDivider1.TabIndex = 8;
             // 
-            // label1
+            // uxBySerialbocks
             // 
-            this.label1.AutoSize = true;
-            this.label1.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.label1.Font = new System.Drawing.Font("Verdana", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(12, 37);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(132, 13);
-            this.label1.TabIndex = 9;
-            this.label1.Text = "A mod by Serialbocks";
+            this.uxBySerialbocks.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.uxBySerialbocks.Font = new System.Drawing.Font("Verdana", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.uxBySerialbocks.Location = new System.Drawing.Point(12, 40);
+            this.uxBySerialbocks.Name = "uxBySerialbocks";
+            this.uxBySerialbocks.Size = new System.Drawing.Size(132, 13);
+            this.uxBySerialbocks.TabIndex = 9;
+            this.uxBySerialbocks.Text = "A mod by Serialbocks";
             // 
             // uxTabs
             // 
@@ -169,6 +170,7 @@ namespace SupersonicMarioInstaller
             // uxWelcomePage
             // 
             this.uxWelcomePage.BackColor = System.Drawing.SystemColors.ButtonFace;
+            this.uxWelcomePage.Controls.Add(this.uxCredits);
             this.uxWelcomePage.Controls.Add(this.uxWelcomeMessage);
             this.uxWelcomePage.Location = new System.Drawing.Point(4, 22);
             this.uxWelcomePage.Name = "uxWelcomePage";
@@ -183,7 +185,7 @@ namespace SupersonicMarioInstaller
             | System.Windows.Forms.AnchorStyles.Right)));
             this.uxWelcomeMessage.Location = new System.Drawing.Point(12, 14);
             this.uxWelcomeMessage.Name = "uxWelcomeMessage";
-            this.uxWelcomeMessage.Size = new System.Drawing.Size(481, 166);
+            this.uxWelcomeMessage.Size = new System.Drawing.Size(481, 82);
             this.uxWelcomeMessage.TabIndex = 0;
             this.uxWelcomeMessage.Text = resources.GetString("uxWelcomeMessage.Text");
             // 
@@ -471,6 +473,15 @@ namespace SupersonicMarioInstaller
             this.uxPostInstallPage.Text = "Postinstall";
             this.uxPostInstallPage.UseVisualStyleBackColor = true;
             // 
+            // uxPostInstallMessage
+            // 
+            this.uxPostInstallMessage.AutoSize = true;
+            this.uxPostInstallMessage.Location = new System.Drawing.Point(9, 3);
+            this.uxPostInstallMessage.Name = "uxPostInstallMessage";
+            this.uxPostInstallMessage.Size = new System.Drawing.Size(275, 13);
+            this.uxPostInstallMessage.TabIndex = 0;
+            this.uxPostInstallMessage.Text = "Installation completed successfully.  Click \"Finish\" to exit.";
+            // 
             // uxNext
             // 
             this.uxNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -508,14 +519,25 @@ namespace SupersonicMarioInstaller
             this.uxBanner.Size = new System.Drawing.Size(164, 52);
             this.uxBanner.TabIndex = 10;
             // 
-            // uxPostInstallMessage
+            // uxVersion
             // 
-            this.uxPostInstallMessage.AutoSize = true;
-            this.uxPostInstallMessage.Location = new System.Drawing.Point(9, 3);
-            this.uxPostInstallMessage.Name = "uxPostInstallMessage";
-            this.uxPostInstallMessage.Size = new System.Drawing.Size(275, 13);
-            this.uxPostInstallMessage.TabIndex = 0;
-            this.uxPostInstallMessage.Text = "Installation completed successfully.  Click \"Finish\" to exit.";
+            this.uxVersion.AutoSize = true;
+            this.uxVersion.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.uxVersion.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.25F);
+            this.uxVersion.Location = new System.Drawing.Point(12, 27);
+            this.uxVersion.Name = "uxVersion";
+            this.uxVersion.Size = new System.Drawing.Size(0, 13);
+            this.uxVersion.TabIndex = 12;
+            // 
+            // uxCredits
+            // 
+            this.uxCredits.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.uxCredits.Location = new System.Drawing.Point(12, 100);
+            this.uxCredits.Name = "uxCredits";
+            this.uxCredits.Size = new System.Drawing.Size(484, 133);
+            this.uxCredits.TabIndex = 1;
+            this.uxCredits.Text = resources.GetString("uxCredits.Text");
             // 
             // uxInstallerForm
             // 
@@ -523,11 +545,12 @@ namespace SupersonicMarioInstaller
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ButtonFace;
             this.ClientSize = new System.Drawing.Size(508, 385);
+            this.Controls.Add(this.uxVersion);
             this.Controls.Add(this.uxBack);
             this.Controls.Add(this.uxNext);
             this.Controls.Add(this.uxTabs);
             this.Controls.Add(this.uxBanner);
-            this.Controls.Add(this.label1);
+            this.Controls.Add(this.uxBySerialbocks);
             this.Controls.Add(this.uxDivider1);
             this.Controls.Add(this.uxInstallerTitle);
             this.Controls.Add(this.uxTopBanner);
@@ -538,6 +561,7 @@ namespace SupersonicMarioInstaller
             this.MinimumSize = new System.Drawing.Size(444, 411);
             this.Name = "uxInstallerForm";
             this.Text = "Supersonic Mario Installer";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.uxInstallerForm_FormClosing);
             this.uxTabs.ResumeLayout(false);
             this.uxWelcomePage.ResumeLayout(false);
             this.uxLicensePage.ResumeLayout(false);
@@ -564,7 +588,7 @@ namespace SupersonicMarioInstaller
         private System.Windows.Forms.Label uxTopBanner;
         private System.Windows.Forms.Label uxInstallerTitle;
         private System.Windows.Forms.Label uxDivider1;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label uxBySerialbocks;
         private System.Windows.Forms.Label uxBanner;
         private System.Windows.Forms.TabControl uxTabs;
         private System.Windows.Forms.TabPage uxWelcomePage;
@@ -600,6 +624,8 @@ namespace SupersonicMarioInstaller
         private System.Windows.Forms.ProgressBar uxInstallProgress;
         private System.ComponentModel.BackgroundWorker uxBackgroundWorker;
         private System.Windows.Forms.Label uxPostInstallMessage;
+        private System.Windows.Forms.Label uxVersion;
+        private System.Windows.Forms.Label uxCredits;
     }
 }
 

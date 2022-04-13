@@ -20,6 +20,8 @@ namespace SupersonicMarioInstaller
 {
     public partial class uxInstallerForm : Form
     {
+        private const string VERSION = "V0.1.0";
+
         private const string NEXT_BUTTON_TEXT = "Next >";
         private const string AGREE_BUTTON_TEXT = "I Agree";
         private const string INSTALL_BUTTON_TEXT = "Install";
@@ -55,6 +57,8 @@ namespace SupersonicMarioInstaller
         public uxInstallerForm()
         {
             InitializeComponent();
+
+            uxVersion.Text = VERSION;
 
             uxTabs.Appearance = TabAppearance.FlatButtons;
             uxTabs.ItemSize = new Size(0, 1);
@@ -302,14 +306,7 @@ namespace SupersonicMarioInstaller
 
         private void uxCancel_Click(object sender, EventArgs e)
         {
-            if(_currentStep == Step.Postinstall)
-            {
-                Application.Exit();
-            }
-            var dialogResult = MessageBox.Show("Are you sure you want to exit the installation?",
-                "Exit Installer",
-                MessageBoxButtons.YesNo);
-            if(dialogResult == DialogResult.Yes)
+            if(_currentStep == Step.Postinstall || WarnCloseInstaller() == DialogResult.Yes)
             {
                 Application.Exit();
             }
@@ -563,6 +560,21 @@ namespace SupersonicMarioInstaller
                     var hash = md5.ComputeHash(stream);
                     return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
                 }
+            }
+        }
+
+        private DialogResult WarnCloseInstaller()
+        {
+            return MessageBox.Show("Are you sure you want to exit the installation?",
+                "Exit Installer",
+                MessageBoxButtons.YesNo);
+        }
+
+        private void uxInstallerForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if(WarnCloseInstaller() == DialogResult.No)
+            {
+                e.Cancel = true;
             }
         }
     }

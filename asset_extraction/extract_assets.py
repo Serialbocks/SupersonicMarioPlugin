@@ -610,7 +610,7 @@ def disassemble_main(inArgs, basePath, destPath):
                     ffmpegDir = os.path.join(basePath, "ffmpeg")
                     ffmpeg = os.path.join(ffmpegDir, "ffmpeg.exe")
                     try:
-                        subprocess.run(['powershell.exe', '-windowstyle', 'hidden', ffmpeg, '-i', filename, wavFilename], check=True, capture_output=False)
+                        subprocess.run(['powershell.exe', '-windowstyle', 'hidden', ffmpeg, '-y', '-i',  filename, wavFilename], check=True, capture_output=False)
                     except:
                         traceback.print_exc()
                     os.remove(filename)

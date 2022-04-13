@@ -161,7 +161,7 @@ void loadSoundFiles()
 		ZeroMemory(&pi, sizeof(pi));
 		CreateProcessA(NULL, (LPSTR)extractAssetsPathWithArgs.c_str(), NULL, NULL,
 			FALSE, CREATE_NO_WINDOW, NULL, tempDir.c_str(), &si, &pi);
-		WaitForSingleObject(pi.hProcess, 20000);
+		WaitForSingleObject(pi.hProcess, INFINITE);
 	}
 
 	std::string soundDir = tempDir + "\\sound\\samples";
