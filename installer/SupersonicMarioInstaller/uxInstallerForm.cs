@@ -155,7 +155,7 @@ namespace SupersonicMarioInstaller
 
             uxInstallStatus.Invoke((MethodInvoker)delegate
             {
-                uxInstallStatus.Text = "Building SM64 Library...";
+                uxInstallStatus.Text = "Building libsm64...";
             });
 
             ExecuteMSYS2Command($"cd ./{LIBSM64_REPO_NAME} && make", 60);
@@ -558,6 +558,10 @@ namespace SupersonicMarioInstaller
 
         private DialogResult WarnCloseInstaller()
         {
+            if(_currentStep == Step.Postinstall)
+            {
+                return DialogResult.Yes;
+            }
             return MessageBox.Show("Are you sure you want to exit the installation?",
                 "Exit Installer",
                 MessageBoxButtons.YesNo);
