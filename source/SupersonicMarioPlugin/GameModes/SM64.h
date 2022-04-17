@@ -49,6 +49,8 @@ struct MatchSettings
     int playerIds[MAX_NUM_PLAYERS] = { 0 };
     int playerColorIndices[MAX_NUM_PLAYERS] = { 0 };
     bool playerStemFlags[MAX_NUM_PLAYERS] = { 0 };
+
+    bool joinGame = false;
 };
 
 class SM64MarioInstance
@@ -97,6 +99,10 @@ public:
     void OnGameLeft(bool deleteMario);
 
     void SendSettingsToClients();
+
+    void MatchSettingsMessageReceived(char* buf, int len);
+    void MarioMessageReceived(char* buf, int len);
+    void SendJoinCommandToClients();
 
 private:
     void onCharacterSpawn(ServerWrapper server);

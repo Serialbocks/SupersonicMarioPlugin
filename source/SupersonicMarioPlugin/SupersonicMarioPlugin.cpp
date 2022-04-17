@@ -438,8 +438,6 @@ void setTeamColor(int8_t& teamColor, const int8_t& newTeamColor)
     teamColor = newTeamColor;
 }
 
-//bool isHostingSm64Game();
-//void renderSm64Options();
 bool SupersonicMarioPlugin::isHostingSm64Game()
 {
     return sm64->IsActive();
@@ -448,7 +446,6 @@ bool SupersonicMarioPlugin::isHostingSm64Game()
 void SupersonicMarioPlugin::renderSm64Options()
 {
     sm64->RenderOptions();
-    sm64->RenderPreferences();
 }
 
 void SupersonicMarioPlugin::renderSm64Preferences()
@@ -775,6 +772,11 @@ void SupersonicMarioPlugin::JoinGame(const char* pswd)
     gameWrapper->ExecuteUnrealCommand(fmt::format("start {:s}:{:d}/?Lan?Password={:s}", *joinIP, *joinPort, pswd));
 }
 
+/// <summary>Joins a local game with the preconfigured settings.</summary>
+void SupersonicMarioPlugin::ForceJoin()
+{
+sm64->SendJoinCommandToClients();
+}
 
 /// <summary>Gets the currently selected game tags.</summary>
 /// <returns>The currently selected game tags</returns>

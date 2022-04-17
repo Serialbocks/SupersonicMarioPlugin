@@ -135,7 +135,7 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 
 SM64::~SM64()
 {
-	
+
 	gameWrapper->UnregisterDrawables();
 	gameWrapper->UnhookEventPost("Function TAGame.EngineShare_TA.EventPostPhysicsStep");
 	gameWrapper->UnhookEventPost("Function TAGame.NetworkInputBuffer_TA.ClientAckFrame");
@@ -232,7 +232,7 @@ void SM64::OnGameLeft(bool deleteMario)
 		remoteMarios.clear();
 		Activate(false);
 	}
-		
+
 	remoteMariosSema.release();
 }
 
@@ -325,7 +325,7 @@ void SM64::moveCarToMario(std::string eventName)
 			}
 		}
 		remoteMariosSema.release();
-		
+
 	}
 }
 
@@ -352,7 +352,7 @@ void SM64::menuPopped(ServerWrapper server)
 		menuStackCount--;
 }
 
-void MarioMessageReceived(char* buf, int len)
+void SM64::MarioMessageReceived(char* buf, int len)
 {
 	auto marioMsgLen = sizeof(struct SM64MarioBodyState) + sizeof(int);
 	uint8_t* targetData = (uint8_t*)buf;
@@ -383,7 +383,7 @@ void MarioMessageReceived(char* buf, int len)
 	self->matchSettingsSema.release();
 }
 
-void MatchSettingsMessageReceived(char* buf, int len)
+void SM64::MatchSettingsMessageReceived(char* buf, int len)
 {
 	auto settingsMsgLen = sizeof(MatchSettings) + sizeof(int);
 	if (len != settingsMsgLen) return;
@@ -418,7 +418,36 @@ void MatchSettingsMessageReceived(char* buf, int len)
 			marioInstance->sema.release();
 		}
 	}
+
 	self->remoteMariosSema.release();
+
+	if( self->matchSettings.joinGame )
+	{
+		OnGameLeft(true);
+
+		static const char pswdBuf[64] = "";
+		static const int MAX_WAIT_CYCLES = 4;
+        static Networking::HostStatus hostOnline = Networking::HostStatus::HOST_UNKNOWN;
+		static std::shared_ptr<std::string> joinIP = std::make_shared<std::string>();
+		static std::shared_ptr<int> joinPort = std::make_shared<int>(DEFAULT_PORT);
+
+		hostOnline = Networking::HostStatus::HOST_UNKNOWN;
+		*joinIP = cvarManager->getCvar("mp_ip").getStringValue();
+		*joinPort = cvarManager->getCvar("mp_port").getIntValue();
+
+		int waits = 0;
+		while( hostOnline != Networking::HostStatus::HOST_ONLINE && waits <= MAX_WAIT_CYCLES)
+		{
+		std::this_thread::sleep_for(std::chrono::milliseconds(250));
+		waits++;
+		Networking::PingHost(*joinIP, static_cast<unsigned short>(*joinPort), &hostOnline, true);
+		}
+
+		Execute([this](GameWrapper*) {
+			SupersonicMarioPluginModule::Outer()->JoinGame(pswdBuf);
+        });
+
+	}
 }
 
 void MessageReceived(char* buf, int len)
@@ -427,11 +456,11 @@ void MessageReceived(char* buf, int len)
 	int messageId = *((int*)buf);
 	if (messageId == -1)
 	{
-		MatchSettingsMessageReceived(buf, len);
+		self->MatchSettingsMessageReceived(buf, len);
 	}
 	else
 	{
-		MarioMessageReceived(buf, len);
+		self->MarioMessageReceived(buf, len);
 	}
 }
 
@@ -480,6 +509,15 @@ void SM64::sendSettingsIfHost(ServerWrapper server)
 		SendSettingsToClients();
 		matchSettingsSema.release();
 	}
+}
+
+void SM64::SendJoinCommandToClients()
+{
+	matchSettingsSema.acquire();
+	matchSettings.joinGame = true;
+	SendSettingsToClients();
+	matchSettings.joinGame = false;
+	matchSettingsSema.release();
 }
 
 /// <summary>Renders the available options for the game mode.</summary>
@@ -533,7 +571,6 @@ void SM64::RenderOptions()
 			matchSettings.bljSetup.bljVel = (uint8_t)velocity;
 		}
 
-
 		ImGui::NewLine();
 
 		auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame();
@@ -566,7 +603,6 @@ void SM64::RenderOptions()
 				}
 
 				if (marioInstance == nullptr) continue;
-
 			}
 			remoteMariosSema.release();
 
