@@ -1079,8 +1079,15 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 
 void backgroundLoadData()
 {
-	Utils::ParseObjFile(Utils::GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj", &self->ballVertices);
+	Utils::ParseObjFile(Utils::GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj", &self->ballVertices, &self->ballIndices);
 	self->backgroundLoadThreadFinished = true;
+
+	SM64* instance = self;
+	self->Execute([instance](GameWrapper*) {
+		instance->ballMesh = instance->renderer->CreateMesh(&instance->ballVertices, &instance->ballIndices);
+		instance->backgroundLoadThreadFinished = true;
+	});
+	
 }
 
 inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
@@ -1143,7 +1150,6 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 
 void SM64::OnRender(CanvasWrapper canvas)
 {
-	if (renderer == nullptr) return;
 	if (!backgroundLoadThreadStarted)
 	{
 		if (!renderer->Initialized) return;
@@ -1157,8 +1163,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 	if (!meshesInitialized)
 	{
-		ballMesh = renderer->CreateMesh(&ballVertices);
-
 		marioMeshPoolSema.acquire();
 		for (int i = 0; i < MARIO_MESH_POOL_SIZE; i++)
 		{

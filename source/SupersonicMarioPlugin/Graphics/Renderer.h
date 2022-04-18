@@ -35,6 +35,7 @@ public:
 		uint16_t inTexWidth = 0,
 		uint16_t inTexHeight = 0);
 	Mesh* CreateMesh(std::vector<Vertex>* inVertices,
+		std::vector<UINT>* inIndices,
 		uint8_t* inTexture = nullptr,
 		size_t inTexSize = 0,
 		uint16_t inTexWidth = 0,

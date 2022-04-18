@@ -13,13 +13,14 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	uint16_t inTexWidth,
 	uint16_t inTexHeight)
 {
-	init(deviceIn, inWindowWidth, inWindowHeight, maxTriangles, inTexture, inAltTexture, inTexSize, inTexWidth, inTexHeight);
+	init(deviceIn, inWindowWidth, inWindowHeight, maxTriangles, 0, inTexture, inAltTexture, inTexSize, inTexWidth, inTexHeight);
 }
 
 Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	int inWindowWidth,
 	int inWindowHeight,
 	std::vector<Vertex> *inVertices,
+	std::vector<UINT>* inIndices,
 	uint8_t* inTexture,
 	size_t inTexSize,
 	uint16_t inTexWidth,
@@ -30,8 +31,13 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	{
 		Vertices.push_back((*inVertices)[i]);
 	}
-	init(deviceIn, inWindowWidth, inWindowHeight, Vertices.size(), inTexture, nullptr, inTexSize, inTexWidth, inTexHeight);
-	NumTrianglesUsed = Vertices.size();
+	for (int i = 0; i < inIndices->size(); i++)
+	{
+		Indices.push_back((*inIndices)[i]);
+	}
+	auto maxTrialges = Indices.size() / 3;
+	init(deviceIn, inWindowWidth, inWindowHeight, maxTrialges, Indices.size(), inTexture, nullptr, inTexSize, inTexWidth, inTexHeight);
+	NumTrianglesUsed = maxTrialges;
 }
 
 void Mesh::RenderUpdateVertices(size_t numTrianglesUsed, CameraWrapper* camera)
@@ -136,6 +142,7 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	int inWindowWidth,
 	int inWindowHeight,
 	size_t maxTriangles,
+	size_t numIndices,
 	uint8_t* inTexture,
 	uint8_t* inAltTexture,
 	size_t inTexSize,
@@ -147,13 +154,21 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	windowHeight = inWindowHeight;
 
 	MaxTriangles = maxTriangles;
-	NumIndices = maxTriangles * 3;
-
-	Vertices.resize(NumIndices);
-	Indices.resize(NumIndices);
-	for (unsigned int i = 0; i < NumIndices; i++)
+	auto vertexCount = MaxTriangles * 3;
+	if (numIndices == 0)
 	{
-		Indices[i] = i;
+		NumIndices = maxTriangles * 3;
+		Vertices.resize(NumIndices);
+		Indices.resize(NumIndices);
+		for (unsigned int i = 0; i < NumIndices; i++)
+		{
+			Indices[i] = i;
+		}
+	}
+	else
+	{
+		vertexCount = Vertices.size();
+		NumIndices = numIndices;
 	}
 
 	texData = inTexture;
@@ -164,7 +179,7 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 
 	D3D11_BUFFER_DESC vbDesc = { 0 };
 	ZeroMemory(&vbDesc, sizeof(D3D11_BUFFER_DESC));
-	vbDesc.ByteWidth = (UINT)(sizeof(Vertex) * MaxTriangles * 3);
+	vbDesc.ByteWidth = (UINT)(sizeof(Vertex) * vertexCount);
 	vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
 	vbDesc.Usage = D3D11_USAGE_DYNAMIC;
 	vbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;

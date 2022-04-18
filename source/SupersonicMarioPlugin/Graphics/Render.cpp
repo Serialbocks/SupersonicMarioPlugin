@@ -55,6 +55,7 @@ Mesh* Renderer::CreateMesh(size_t maxTriangles,
 }
 
 Mesh* Renderer::CreateMesh(std::vector<Vertex> *inVertices,
+	std::vector<UINT>* inIndices,
 	uint8_t* inTexture,
 	size_t inTexSize,
 	uint16_t inTexWidth,
@@ -64,7 +65,7 @@ Mesh* Renderer::CreateMesh(std::vector<Vertex> *inVertices,
 	{
 		return nullptr;
 	}
-	Mesh* newMesh = new Mesh(device, windowWidth, windowHeight, inVertices, inTexture, inTexSize, inTexWidth, inTexHeight);
+	Mesh* newMesh = new Mesh(device, windowWidth, windowHeight, inVertices, inIndices, inTexture, inTexSize, inTexWidth, inTexHeight);
 	meshes.push_back(newMesh);
 	return newMesh;
 }

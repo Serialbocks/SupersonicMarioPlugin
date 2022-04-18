@@ -7,6 +7,12 @@
 #include <math.h>
 #include <sys/stat.h>
 
+
+#pragma comment(lib, "assimp-vc142-mt.lib")
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+
 class Utils
 {
 public:
@@ -33,12 +39,43 @@ public:
 		return stm.str();
 	}
 
-	static void ParseObjFile(std::string path, std::vector<Vertex>* outVertices)
+
+
+	static void ProcessModelNode(aiNode* node, const aiScene* scene, std::vector<Vertex>* outVertices, std::vector<UINT>* outIndices)
+	{
+		for (UINT i = 0; i < node->mNumMeshes; i++)
+		{
+			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+			for (UINT k = 0; k < mesh->mNumVertices; k++)
+			{
+
+			}
+		}
+
+		for (UINT i = 0; i < node->mNumChildren; i++)
+		{
+			ProcessModelNode(node->mChildren[i], scene, outVertices, outIndices);
+		}
+	}
+
+	static bool LoadModel(std::string path, std::vector<Vertex>* outVertices, std::vector<UINT>* outIndices)
+	{
+		Assimp::Importer importer;
+
+		const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_ConvertToLeftHanded);
+		if (scene == nullptr)
+			return false;
+
+		ProcessModelNode(scene->mRootNode, scene, outVertices, outIndices);
+
+		return true;
+	}
+
+	static void ParseObjFile(std::string path, std::vector<Vertex>* vertices, std::vector<UINT>* indices)
 	{
 		std::ifstream file(path);
 		std::string line;
 
-		std::vector<Vertex> vertices;
 		std::vector<Vertex> normals;
 		while (std::getline(file, line))
 		{
@@ -58,7 +95,7 @@ public:
 				vertex.color.w = 0.0f;
 				vertex.texCoord.x = 1.0f;
 				vertex.texCoord.y = 0.0f;
-				vertices.push_back(vertex);
+				vertices->push_back(vertex);
 			}
 			else if (type == "vn")
 			{
@@ -76,22 +113,24 @@ public:
 				auto normalIndex1 = std::stoul(SplitStr(split[lastIndex - 2], '/')[2], nullptr);
 				auto normalIndex2 = std::stoul(SplitStr(split[lastIndex - 1], '/')[2], nullptr);
 				auto normalIndex3 = std::stoul(SplitStr(split[lastIndex], '/')[2], nullptr);
-				vertices[vertIndex1].normal.x = normals[normalIndex1].normal.x;
-				vertices[vertIndex1].normal.y = normals[normalIndex1].normal.y;
-				vertices[vertIndex1].normal.z = normals[normalIndex1].normal.z;
-				vertices[vertIndex2].normal.x = normals[normalIndex2].normal.x;
-				vertices[vertIndex2].normal.y = normals[normalIndex2].normal.y;
-				vertices[vertIndex2].normal.z = normals[normalIndex2].normal.z;
-				vertices[vertIndex3].normal.x = normals[normalIndex3].normal.x;
-				vertices[vertIndex3].normal.y = normals[normalIndex3].normal.y;
-				vertices[vertIndex3].normal.z = normals[normalIndex3].normal.z;
-				outVertices->push_back(vertices[vertIndex1]);
-				outVertices->push_back(vertices[vertIndex2]);
-				outVertices->push_back(vertices[vertIndex3]);
+				(*vertices)[vertIndex1].normal.x = normals[normalIndex1].normal.x;
+				(*vertices)[vertIndex1].normal.y = normals[normalIndex1].normal.y;
+				(*vertices)[vertIndex1].normal.z = normals[normalIndex1].normal.z;
+				(*vertices)[vertIndex2].normal.x = normals[normalIndex2].normal.x;
+				(*vertices)[vertIndex2].normal.y = normals[normalIndex2].normal.y;
+				(*vertices)[vertIndex2].normal.z = normals[normalIndex2].normal.z;
+				(*vertices)[vertIndex3].normal.x = normals[normalIndex3].normal.x;
+				(*vertices)[vertIndex3].normal.y = normals[normalIndex3].normal.y;
+				(*vertices)[vertIndex3].normal.z = normals[normalIndex3].normal.z;
+				indices->push_back(vertIndex1);
+				indices->push_back(vertIndex2);
+				indices->push_back(vertIndex3);
 			}
 		}
 
 	}
+
+
 
 	static std::vector<std::string> SplitStr(std::string str, char delimiter)
 	{

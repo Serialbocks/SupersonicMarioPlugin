@@ -124,6 +124,7 @@ public:
     bool inputManagerInitialized = false;
     Renderer* renderer = nullptr;
     std::vector<Vertex> ballVertices;
+    std::vector<UINT> ballIndices;
     bool backgroundLoadThreadStarted = false;
     bool backgroundLoadThreadFinished = false;
     Rotator carRotation;
@@ -150,6 +151,7 @@ public:
     };
     int menuStackCount = 0;
     bool Sm64Initialized = false;
+    Mesh* ballMesh = nullptr;
 
 private:
     /* SM64 Members */
@@ -158,7 +160,6 @@ private:
     float cameraRot;
     bool locationInit;
     Mesh* marioMesh = nullptr;
-    Mesh* ballMesh = nullptr;
     bool meshesInitialized = false;
     struct SM64MarioBodyState marioBodyStateIn;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
