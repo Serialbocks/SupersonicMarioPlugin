@@ -195,6 +195,9 @@
     <ClInclude Include="..\External\AudioFile\AudioFile.h">
       <Filter>External\AudioFile</Filter>
     </ClInclude>
+    <ClInclude Include="Graphics\Model.h">
+      <Filter>Graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SupersonicMarioPlugin.cpp">
@@ -376,6 +379,9 @@
     </ClCompile>
     <ClCompile Include="..\External\xxHash\xxhash.c">
       <Filter>External\xxHash</Filter>
+    </ClCompile>
+    <ClCompile Include="Graphics\Model.cpp">
+      <Filter>Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

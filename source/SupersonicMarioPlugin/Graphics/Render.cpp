@@ -32,42 +32,11 @@ Renderer::~Renderer()
 {
 	kiero::shutdown();
 	instance = nullptr;
-	for (auto i = 0; i < meshes.size(); i++)
-	{
-		delete meshes[i];
-	}
 }
 
-Mesh* Renderer::CreateMesh(size_t maxTriangles,
-	uint8_t* inTexture,
-	uint8_t* inAltTexture,
-	size_t inTexSize,
-	uint16_t inTexWidth,
-	uint16_t inTexHeight)
+void Renderer::AddModel(Model* model)
 {
-	if (!device)
-	{
-		return nullptr;
-	}
-	Mesh* newMesh = new Mesh(device, windowWidth, windowHeight, maxTriangles, inTexture, inAltTexture, inTexSize, inTexWidth, inTexHeight);
-	meshes.push_back(newMesh);
-	return newMesh;
-}
-
-Mesh* Renderer::CreateMesh(std::vector<Vertex> *inVertices,
-	std::vector<UINT>* inIndices,
-	uint8_t* inTexture,
-	size_t inTexSize,
-	uint16_t inTexWidth,
-	uint16_t inTexHeight)
-{
-	if (!device)
-	{
-		return nullptr;
-	}
-	Mesh* newMesh = new Mesh(device, windowWidth, windowHeight, inVertices, inIndices, inTexture, inTexSize, inTexWidth, inTexHeight);
-	meshes.push_back(newMesh);
-	return newMesh;
+	models.push_back(model);
 }
 
 void Renderer::OnPresent(IDXGISwapChain* pThis, UINT SyncInterval, UINT Flags)
@@ -75,7 +44,7 @@ void Renderer::OnPresent(IDXGISwapChain* pThis, UINT SyncInterval, UINT Flags)
 	if (!Initialized)
 	{
 		if (!Init(pThis, SyncInterval, Flags)) return;
-		drawMeshes = true;
+		drawModels = true;
 	}
 
 	Render();
@@ -128,7 +97,7 @@ bool Renderer::Init(IDXGISwapChain* swapChain, UINT syncInterval, UINT flags)
 	return true;
 }
 
-void Renderer::InitMeshBuffers()
+void Renderer::InitBuffers()
 {
 	// Create rasterizer state
 	// We need to control which face of a shape is culled
@@ -255,16 +224,16 @@ void Renderer::Render()
 	context->OMSetRenderTargets(1, mainRenderTargetView.GetAddressOf(), 0);
 	context->RSSetViewports(1, &viewport);
 
-	if (drawMeshes)
+	if (drawModels)
 	{
 		if (!pipelineInitialized)
 		{
 			CreatePipeline();
-			InitMeshBuffers();
+			InitBuffers();
 			pipelineInitialized = true;
 		}
 
-		DrawRenderedMesh();
+		DrawModels();
 	}
 }
 
@@ -285,7 +254,7 @@ ComPtr<ID3DBlob> Renderer::LoadShader(const char* shader, std::string targetShad
 	return shaderBlob;
 }
 
-void Renderer::DrawRenderedMesh()
+void Renderer::DrawModels()
 {
 	context->OMSetRenderTargets(1, mainRenderTargetView.GetAddressOf(), depthStencilView.Get());
 	context->ClearDepthStencilView(depthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
@@ -309,73 +278,89 @@ void Renderer::DrawRenderedMesh()
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
 
-	for (auto i = 0; i < meshes.size(); i++)
+	for (auto k = 0; k < models.size(); k++)
 	{
-		auto mesh = meshes[i];
+		auto model = models[k];
 
-		if (!mesh->render) {
-			mesh->UpdateVertices = false;
+		if (model->NeedsInitialized())
+		{
+			model->InitMeshes(device, windowWidth, windowHeight);
+		}
+
+		if (!model->ShouldRender())
+		{
 			continue;
-		};
-
-		PixelConstBufferData.capColor.x = mesh->CapColorR;
-		PixelConstBufferData.capColor.y = mesh->CapColorG;
-		PixelConstBufferData.capColor.z = mesh->CapColorB;
-		PixelConstBufferData.shirtColor.x = mesh->ShirtColorR;
-		PixelConstBufferData.shirtColor.y = mesh->ShirtColorG;
-		PixelConstBufferData.shirtColor.z = mesh->ShirtColorB;
-
-		// Map the pixel constant buffer
-		D3D11_MAPPED_SUBRESOURCE mappedResource;
-		context->Map(pixelConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		memcpy(mappedResource.pData, &PixelConstBufferData, sizeof(PS_ConstantBufferData));
-		context->Unmap(pixelConstantBuffer.Get(), 0);
-
-		// Map the vertex constant buffer on the GPU
-		context->Map(mesh->VertexConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-		memcpy(mappedResource.pData, &mesh->VertexConstBufferData, sizeof(VS_ConstantBufferData));
-		context->Unmap(mesh->VertexConstantBuffer.Get(), 0);
-
-		context->UpdateSubresource(mesh->VertexConstantBuffer.Get(), 0, 0, &mesh->VertexConstBufferData, 0, 0);
-		context->VSSetConstantBuffers(0, 1, mesh->VertexConstantBuffer.GetAddressOf());
-
-		if (mesh->UpdateVertices)
-		{
-			context->Map(mesh->VertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
-			memcpy(mappedResource.pData, (void*)mesh->Vertices.data(), sizeof(Vertex) * mesh->NumTrianglesUsed * 3);
-			context->Unmap(mesh->VertexBuffer.Get(), 0);
-			mesh->UpdateVertices = false;
 		}
 
-		context->IASetVertexBuffers(0, 1, mesh->VertexBuffer.GetAddressOf(), &stride, &offset);
-		context->IASetIndexBuffer(mesh->IndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
-
-		if (mesh->TextureResourceView != nullptr)
+		for (auto i = 0; i < model->Meshes.size(); i++)
 		{
-			if (mesh->IsTransparent)
+			auto mesh = model->Meshes[i];
+
+			if (!mesh->render) {
+				mesh->UpdateVertices = false;
+				continue;
+			};
+
+			PixelConstBufferData.capColor.x = mesh->CapColorR;
+			PixelConstBufferData.capColor.y = mesh->CapColorG;
+			PixelConstBufferData.capColor.z = mesh->CapColorB;
+			PixelConstBufferData.shirtColor.x = mesh->ShirtColorR;
+			PixelConstBufferData.shirtColor.y = mesh->ShirtColorG;
+			PixelConstBufferData.shirtColor.z = mesh->ShirtColorB;
+
+			// Map the pixel constant buffer
+			D3D11_MAPPED_SUBRESOURCE mappedResource;
+			context->Map(pixelConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+			memcpy(mappedResource.pData, &PixelConstBufferData, sizeof(PS_ConstantBufferData));
+			context->Unmap(pixelConstantBuffer.Get(), 0);
+
+			// Map the vertex constant buffer on the GPU
+			context->Map(mesh->VertexConstantBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+			memcpy(mappedResource.pData, &mesh->VertexConstBufferData, sizeof(VS_ConstantBufferData));
+			context->Unmap(mesh->VertexConstantBuffer.Get(), 0);
+
+			context->UpdateSubresource(mesh->VertexConstantBuffer.Get(), 0, 0, &mesh->VertexConstBufferData, 0, 0);
+			context->VSSetConstantBuffers(0, 1, mesh->VertexConstantBuffer.GetAddressOf());
+
+			if (mesh->UpdateVertices)
 			{
-				context->PSSetShader(pixelShaderTexturesTransparent.Get(), nullptr, 0);
+				context->Map(mesh->VertexBuffer.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource);
+				memcpy(mappedResource.pData, (void*)mesh->Vertices.data(), sizeof(Vertex) * mesh->NumTrianglesUsed * 3);
+				context->Unmap(mesh->VertexBuffer.Get(), 0);
+				mesh->UpdateVertices = false;
+			}
+
+			context->IASetVertexBuffers(0, 1, mesh->VertexBuffer.GetAddressOf(), &stride, &offset);
+			context->IASetIndexBuffer(mesh->IndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
+
+			if (mesh->TextureResourceView != nullptr)
+			{
+				if (mesh->IsTransparent)
+				{
+					context->PSSetShader(pixelShaderTexturesTransparent.Get(), nullptr, 0);
+				}
+				else
+				{
+					context->PSSetShader(pixelShaderTextures.Get(), nullptr, 0);
+				}
+				context->PSSetSamplers(0, 1, samplerState.GetAddressOf());
+				if (mesh->ShowAltTexture && mesh->AltTextureResourceView != nullptr)
+				{
+					context->PSSetShaderResources(0, 1, mesh->AltTextureResourceView.GetAddressOf());
+				}
+				else
+				{
+					context->PSSetShaderResources(0, 1, mesh->TextureResourceView.GetAddressOf());
+				}
 			}
 			else
 			{
-				context->PSSetShader(pixelShaderTextures.Get(), nullptr, 0);
+				context->PSSetShader(pixelShader.Get(), nullptr, 0);
 			}
-			context->PSSetSamplers(0, 1, samplerState.GetAddressOf());
-			if (mesh->ShowAltTexture && mesh->AltTextureResourceView != nullptr)
-			{
-				context->PSSetShaderResources(0, 1, mesh->AltTextureResourceView.GetAddressOf());
-			}
-			else
-			{
-				context->PSSetShaderResources(0, 1, mesh->TextureResourceView.GetAddressOf());
-			}
+			context->DrawIndexed((UINT)mesh->NumTrianglesUsed * 3, 0, 0);
 		}
-		else
-		{
-			context->PSSetShader(pixelShader.Get(), nullptr, 0);
-		}
-		context->DrawIndexed((UINT)mesh->NumTrianglesUsed * 3, 0, 0);
 	}
+
 
 
 }

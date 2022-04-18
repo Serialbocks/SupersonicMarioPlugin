@@ -71,67 +71,6 @@ public:
 		return true;
 	}
 
-	static void ParseObjFile(std::string path, std::vector<Vertex>* vertices, std::vector<UINT>* indices)
-	{
-		std::ifstream file(path);
-		std::string line;
-
-		std::vector<Vertex> normals;
-		while (std::getline(file, line))
-		{
-			if (line.size() == 0) continue;
-			auto split = SplitStr(line, ' ');
-			auto type = split[0];
-			auto lastIndex = split.size() - 1;
-			if (type == "v")
-			{
-				Vertex vertex;
-				vertex.pos.x = std::stof(split[lastIndex - 2], nullptr);
-				vertex.pos.y = std::stof(split[lastIndex - 1], nullptr);
-				vertex.pos.z = std::stof(split[lastIndex], nullptr);
-				vertex.color.x = 1.0f;
-				vertex.color.y = 1.0f;
-				vertex.color.z = 1.0f;
-				vertex.color.w = 0.0f;
-				vertex.texCoord.x = 1.0f;
-				vertex.texCoord.y = 0.0f;
-				vertices->push_back(vertex);
-			}
-			else if (type == "vn")
-			{
-				Vertex vertex;
-				vertex.normal.x = std::stof(split[lastIndex - 2], nullptr);
-				vertex.normal.y = std::stof(split[lastIndex - 1], nullptr);
-				vertex.normal.z = std::stof(split[lastIndex], nullptr);
-				normals.push_back(vertex);
-			}
-			else if (type == "f")
-			{
-				auto vertIndex1 = std::stoul(SplitStr(split[lastIndex - 2], '/')[0], nullptr);
-				auto vertIndex2 = std::stoul(SplitStr(split[lastIndex - 1], '/')[0], nullptr);
-				auto vertIndex3 = std::stoul(SplitStr(split[lastIndex], '/')[0], nullptr);
-				auto normalIndex1 = std::stoul(SplitStr(split[lastIndex - 2], '/')[2], nullptr);
-				auto normalIndex2 = std::stoul(SplitStr(split[lastIndex - 1], '/')[2], nullptr);
-				auto normalIndex3 = std::stoul(SplitStr(split[lastIndex], '/')[2], nullptr);
-				(*vertices)[vertIndex1].normal.x = normals[normalIndex1].normal.x;
-				(*vertices)[vertIndex1].normal.y = normals[normalIndex1].normal.y;
-				(*vertices)[vertIndex1].normal.z = normals[normalIndex1].normal.z;
-				(*vertices)[vertIndex2].normal.x = normals[normalIndex2].normal.x;
-				(*vertices)[vertIndex2].normal.y = normals[normalIndex2].normal.y;
-				(*vertices)[vertIndex2].normal.z = normals[normalIndex2].normal.z;
-				(*vertices)[vertIndex3].normal.x = normals[normalIndex3].normal.x;
-				(*vertices)[vertIndex3].normal.y = normals[normalIndex3].normal.y;
-				(*vertices)[vertIndex3].normal.z = normals[normalIndex3].normal.z;
-				indices->push_back(vertIndex1);
-				indices->push_back(vertIndex2);
-				indices->push_back(vertIndex3);
-			}
-		}
-
-	}
-
-
-
 	static std::vector<std::string> SplitStr(std::string str, char delimiter)
 	{
 		std::stringstream stringStream(str);

@@ -15,8 +15,8 @@
 #include "shlobj.h"
 
 #include "../Graphics/Renderer.h"
-#include "../Graphics/Mesh.h"
 #include "../Graphics/GraphicsTypes.h"
+#include "../Graphics/Model.h"
 #include "../Modules/Utils.h"
 #include "../Modules/MarioAudio.h"
 #include "../Modules/MarioConfig.h"
@@ -64,8 +64,7 @@ public:
     struct SM64MarioGeometryBuffers marioGeometry { 0 };
     struct SM64MarioBodyState marioBodyState { 0 };
     bool CarActive = true;
-    bool isStem = false;
-    Mesh* mesh = nullptr;
+    Model* model = nullptr;
     std::counting_semaphore<1> sema{ 1 };
     int slidingHandle = -1;
     int yahooHandle = -1;
@@ -111,8 +110,8 @@ private:
     void menuPushed(ServerWrapper server);
     void menuPopped(ServerWrapper server);
     uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
-    Mesh* getMeshFromPool();
-    void addMeshToPool(Mesh*);
+    Model* getModelFromPool();
+    void addModelToPool(Model*);
     int getColorIndexFromPool(int teamIndex);
     void addColorIndexToPool(int colorIndex);
 
@@ -122,15 +121,12 @@ public:
     Vector cameraLoc = Vector(0, 0, 0);
     ControllerInput playerInputs;
     bool inputManagerInitialized = false;
-    Renderer* renderer = nullptr;
     std::vector<Vertex> ballVertices;
     std::vector<UINT> ballIndices;
-    bool backgroundLoadThreadStarted = false;
-    bool backgroundLoadThreadFinished = false;
     Rotator carRotation;
     char netcodeOutBuf[SM64_NETCODE_BUF_LEN];
-    std::vector<Mesh*> marioMeshPool;
-    std::counting_semaphore<1> marioMeshPoolSema{ 1 };
+    std::vector<Model*> marioModelPool;
+    std::counting_semaphore<1> marioModelPoolSema{ 1 };
     float currentBoostAount = 0.33f;
     std::map<int, SM64MarioInstance*> remoteMarios;
     std::counting_semaphore<1> remoteMariosSema{ 1 };
@@ -151,7 +147,7 @@ public:
     };
     int menuStackCount = 0;
     bool Sm64Initialized = false;
-    Mesh* ballMesh = nullptr;
+    Model* ballModel = nullptr;
 
 private:
     /* SM64 Members */
@@ -159,8 +155,8 @@ private:
     vec3 cameraPos;
     float cameraRot;
     bool locationInit;
-    Mesh* marioMesh = nullptr;
-    bool meshesInitialized = false;
+    Model* marioModel = nullptr;
+    bool modelsInitialized = false;
     struct SM64MarioBodyState marioBodyStateIn;
     std::shared_ptr<CVarManagerWrapper> cvarManager;
     bool isHost = false;

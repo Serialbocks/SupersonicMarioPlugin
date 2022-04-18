@@ -9,16 +9,16 @@
 #include <wrl/client.h>
 #include <fstream>
 #include <bakkesmod/wrappers/wrapperstructs.h>
-#include "Mesh.h"
 #include "Lighting.h"
 #include "GraphicsTypes.h"
 #include "Modules/Utils.h"
+#include "Model.h"
 
 #pragma comment(lib, "d3dcompiler.lib")
 
 #define safe_release(p) if (p) { p->Release(); p = nullptr; } 
 
-class Mesh;
+class Model;
 
 class Renderer
 {
@@ -28,18 +28,7 @@ public:
 		static Renderer instance;
 		return instance;
 	}
-	Mesh* CreateMesh(size_t maxTriangles,
-		uint8_t* inTexture = nullptr,
-		uint8_t* inAltTexture = nullptr,
-		size_t inTexSize = 0,
-		uint16_t inTexWidth = 0,
-		uint16_t inTexHeight = 0);
-	Mesh* CreateMesh(std::vector<Vertex>* inVertices,
-		std::vector<UINT>* inIndices,
-		uint8_t* inTexture = nullptr,
-		size_t inTexSize = 0,
-		uint16_t inTexWidth = 0,
-		uint16_t inTexHeight = 0);
+	void AddModel(Model* model);
 	bool Init(IDXGISwapChain* pThis, UINT SyncInterval, UINT Flags);
 	void OnPresent(IDXGISwapChain* pThis, UINT SyncInterval, UINT Flags);
 	bool Initialized = false;
@@ -55,14 +44,14 @@ private:
 	void Render();
 	void CreatePipeline();
 	Microsoft::WRL::ComPtr<ID3DBlob> LoadShader(const char* shaderData, std::string targetShaderVersion, std::string shaderEntry);
-	void InitMeshBuffers();
-	void DrawRenderedMesh();
+	void InitBuffers();
+	void DrawModels();
 	
-	bool drawMeshes = false;
+	bool drawModels = false;
 	bool pipelineInitialized = false;
 	bool firstInit = true;
 	int windowWidth, windowHeight;
-	std::vector<Mesh*> meshes;
+	std::vector<Model*> models;
 
 	Microsoft::WRL::ComPtr<ID3D11DeviceContext> context = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Device> device = nullptr;

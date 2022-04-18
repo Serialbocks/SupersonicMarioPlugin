@@ -143,7 +143,7 @@ SM64::~SM64()
 
 	remoteMariosSema.release();
 	matchSettingsSema.release();
-	marioMeshPoolSema.release();
+	marioModelPoolSema.release();
 	DestroySM64();
 	for (int i = 0; i < remoteMarios.size(); i++)
 	{
@@ -158,9 +158,9 @@ void SM64::OnGameLeft(bool deleteMario)
 	matchSettingsSema.acquire();
 	matchSettings.isInSm64Game = false;
 	matchSettingsSema.release();
-	if (localMario.mesh != nullptr)
+	if (localMario.model != nullptr)
 	{
-		localMario.mesh->RenderUpdateVertices(0, nullptr);
+		localMario.model->RenderUpdateVertices(0, nullptr);
 	}
 
 	if (localMario.marioId >= 0)
@@ -177,13 +177,13 @@ void SM64::OnGameLeft(bool deleteMario)
 			localMario.marioBodyState.marioState.posZ = 0.0f;
 		}
 
-		if (localMario.mesh != nullptr)
+		if (localMario.model != nullptr)
 		{
-			localMario.mesh->RenderUpdateVertices(0, nullptr);
+			localMario.model->RenderUpdateVertices(0, nullptr);
 			if (deleteMario)
 			{
-				addMeshToPool(localMario.mesh);
-				localMario.mesh = nullptr;
+				addModelToPool(localMario.model);
+				localMario.model = nullptr;
 			}
 		}
 		if (isHost && deleteMario && localMario.colorIndex >= 0)
@@ -199,13 +199,13 @@ void SM64::OnGameLeft(bool deleteMario)
 	{
 		SM64MarioInstance* marioInstance = remoteMario.second;
 		marioInstance->sema.acquire();
-		if (marioInstance->mesh != nullptr)
+		if (marioInstance->model != nullptr)
 		{
-			marioInstance->mesh->RenderUpdateVertices(0, nullptr);
+			marioInstance->model->RenderUpdateVertices(0, nullptr);
 			if (deleteMario)
 			{
-				addMeshToPool(marioInstance->mesh);
-				marioInstance->mesh = nullptr;
+				addModelToPool(marioInstance->model);
+				marioInstance->model = nullptr;
 			}
 
 		}
@@ -485,100 +485,97 @@ void SM64::sendSettingsIfHost(ServerWrapper server)
 /// <summary>Renders the available options for the game mode.</summary>
 void SM64::RenderOptions()
 {
-	if (renderer != nullptr)
+	ImGui::SliderFloat("Attack Boost Damage", &attackBoostDamage, 0.0f, 1.0f);
+
+	ImGui::SliderFloat("Ground Pound Pinch Velocity", &groundPoundPinchVel, 0.0f, 15000.0f);
+	ImGui::SliderFloat("Attack Ball Radius", &attackBallRadius, 0.0f, 600.0f);
+
+	ImGui::SliderFloat("Kick Ball Vel Horiz", &kickBallVelHoriz, 0.0f, 10000.0f);
+	ImGui::SliderFloat("Kick Ball Vel Vert", &kickBallVelVert, 0.0f, 10000.0f);
+
+	ImGui::SliderFloat("Punch Ball Vel Horiz", &punchBallVelHoriz, 0.0f, 10000.0f);
+	ImGui::SliderFloat("Punch Ball Vel Vert", &punchBallVelVert, 0.0f, 10000.0f);
+
+	ImGui::SliderFloat("Dive Ball Vel Horiz", &diveBallVelHoriz, 0.0f, 10000.0f);
+	ImGui::SliderFloat("Dive Ball Vel Vert", &diveBallVelVert, 0.0f, 10000.0f);
+
+	ImGui::NewLine();
+
+	ImGui::Text("BLJ Configuration");
+	std::string bljLabel[3];
+	bljLabel[0] = "BLJ Disabled";
+	bljLabel[1] = "BLJ Enabled (Press)";
+	bljLabel[2] = "BLJ Enabled (Hold)";
+	matchSettingsSema.acquire();
+	std::string currentBljLabel = bljLabel[matchSettings.bljSetup.bljState];
+	if (ImGui::BeginCombo("BLJ Mode Select", currentBljLabel.c_str()))
 	{
-		ImGui::SliderFloat("Attack Boost Damage", &attackBoostDamage, 0.0f, 1.0f);
-
-		ImGui::SliderFloat("Ground Pound Pinch Velocity", &groundPoundPinchVel, 0.0f, 15000.0f);
-		ImGui::SliderFloat("Attack Ball Radius", &attackBallRadius, 0.0f, 600.0f);
-
-		ImGui::SliderFloat("Kick Ball Vel Horiz", &kickBallVelHoriz, 0.0f, 10000.0f);
-		ImGui::SliderFloat("Kick Ball Vel Vert", &kickBallVelVert, 0.0f, 10000.0f);
-
-		ImGui::SliderFloat("Punch Ball Vel Horiz", &punchBallVelHoriz, 0.0f, 10000.0f);
-		ImGui::SliderFloat("Punch Ball Vel Vert", &punchBallVelVert, 0.0f, 10000.0f);
-
-		ImGui::SliderFloat("Dive Ball Vel Horiz", &diveBallVelHoriz, 0.0f, 10000.0f);
-		ImGui::SliderFloat("Dive Ball Vel Vert", &diveBallVelVert, 0.0f, 10000.0f);
-
-		ImGui::NewLine();
-
-		ImGui::Text("BLJ Configuration");
-		std::string bljLabel[3];
-		bljLabel[0] = "BLJ Disabled";
-		bljLabel[1] = "BLJ Enabled (Press)";
-		bljLabel[2] = "BLJ Enabled (Hold)";
-		matchSettingsSema.acquire();
-		std::string currentBljLabel = bljLabel[matchSettings.bljSetup.bljState];
-		if (ImGui::BeginCombo("BLJ Mode Select", currentBljLabel.c_str()))
+		for (int i = 0; i < 3; i++)
 		{
-			for (int i = 0; i < 3; i++)
+			bool isSelected = i == matchSettings.bljSetup.bljState;
+			if (ImGui::Selectable(bljLabel[i].c_str(), isSelected))
 			{
-				bool isSelected = i == matchSettings.bljSetup.bljState;
-				if (ImGui::Selectable(bljLabel[i].c_str(), isSelected))
-				{
-					matchSettings.bljSetup.bljState = (SM64BljState)i;
-					SendSettingsToClients();
-				}
-				if (isSelected)
-					ImGui::SetItemDefaultFocus();
+				matchSettings.bljSetup.bljState = (SM64BljState)i;
+				SendSettingsToClients();
 			}
-			ImGui::EndCombo();
+			if (isSelected)
+				ImGui::SetItemDefaultFocus();
 		}
-
-		if( 0 != matchSettings.bljSetup.bljState )
-		{
-			int velocity = matchSettings.bljSetup.bljVel;
-			ImGui::SliderInt("BLJ Velocity", &velocity, 0, 10);
-			matchSettings.bljSetup.bljVel = (uint8_t)velocity;
-		}
-
-
-		ImGui::NewLine();
-
-		auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame();
-		bool inSm64Game = matchSettings.isInSm64Game;
-		bool needToSendMatchUpdate = false;
-		if (inGame && inSm64Game)
-		{
-			auto server = gameWrapper->GetGameEventAsServer();
-			if (server.IsNull())
-			{
-				server = gameWrapper->GetCurrentGameState();
-				if (server.IsNull()) return;
-			}
-
-			remoteMariosSema.acquire();
-			for (CarWrapper car : server.GetCars())
-			{
-				PriWrapper player = car.GetPRI();
-				if (player.IsNull()) continue;
-				int playerId = player.GetPlayerID();
-
-				SM64MarioInstance* marioInstance = nullptr;
-				if (localMario.playerId == playerId)
-				{
-					marioInstance = &localMario;
-				}
-				else if (remoteMarios.count(playerId) > 0)
-				{
-					marioInstance = remoteMarios[playerId];
-				}
-
-				if (marioInstance == nullptr) continue;
-
-			}
-			remoteMariosSema.release();
-
-		}
-
-		if (needToSendMatchUpdate)
-		{
-			SendSettingsToClients();
-		}
-
-		matchSettingsSema.release();
+		ImGui::EndCombo();
 	}
+
+	if( 0 != matchSettings.bljSetup.bljState )
+	{
+		int velocity = matchSettings.bljSetup.bljVel;
+		ImGui::SliderInt("BLJ Velocity", &velocity, 0, 10);
+		matchSettings.bljSetup.bljVel = (uint8_t)velocity;
+	}
+
+
+	ImGui::NewLine();
+
+	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame();
+	bool inSm64Game = matchSettings.isInSm64Game;
+	bool needToSendMatchUpdate = false;
+	if (inGame && inSm64Game)
+	{
+		auto server = gameWrapper->GetGameEventAsServer();
+		if (server.IsNull())
+		{
+			server = gameWrapper->GetCurrentGameState();
+			if (server.IsNull()) return;
+		}
+
+		remoteMariosSema.acquire();
+		for (CarWrapper car : server.GetCars())
+		{
+			PriWrapper player = car.GetPRI();
+			if (player.IsNull()) continue;
+			int playerId = player.GetPlayerID();
+
+			SM64MarioInstance* marioInstance = nullptr;
+			if (localMario.playerId == playerId)
+			{
+				marioInstance = &localMario;
+			}
+			else if (remoteMarios.count(playerId) > 0)
+			{
+				marioInstance = remoteMarios[playerId];
+			}
+
+			if (marioInstance == nullptr) continue;
+
+		}
+		remoteMariosSema.release();
+
+	}
+
+	if (needToSendMatchUpdate)
+	{
+		SendSettingsToClients();
+	}
+
+	matchSettingsSema.release();
 }
 
 void SM64::RenderPreferences()
@@ -684,7 +681,6 @@ void SM64::InitSM64()
 
 	locationInit = false;
 
-	renderer = &Renderer::getInstance();
 	Sm64Initialized = true;
 }
 
@@ -1077,19 +1073,6 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	marioInstance->sema.release();
 }
 
-void backgroundLoadData()
-{
-	Utils::ParseObjFile(Utils::GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj", &self->ballVertices, &self->ballIndices);
-	self->backgroundLoadThreadFinished = true;
-
-	SM64* instance = self;
-	self->Execute([instance](GameWrapper*) {
-		instance->ballMesh = instance->renderer->CreateMesh(&instance->ballVertices, &instance->ballIndices);
-		instance->backgroundLoadThreadFinished = true;
-	});
-	
-}
-
 inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 {
 	if (marioInstance == nullptr) return;
@@ -1097,9 +1080,9 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 	if (self->menuStackCount > 0)
 	{
 		marioInstance->sema.acquire();
-		if (marioInstance->mesh != nullptr)
+		if (marioInstance->model != nullptr)
 		{
-			marioInstance->mesh->RenderUpdateVertices(0, &camera);
+			marioInstance->model->RenderUpdateVertices(0, &camera);
 		}
 		marioInstance->sema.release();
 		return;
@@ -1107,75 +1090,70 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 
 	marioInstance->sema.acquire();
 
-	if (marioInstance->mesh != nullptr)
+	if (marioInstance->model != nullptr)
 	{
-		for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
+		std::vector<Vertex>* vertices = marioInstance->model->GetVertices();
+		if (vertices != nullptr)
 		{
-			auto position = &marioInstance->marioGeometry.position[i * 3];
-			auto color = &marioInstance->marioGeometry.color[i * 3];
-			auto uv = &marioInstance->marioGeometry.uv[i * 2];
-			auto normal = &marioInstance->marioGeometry.normal[i * 3];
+			for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
+			{
+				auto position = &marioInstance->marioGeometry.position[i * 3];
+				auto color = &marioInstance->marioGeometry.color[i * 3];
+				auto uv = &marioInstance->marioGeometry.uv[i * 2];
+				auto normal = &marioInstance->marioGeometry.normal[i * 3];
 
-			auto currentVertex = &marioInstance->mesh->Vertices[i];
-			// Unreal engine swaps x and y coords for 3d model
-			currentVertex->pos.x = position[0];
-			currentVertex->pos.y = position[2];
-			currentVertex->pos.z = position[1];
-			currentVertex->color.x = color[0];
-			currentVertex->color.y = color[1];
-			currentVertex->color.z = color[2];
-			currentVertex->color.w = i >= (WINGCAP_VERTEX_INDEX * 3) ? 0.0f : 1.0f;
-			currentVertex->texCoord.x = uv[0];
-			currentVertex->texCoord.y = uv[1];
-			currentVertex->normal.x = normal[0];
-			currentVertex->normal.y = normal[2];
-			currentVertex->normal.z = normal[1];
+				auto currentVertex = &(*vertices)[i];
+				// Unreal engine swaps x and y coords for 3d model
+				currentVertex->pos.x = position[0];
+				currentVertex->pos.y = position[2];
+				currentVertex->pos.z = position[1];
+				currentVertex->color.x = color[0];
+				currentVertex->color.y = color[1];
+				currentVertex->color.z = color[2];
+				currentVertex->color.w = i >= (WINGCAP_VERTEX_INDEX * 3) ? 0.0f : 1.0f;
+				currentVertex->texCoord.x = uv[0];
+				currentVertex->texCoord.y = uv[1];
+				currentVertex->normal.x = normal[0];
+				currentVertex->normal.y = normal[2];
+				currentVertex->normal.z = normal[1];
+			}
+
+			if (marioInstance->colorIndex >= 0)
+			{
+				int trueIndex = 6 * marioInstance->colorIndex;
+				marioInstance->model->SetCapColor(self->teamColors[trueIndex],
+					self->teamColors[trueIndex + 1],
+					self->teamColors[trueIndex + 2]);
+				marioInstance->model->SetShirtColor(self->teamColors[trueIndex + 3],
+					self->teamColors[trueIndex + 4],
+					self->teamColors[trueIndex + 5]);
+			}
+
+			marioInstance->model->RenderUpdateVertices(marioInstance->marioGeometry.numTrianglesUsed, &camera);
 		}
 
-		if (marioInstance->colorIndex >= 0)
-		{
-			int trueIndex = 6 * marioInstance->colorIndex;
-			marioInstance->mesh->SetCapColor(self->teamColors[trueIndex],
-				self->teamColors[trueIndex + 1],
-				self->teamColors[trueIndex + 2]);
-			marioInstance->mesh->SetShirtColor(self->teamColors[trueIndex + 3],
-				self->teamColors[trueIndex + 4],
-				self->teamColors[trueIndex + 5]);
-		}
-
-		marioInstance->mesh->RenderUpdateVertices(marioInstance->marioGeometry.numTrianglesUsed, &camera);
 	}
 	marioInstance->sema.release();
 }
 
 void SM64::OnRender(CanvasWrapper canvas)
 {
-	if (!backgroundLoadThreadStarted)
+	if (!modelsInitialized)
 	{
-		if (!renderer->Initialized) return;
-		std::thread loadMeshesThread(backgroundLoadData);
-		loadMeshesThread.detach();
-		backgroundLoadThreadStarted = true;
-		return;
-	}
-
-	if (!backgroundLoadThreadFinished) return;
-
-	if (!meshesInitialized)
-	{
-		marioMeshPoolSema.acquire();
+		ballModel = new Model(Utils::GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj");
+		marioModelPoolSema.acquire();
 		for (int i = 0; i < MARIO_MESH_POOL_SIZE; i++)
 		{
-			marioMeshPool.push_back(renderer->CreateMesh(SM64_GEO_MAX_TRIANGLES,
+			marioModelPool.push_back(new Model(SM64_GEO_MAX_TRIANGLES,
 				texture,
 				nullptr,
 				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
 				SM64_TEXTURE_WIDTH,
 				SM64_TEXTURE_HEIGHT));
 		}
-		marioMeshPoolSema.release();
+		marioModelPoolSema.release();
 
-		meshesInitialized = true;
+		modelsInitialized = true;
 	}
 
 	auto inGame = gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame();
@@ -1243,10 +1221,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 			auto remoteMario = remoteMarios[playerId];
 			remoteMario->CarActive = true;
 			remoteMario->teamIndex = teamIndex;
-			if (remoteMario->mesh != nullptr)
-			{
-				//remoteMario->mesh->ShowNameplate(L"", car.GetLocation());
-			}
 			if (isHost && remoteMario->colorIndex < 0)
 			{
 				remoteMario->colorIndex = getColorIndexFromPool(teamIndex);
@@ -1267,13 +1241,9 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		carLocation = car.GetLocation();
 
-		if (marioInstance->mesh == nullptr)
+		if (marioInstance->model == nullptr)
 		{
-			marioInstance->mesh = getMeshFromPool();
-		}
-		else
-		{
-			//marioInstance->mesh->ShowNameplate(L"", car.GetLocation());
+			marioInstance->model = getModelFromPool();
 		}
 
 		if(!isHost)
@@ -1297,9 +1267,9 @@ void SM64::OnRender(CanvasWrapper canvas)
 			localMario.marioId = -2;
 		}
 
-		if (localMario.mesh != nullptr)
+		if (localMario.model != nullptr)
 		{
-			localMario.mesh->RenderUpdateVertices(0, nullptr);
+			localMario.model->RenderUpdateVertices(0, nullptr);
 		}
 
 		if (isHost && localMario.colorIndex >= 0)
@@ -1314,10 +1284,10 @@ void SM64::OnRender(CanvasWrapper canvas)
 	for (auto const& [playerId, marioInstance] : remoteMarios)
 	{
 		marioInstance->sema.acquire();
-		if (marioInstance->mesh == nullptr)
+		if (marioInstance->model == nullptr)
 		{
-			marioInstance->mesh = getMeshFromPool();
-			if (marioInstance->mesh == nullptr)
+			marioInstance->model = getModelFromPool();
+			if (marioInstance->model == nullptr)
 			{
 				marioInstance->sema.release();
 				continue;
@@ -1367,11 +1337,11 @@ void SM64::OnRender(CanvasWrapper canvas)
 				marioInstance->marioId = -2;
 			}
 
-			if (marioInstance->mesh != nullptr)
+			if (marioInstance->model != nullptr)
 			{
-				marioInstance->mesh->RenderUpdateVertices(0, nullptr);
-				addMeshToPool(marioInstance->mesh);
-				marioInstance->mesh = nullptr;
+				marioInstance->model->RenderUpdateVertices(0, nullptr);
+				addModelToPool(marioInstance->model);
+				marioInstance->model = nullptr;
 			}
 
 			if (isHost && marioInstance->colorIndex >= 0)
@@ -1394,7 +1364,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 	}
 
 
-	if (ballMesh != nullptr)
+	if (ballModel != nullptr)
 	{
 		if (!server.IsNull())
 		{
@@ -1405,10 +1375,10 @@ void SM64::OnRender(CanvasWrapper canvas)
 				auto ballRotation = ball.GetRotation();
 				auto quat = RotatorToQuat(ballRotation);
 
-				ballMesh->SetRotationQuat(quat.X, quat.Y, quat.Z, quat.W);
-				ballMesh->SetTranslation(ballLocation.X, ballLocation.Y, ballLocation.Z);
-				ballMesh->SetScale(BALL_MODEL_SCALE, BALL_MODEL_SCALE, BALL_MODEL_SCALE);
-				ballMesh->Render(&camera);
+				ballModel->SetRotationQuat(quat.X, quat.Y, quat.Z, quat.W);
+				ballModel->SetTranslation(ballLocation.X, ballLocation.Y, ballLocation.Z);
+				ballModel->SetScale(BALL_MODEL_SCALE, BALL_MODEL_SCALE, BALL_MODEL_SCALE);
+				ballModel->Render(&camera);
 
 			}
 
@@ -1434,26 +1404,26 @@ SM64MarioInstance::~SM64MarioInstance()
 	free(marioGeometry.uv);
 }
 
-Mesh* SM64::getMeshFromPool()
+Model* SM64::getModelFromPool()
 {
-	Mesh* mesh = nullptr;
-	marioMeshPoolSema.acquire();
-	if (marioMeshPool.size() > 0)
+	Model* model = nullptr;
+	marioModelPoolSema.acquire();
+	if (marioModelPool.size() > 0)
 	{
-		mesh = marioMeshPool[0];
-		marioMeshPool.erase(marioMeshPool.begin());
+		model = marioModelPool[0];
+		marioModelPool.erase(marioModelPool.begin());
 	}
-	marioMeshPoolSema.release();
-	return mesh;
+	marioModelPoolSema.release();
+	return model;
 }
 
-void SM64::addMeshToPool(Mesh* mesh)
+void SM64::addModelToPool(Model* model)
 {
-	if (mesh != nullptr)
+	if (model != nullptr)
 	{
-		marioMeshPoolSema.acquire();
-		marioMeshPool.push_back(mesh);
-		marioMeshPoolSema.release();
+		marioModelPoolSema.acquire();
+		marioModelPool.push_back(model);
+		marioModelPoolSema.release();
 	}
 }
 
