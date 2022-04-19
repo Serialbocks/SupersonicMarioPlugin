@@ -40,29 +40,20 @@ Mesh::Mesh(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	NumTrianglesUsed = maxTrialges;
 }
 
-void Mesh::RenderUpdateVertices(size_t numTrianglesUsed, CameraWrapper* camera)
+void Mesh::RenderUpdateVertices(size_t numTrianglesUsed, Vector camLocation, Vector camRotation, float fov)
 {
 	if (UpdateVertices) return;
 
-	Render(camera);
+	Render(camLocation, camRotation, fov);
 
 	NumTrianglesUsed = numTrianglesUsed;
 	UpdateVertices = true;
 }
 	
-void Mesh::Render(CameraWrapper *camera)
+void Mesh::Render(Vector camLocation, Vector camRotation, float fov)
 {
-	if (camera == nullptr)
-	{
-		return;
-	}
-
-	auto camLocation = camera->GetLocation();
-	auto camRotationVector = RotatorToVector(camera->GetRotation());
-
 	float aspectRatio = static_cast<float>(this->windowWidth) / static_cast<float>(this->windowHeight);
 
-	float fov = camera->GetFOV();
 	float fovRadians = DirectX::XMConvertToRadians(fov);
 	float verticalFovRadians = 2 * atan(tan(fovRadians / 2) / aspectRatio);
 
@@ -78,7 +69,7 @@ void Mesh::Render(CameraWrapper *camera)
 	DirectX::XMMATRIX quatRotation = DirectX::XMMatrixRotationQuaternion(quat);
 
 	auto camLocationVector = DirectX::XMVectorSet(camLocation.X, camLocation.Y, camLocation.Z, 0.0f);
-	auto camTarget = DirectX::XMVectorSet(camRotationVector.X, camRotationVector.Y, camRotationVector.Z, 0.0f);
+	auto camTarget = DirectX::XMVectorSet(camRotation.X, camRotation.Y, camRotation.Z, 0.0f);
 	camTarget = DirectX::XMVectorAdd(camTarget, camLocationVector);
 	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(camLocationVector, camTarget, this->DEFAULT_UP_VECTOR);
 

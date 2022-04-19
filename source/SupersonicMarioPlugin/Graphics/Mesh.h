@@ -36,8 +36,8 @@ public:
 		size_t inTexSize,
 		uint16_t inTexWidth,
 		uint16_t inTexHeight);
-	void Render(CameraWrapper *camera);
-	void RenderUpdateVertices(size_t numTrianglesUsed, CameraWrapper *camera);
+	void Render(Vector camLocation, Vector camRotation, float fov);
+	void RenderUpdateVertices(size_t numTrianglesUsed, Vector camLocation, Vector camRotation, float fov);
 	void SetTranslation(float x, float y, float z);
 	void SetScale(float x, float y, float z);
 	void SetRotation(float roll, float pitch, float yaw);

@@ -16,6 +16,22 @@ class Mesh;
 class Model
 {
 public:
+	typedef struct Frame_t
+	{
+		float rotRoll, rotPitch, rotYaw = 0.0f;
+		float quatX, quatY, quatZ, quatW = 0.0f;
+		Vector translationVector = Vector(0.0f, 0.0f, 0.0f);
+		Vector scaleVector = Vector(1.0f, 1.0f, 1.0f);
+		Vector rotationVector = Vector(0.0f, 0.0f, 0.0f);
+		float CapColorR, CapColorG, CapColorB = 1.0f;
+		float ShirtColorR, ShirtColorG, ShirtColorB = 1.0f;
+		bool updateVertices = false;
+		Vector camLocation, camRotation;
+		float fov;
+		size_t numTrianglesUsed;
+		bool showAltTexture;
+	} Frame;
+
 	Model(std::string path);
 	Model(size_t inMaxTriangles,
 		uint8_t* inTexture,
@@ -43,8 +59,10 @@ public:
 	void SetShirtColor(float r, float g, float b);
 	void SetShowAltTexture(bool val);
 
+	void SetFrame(Frame* frame);
 	std::vector<Vertex>* GetVertices();
 private:
+	void pushRenderFrame(bool updateVertices, CameraWrapper* camera);
 
 public:
 	std::vector<Mesh*> Meshes;
@@ -52,9 +70,11 @@ public:
 	std::vector<std::vector<UINT>> modelIndicesArr;
 	std::counting_semaphore<1> sema{ 1 };
 	bool backgroundDataLoaded = false;
+	std::vector<Frame> Frames;
 private:
 	bool meshesInitialized = false;
 	std::string modelPath;
+	Frame currentFrame;
 
 	// Single mesh init vals
 	size_t maxTriangles = 0;

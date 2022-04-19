@@ -141,75 +141,118 @@ void Model::ProcessMesh(aiMesh* mesh, const aiScene* scene, const aiNode* node)
 	modelIndicesArr.push_back(indices);
 }
 
+void Model::pushRenderFrame(bool updateVertices, CameraWrapper* camera)
+{
+	if (camera != nullptr)
+	{
+		currentFrame.updateVertices = updateVertices;
+		currentFrame.camLocation = camera->GetLocation();
+		currentFrame.camRotation = RotatorToVector(camera->GetRotation());
+		currentFrame.fov = camera->GetFOV();
+		Frames.push_back(currentFrame);
+	}
+
+}
+
 void Model::Render(CameraWrapper* camera)
 {
-	for (auto i = 0; i < Meshes.size(); i++)
-	{
-		Meshes[i]->Render(camera);
-	}
+	pushRenderFrame(false, camera);
 }
 
 void Model::RenderUpdateVertices(size_t numTrianglesUsed, CameraWrapper* camera)
 {
-	for (auto i = 0; i < Meshes.size(); i++)
-	{
-		Meshes[i]->RenderUpdateVertices(numTrianglesUsed, camera);
-	}
+	currentFrame.numTrianglesUsed = numTrianglesUsed;
+	pushRenderFrame(true, camera);
 }
 
 void Model::SetTranslation(float x, float y, float z)
 {
-	for (auto i = 0; i < Meshes.size(); i++)
-	{
-		Meshes[i]->SetTranslation(x, y, z);
-	}
+	currentFrame.translationVector.X = x;
+	currentFrame.translationVector.Y = y;
+	currentFrame.translationVector.Z = z;
 }
 
 void Model::SetScale(float x, float y, float z)
 {
-	for (auto i = 0; i < Meshes.size(); i++)
-	{
-		Meshes[i]->SetScale(x, y, z);
-	}
+	currentFrame.scaleVector.X = x;
+	currentFrame.scaleVector.Y = y;
+	currentFrame.scaleVector.Z = z;
 }
 
 void Model::SetRotation(float roll, float pitch, float yaw)
 {
-	for (auto i = 0; i < Meshes.size(); i++)
-	{
-		Meshes[i]->SetScale(roll, pitch, yaw);
-	}
+	currentFrame.rotRoll = roll;
+	currentFrame.rotPitch = pitch;
+	currentFrame.rotYaw = yaw;
 }
 
 void Model::SetRotationQuat(float x, float y, float z, float w)
 {
-	for (auto i = 0; i < Meshes.size(); i++)
-	{
-		Meshes[i]->SetRotationQuat(x, y, z, w);
-	}
+	currentFrame.quatX = x;
+	currentFrame.quatY = y;
+	currentFrame.quatZ = z;
+	currentFrame.quatW = w;
 }
 
 void Model::SetCapColor(float r, float g, float b)
 {
-	for (auto i = 0; i < Meshes.size(); i++)
-	{
-		Meshes[i]->SetCapColor(r, g, b);
-	}
+	currentFrame.CapColorR = r;
+	currentFrame.CapColorG = g;
+	currentFrame.CapColorB = b;
 }
 
 void Model::SetShirtColor(float r, float g, float b)
 {
-	for (auto i = 0; i < Meshes.size(); i++)
-	{
-		Meshes[i]->SetShirtColor(r, g, b);
-	}
+	currentFrame.ShirtColorR = r;
+	currentFrame.ShirtColorG = g;
+	currentFrame.ShirtColorB = b;
 }
 
 void Model::SetShowAltTexture(bool val)
 {
+	currentFrame.showAltTexture = val;
+}
+
+void Model::SetFrame(Frame* frame)
+{
 	for (auto i = 0; i < Meshes.size(); i++)
 	{
-		Meshes[i]->SetShowAltTexture(val);
+		Mesh* mesh = Meshes[i];
+
+		mesh->SetTranslation(frame->translationVector.X,
+			frame->translationVector.Y,
+			frame->translationVector.Z);
+		mesh->SetScale(frame->scaleVector.X,
+			frame->scaleVector.Y,
+			frame->scaleVector.Z);
+		mesh->SetRotation(frame->rotRoll,
+			frame->rotPitch,
+			frame->rotYaw);
+		mesh->SetRotationQuat(frame->quatX,
+			frame->quatY,
+			frame->quatZ,
+			frame->quatW);
+		mesh->SetCapColor(frame->CapColorR,
+			frame->CapColorG,
+			frame->CapColorB);
+		mesh->SetShirtColor(frame->ShirtColorR,
+			frame->ShirtColorG,
+			frame->ShirtColorB);
+		mesh->SetShowAltTexture(frame->showAltTexture);
+
+		if (frame->updateVertices)
+		{
+			mesh->RenderUpdateVertices(frame->numTrianglesUsed,
+				frame->camLocation,
+				frame->camRotation,
+				frame->fov);
+		}
+		else
+		{
+			mesh->Render(frame->camLocation,
+				frame->camRotation,
+				frame->fov);
+		}
 	}
 }
 
