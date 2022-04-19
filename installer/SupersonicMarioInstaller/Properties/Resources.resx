@@ -157,8 +157,11 @@
   <data name="Octane-LICENSE" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Octane.LICENSE;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="ROCKETBALL" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\ROCKETBALL.obj;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="Rocketball" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Rocketball.fbx;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="Rocketball-LICENSE" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Rocketball.LICENSE;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="rom_hash" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\rom-hash.sha1;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>

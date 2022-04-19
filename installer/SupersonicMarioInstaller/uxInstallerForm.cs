@@ -210,7 +210,8 @@ namespace SupersonicMarioInstaller
             File.WriteAllBytes(Path.Combine(assetsPath, "sm64tools.LICENSE"), Properties.Resources.sm64tools_LICENSE);
             File.WriteAllBytes(Path.Combine(assetsPath, "transparent.png"), Properties.Resources.transparent);
 
-            File.WriteAllBytes(Path.Combine(assetsPath, "ROCKETBALL.obj"), Properties.Resources.ROCKETBALL);
+            File.WriteAllBytes(Path.Combine(assetsPath, "Rocketball.fbx"), Properties.Resources.Rocketball);
+            File.WriteAllBytes(Path.Combine(assetsPath, "Rocketball.LICENSE"), Properties.Resources.Rocketball_LICENSE);
             File.WriteAllBytes(Path.Combine(assetsPath, "Octane.fbx"), Properties.Resources.Octane);
             File.WriteAllBytes(Path.Combine(assetsPath, "Octane.LICENSE"), Properties.Resources.Octane_LICENSE);
             File.WriteAllBytes(Path.Combine(assetsPath, "Dominus.fbx"), Properties.Resources.Dominus);

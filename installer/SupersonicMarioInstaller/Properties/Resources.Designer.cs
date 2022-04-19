@@ -193,9 +193,19 @@ namespace SupersonicMarioInstaller.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] ROCKETBALL {
+        internal static byte[] Rocketball {
             get {
-                object obj = ResourceManager.GetObject("ROCKETBALL", resourceCulture);
+                object obj = ResourceManager.GetObject("Rocketball", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] Rocketball_LICENSE {
+            get {
+                object obj = ResourceManager.GetObject("Rocketball-LICENSE", resourceCulture);
                 return ((byte[])(obj));
             }
         }
