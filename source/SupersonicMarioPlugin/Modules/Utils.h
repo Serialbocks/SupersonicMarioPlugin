@@ -6,13 +6,6 @@
 #include "../Graphics/GraphicsTypes.h"
 #include <math.h>
 #include <sys/stat.h>
-
-
-#pragma comment(lib, "assimp-vc142-mt.lib")
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
-#include <assimp/scene.h>
-
 class Utils
 {
 public:
@@ -37,38 +30,6 @@ public:
 			stm << std::use_facet< std::ctype<wchar_t> >(std::locale()).narrow(*s++, '?');
 		}
 		return stm.str();
-	}
-
-
-
-	static void ProcessModelNode(aiNode* node, const aiScene* scene, std::vector<Vertex>* outVertices, std::vector<UINT>* outIndices)
-	{
-		for (UINT i = 0; i < node->mNumMeshes; i++)
-		{
-			aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-			for (UINT k = 0; k < mesh->mNumVertices; k++)
-			{
-
-			}
-		}
-
-		for (UINT i = 0; i < node->mNumChildren; i++)
-		{
-			ProcessModelNode(node->mChildren[i], scene, outVertices, outIndices);
-		}
-	}
-
-	static bool LoadModel(std::string path, std::vector<Vertex>* outVertices, std::vector<UINT>* outIndices)
-	{
-		Assimp::Importer importer;
-
-		const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_ConvertToLeftHanded);
-		if (scene == nullptr)
-			return false;
-
-		ProcessModelNode(scene->mRootNode, scene, outVertices, outIndices);
-
-		return true;
 	}
 
 	static std::vector<std::string> SplitStr(std::string str, char delimiter)

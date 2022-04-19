@@ -4,6 +4,11 @@
 #include "Modules/Utils.h"
 #include "Renderer.h"
 
+#pragma comment(lib, "assimp-vc142-mt.lib")
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
+
 #include <semaphore>
 
 class Mesh;
@@ -21,8 +26,13 @@ public:
 	bool NeedsInitialized();
 	bool ShouldRender();
 	void InitMeshes(Microsoft::WRL::ComPtr<ID3D11Device> device, int windowWidth, int windowHeight);
-	void ParseObjFile(std::vector<Vertex>* vertices, std::vector<UINT>* indices);
 
+	// Model loading
+	bool LoadModel();
+	void ProcessNode(aiNode* node, const aiScene* scene);
+	void ProcessMesh(aiMesh* mesh, const aiScene* scene);
+
+	// Model Manipulation
 	void Render(CameraWrapper* camera);
 	void RenderUpdateVertices(size_t numTrianglesUsed, CameraWrapper* camera);
 	void SetTranslation(float x, float y, float z);

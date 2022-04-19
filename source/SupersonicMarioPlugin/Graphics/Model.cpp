@@ -4,11 +4,7 @@ Model* self = nullptr;
 
 void backgroundLoadData()
 {
-	// For now, with an obj file, assume only one mesh
-	self->modelVerticesArr.resize(1);
-	self->modelIndicesArr.resize(1);
-
-	self->ParseObjFile(&self->modelVerticesArr[0], &self->modelIndicesArr[0]);
+	self->LoadModel();
 
 	self->sema.acquire();
 	self->backgroundDataLoaded = true;
@@ -75,6 +71,75 @@ void Model::InitMeshes(Microsoft::WRL::ComPtr<ID3D11Device> device, int windowWi
 	}
 
 	meshesInitialized = true;
+}
+
+bool Model::LoadModel()
+{
+	Assimp::Importer importer;
+
+	const aiScene* scene = importer.ReadFile(modelPath, aiProcess_Triangulate | aiProcess_ConvertToLeftHanded);
+	if (scene == nullptr)
+		return false;
+
+	ProcessNode(scene->mRootNode, scene);
+
+	return true;
+}
+
+void Model::ProcessNode(aiNode* node, const aiScene* scene)
+{
+	for (UINT i = 0; i < node->mNumMeshes; i++)
+	{
+		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		ProcessMesh(mesh, scene);
+	}
+
+	for (UINT i = 0; i < node->mNumChildren; i++)
+	{
+		ProcessNode(node->mChildren[i], scene);
+	}
+}
+
+void Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
+{
+	std::vector<Vertex> vertices;
+	std::vector<UINT> indices;
+
+	for (UINT i = 0; i < mesh->mNumVertices; i++)
+	{
+		Vertex vertex;
+
+		vertex.pos.x = mesh->mVertices[i].x;
+		vertex.pos.y = mesh->mVertices[i].y;
+		vertex.pos.z = mesh->mVertices[i].z;
+
+		vertex.normal.x = mesh->mNormals[i].x;
+		vertex.normal.y = mesh->mNormals[i].y;
+		vertex.normal.z = mesh->mNormals[i].z;
+
+		vertex.color.x = 1.0f;
+		vertex.color.y = 1.0f;
+		vertex.color.z = 1.0f;
+		vertex.color.w = 0.0f;
+
+		vertex.texCoord.x = 1.0f;
+		vertex.texCoord.y = 0.0f;
+
+		vertices.push_back(vertex);
+	}
+
+	for (UINT i = 0; i < mesh->mNumFaces; i++)
+	{
+		aiFace face = mesh->mFaces[i];
+
+		for (UINT j = 0; j < face.mNumIndices; j++)
+		{
+			indices.push_back(face.mIndices[j]);
+		}
+	}
+
+	modelVerticesArr.push_back(vertices);
+	modelIndicesArr.push_back(indices);
 }
 
 void Model::Render(CameraWrapper* camera)
@@ -156,63 +221,4 @@ std::vector<Vertex>* Model::GetVertices()
 		return nullptr;
 	}
 	return &Meshes[0]->Vertices;
-}
-
-void Model::ParseObjFile(std::vector<Vertex>* vertices, std::vector<UINT>* indices)
-{
-	std::ifstream file(modelPath);
-	std::string line;
-
-	std::vector<Vertex> normals;
-	while (std::getline(file, line))
-	{
-		if (line.size() == 0) continue;
-		auto split = Utils::SplitStr(line, ' ');
-		auto type = split[0];
-		auto lastIndex = split.size() - 1;
-		if (type == "v")
-		{
-			Vertex vertex;
-			vertex.pos.x = std::stof(split[lastIndex - 2], nullptr);
-			vertex.pos.y = std::stof(split[lastIndex - 1], nullptr);
-			vertex.pos.z = std::stof(split[lastIndex], nullptr);
-			vertex.color.x = 1.0f;
-			vertex.color.y = 1.0f;
-			vertex.color.z = 1.0f;
-			vertex.color.w = 0.0f;
-			vertex.texCoord.x = 1.0f;
-			vertex.texCoord.y = 0.0f;
-			vertices->push_back(vertex);
-		}
-		else if (type == "vn")
-		{
-			Vertex vertex;
-			vertex.normal.x = std::stof(split[lastIndex - 2], nullptr);
-			vertex.normal.y = std::stof(split[lastIndex - 1], nullptr);
-			vertex.normal.z = std::stof(split[lastIndex], nullptr);
-			normals.push_back(vertex);
-		}
-		else if (type == "f")
-		{
-			auto vertIndex1 = std::stoul(Utils::SplitStr(split[lastIndex - 2], '/')[0], nullptr);
-			auto vertIndex2 = std::stoul(Utils::SplitStr(split[lastIndex - 1], '/')[0], nullptr);
-			auto vertIndex3 = std::stoul(Utils::SplitStr(split[lastIndex], '/')[0], nullptr);
-			auto normalIndex1 = std::stoul(Utils::SplitStr(split[lastIndex - 2], '/')[2], nullptr);
-			auto normalIndex2 = std::stoul(Utils::SplitStr(split[lastIndex - 1], '/')[2], nullptr);
-			auto normalIndex3 = std::stoul(Utils::SplitStr(split[lastIndex], '/')[2], nullptr);
-			(*vertices)[vertIndex1].normal.x = normals[normalIndex1].normal.x;
-			(*vertices)[vertIndex1].normal.y = normals[normalIndex1].normal.y;
-			(*vertices)[vertIndex1].normal.z = normals[normalIndex1].normal.z;
-			(*vertices)[vertIndex2].normal.x = normals[normalIndex2].normal.x;
-			(*vertices)[vertIndex2].normal.y = normals[normalIndex2].normal.y;
-			(*vertices)[vertIndex2].normal.z = normals[normalIndex2].normal.z;
-			(*vertices)[vertIndex3].normal.x = normals[normalIndex3].normal.x;
-			(*vertices)[vertIndex3].normal.y = normals[normalIndex3].normal.y;
-			(*vertices)[vertIndex3].normal.z = normals[normalIndex3].normal.z;
-			indices->push_back(vertIndex1);
-			indices->push_back(vertIndex2);
-			indices->push_back(vertIndex3);
-		}
-	}
-
 }
