@@ -65,7 +65,7 @@ public:
     struct SM64MarioState marioState { 0 };
     struct SM64MarioGeometryBuffers marioGeometry { 0 };
     struct SM64MarioBodyState marioBodyState { 0 };
-    bool CarActive = true;
+    bool MarioActive = true;
     Model* model = nullptr;
     std::counting_semaphore<1> sema{ 1 };
     int slidingHandle = -1;
