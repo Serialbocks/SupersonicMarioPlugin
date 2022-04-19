@@ -41,9 +41,10 @@ void SupersonicMarioPlugin::OnRender()
         if (ImGui::BeginTabBar("#RPTabBar", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip)) {
             if (isHostingSm64Game())
             {
+                renderShortMultiplayerTab();
                 renderMatchOptionsTab();
             }
-            else
+            else if( !(gameWrapper->IsInGame() || gameWrapper->IsInReplay() || gameWrapper->IsInOnlineGame()) )
             {
                 renderMultiplayerTab();
             }
@@ -230,6 +231,7 @@ void SupersonicMarioPlugin::renderMatchOptionsTab()
 {
     if (ImGui::BeginTabItem("Match Settings")) {
         renderSm64Options();
+        ImGui::EndTabItem();
     }
 }
 
@@ -237,6 +239,7 @@ void SupersonicMarioPlugin::renderPreferencesTab()
 {
     if (ImGui::BeginTabItem("Preferences")) {
         renderSm64Preferences();
+        ImGui::EndTabItem();
     }
 }
 
@@ -256,6 +259,27 @@ void SupersonicMarioPlugin::renderMultiplayerTab()
     }
 }
 
+/// <summary>Renders the multiplayer tab.</summary>
+void SupersonicMarioPlugin::renderShortMultiplayerTab()
+{
+    if (ImGui::BeginTabItem("Multiplayer")) {
+        if (!errors.empty()) {
+            if (ImGui::Banner(errors.front().c_str(), IM_COL32_ERROR_BANNER)) {
+                errors.pop();
+            }
+        }
+
+        if (ImGui::Button("Host New Match")) {
+            Execute([this](GameWrapper*) {
+                ForceJoin();
+            });
+            Execute([this](GameWrapper*) {
+                HostGame();
+            });
+        }
+        ImGui::EndTabItem();
+    }
+}
 
 /*
  *  Host settings

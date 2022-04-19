@@ -86,6 +86,7 @@ private:
 public:
     void HostGame(std::string arena = "");
     void JoinGame(const char* pswd = "");
+    void ForceJoin();
 
 private:
     std::string getGameTags() const;
@@ -195,6 +196,7 @@ private:
     void renderMultiplayerTab();
     void renderMatchOptionsTab();
     void renderPreferencesTab();
+    void renderShortMultiplayerTab();
 
     std::queue<std::string> errors;
     bool shouldRefreshGameSettingsConstants = true;
