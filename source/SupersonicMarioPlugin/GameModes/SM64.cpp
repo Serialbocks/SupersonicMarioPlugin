@@ -311,7 +311,7 @@ void SM64::moveCarToMario(std::string eventName)
 				marioInstance = remoteMarios[playerId];
 				marioInstance->sema.acquire();
 
-				if (marioInstance->isCar && marioInstance->marioId >= 0)
+				if (!marioInstance->isCar && marioInstance->marioId >= 0)
 				{
 					auto marioState = &marioInstance->marioBodyState.marioState;
 					auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
