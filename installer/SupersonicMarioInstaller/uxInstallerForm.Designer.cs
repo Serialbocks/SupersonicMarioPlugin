@@ -72,7 +72,8 @@ namespace SupersonicMarioInstaller
             this.uxBackgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.uxBanner = new System.Windows.Forms.Label();
             this.uxVersion = new System.Windows.Forms.Label();
-            this.uxCredits = new System.Windows.Forms.Label();
+            this.uxCredits = new System.Windows.Forms.TextBox();
+            this.uxCreditsLabel = new System.Windows.Forms.Label();
             this.uxTabs.SuspendLayout();
             this.uxWelcomePage.SuspendLayout();
             this.uxLicensePage.SuspendLayout();
@@ -170,6 +171,7 @@ namespace SupersonicMarioInstaller
             // uxWelcomePage
             // 
             this.uxWelcomePage.BackColor = System.Drawing.SystemColors.ButtonFace;
+            this.uxWelcomePage.Controls.Add(this.uxCreditsLabel);
             this.uxWelcomePage.Controls.Add(this.uxCredits);
             this.uxWelcomePage.Controls.Add(this.uxWelcomeMessage);
             this.uxWelcomePage.Location = new System.Drawing.Point(4, 22);
@@ -531,13 +533,27 @@ namespace SupersonicMarioInstaller
             // 
             // uxCredits
             // 
-            this.uxCredits.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            this.uxCredits.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.uxCredits.Location = new System.Drawing.Point(12, 100);
+            this.uxCredits.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.uxCredits.Location = new System.Drawing.Point(12, 112);
+            this.uxCredits.Multiline = true;
             this.uxCredits.Name = "uxCredits";
-            this.uxCredits.Size = new System.Drawing.Size(484, 133);
+            this.uxCredits.ReadOnly = true;
+            this.uxCredits.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.uxCredits.Size = new System.Drawing.Size(481, 109);
             this.uxCredits.TabIndex = 1;
             this.uxCredits.Text = resources.GetString("uxCredits.Text");
+            // 
+            // uxCreditsLabel
+            // 
+            this.uxCreditsLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.uxCreditsLabel.AutoSize = true;
+            this.uxCreditsLabel.Location = new System.Drawing.Point(12, 93);
+            this.uxCreditsLabel.Name = "uxCreditsLabel";
+            this.uxCreditsLabel.Size = new System.Drawing.Size(42, 13);
+            this.uxCreditsLabel.TabIndex = 2;
+            this.uxCreditsLabel.Text = "Credits:";
             // 
             // uxInstallerForm
             // 
@@ -564,6 +580,7 @@ namespace SupersonicMarioInstaller
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.uxInstallerForm_FormClosing);
             this.uxTabs.ResumeLayout(false);
             this.uxWelcomePage.ResumeLayout(false);
+            this.uxWelcomePage.PerformLayout();
             this.uxLicensePage.ResumeLayout(false);
             this.uxLicensePage.PerformLayout();
             this.uxRomSelectPage.ResumeLayout(false);
@@ -625,7 +642,8 @@ namespace SupersonicMarioInstaller
         private System.ComponentModel.BackgroundWorker uxBackgroundWorker;
         private System.Windows.Forms.Label uxPostInstallMessage;
         private System.Windows.Forms.Label uxVersion;
-        private System.Windows.Forms.Label uxCredits;
+        private System.Windows.Forms.TextBox uxCredits;
+        private System.Windows.Forms.Label uxCreditsLabel;
     }
 }
 

@@ -139,6 +139,12 @@
   <data name="libsoxr-LICENSE" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\libsoxr.LICENSE;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Octane" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Octane.fbx;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="Octane-LICENSE" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Octane.LICENSE;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="ROCKETBALL" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ROCKETBALL.obj;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>

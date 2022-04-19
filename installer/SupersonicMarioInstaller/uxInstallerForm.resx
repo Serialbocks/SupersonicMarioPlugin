@@ -118,13 +118,15 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="uxCredits.Text" xml:space="preserve">
-    <value>Credits:
-CtrlShiftEscapist (Helped work on this mod)
-@pxdylan (Creator of retro64 Minecraft Mod)
-Stanbroek (Creator of RocketPlugin)
+    <value>CtrlShiftEscapist - Helped work on this mod
+@pxdylan on Twitter - Creator of retro64 Minecraft Mod
 SM64 Decompilation Project
 libsm64
-All the helpful people in the Bakkesmod Discord</value>
+Stanbroek - Creator of RocketPlugin
+Jpres on YouTube - DX11 Tutorial Series
+Octane - Rocket League Car by Jako is licensed under Creative Commons Attribution
+All the helpful people in the Bakkesmod Discord
+</value>
   </data>
   <data name="uxWelcomeMessage.Text" xml:space="preserve">
     <value>This setup will guide you through the installation of the Supersonic Mario mod for Rocket League.

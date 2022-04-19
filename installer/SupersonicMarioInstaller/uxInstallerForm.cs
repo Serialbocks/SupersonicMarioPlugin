@@ -210,6 +210,8 @@ namespace SupersonicMarioInstaller
             File.WriteAllBytes(Path.Combine(assetsPath, "rom-hash.sha1"), Properties.Resources.rom_hash);
             File.WriteAllBytes(Path.Combine(assetsPath, "sm64tools.LICENSE"), Properties.Resources.sm64tools_LICENSE);
             File.WriteAllBytes(Path.Combine(assetsPath, "transparent.png"), Properties.Resources.transparent);
+            File.WriteAllBytes(Path.Combine(assetsPath, "Octane.fbx"), Properties.Resources.Octane);
+            File.WriteAllBytes(Path.Combine(assetsPath, "Octane.LICENSE"), Properties.Resources.Octane_LICENSE);
 
             // Copy game config
             var cfgContents = DEFAULT_PLUGIN_CONFIG + uxRomPath.Text + "\r\n";
@@ -299,10 +301,8 @@ namespace SupersonicMarioInstaller
 
         private void uxCancel_Click(object sender, EventArgs e)
         {
-            if(_currentStep == Step.Postinstall || WarnCloseInstaller() == DialogResult.Yes)
-            {
-                Application.Exit();
-            }
+
+            Application.Exit();
         }
 
         private void Next()

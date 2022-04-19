@@ -222,6 +222,8 @@
     <None Include="Resources\assets.json" />
     <None Include="Resources\libsoxr.lib" />
     <None Include="Resources\libsoxr.LICENSE" />
+    <None Include="Resources\Octane.fbx" />
+    <None Include="Resources\Octane.LICENSE" />
     <None Include="Resources\ROCKETBALL.obj" />
     <None Include="Resources\rom-hash.sha1" />
     <None Include="Resources\sm64.lib" />
