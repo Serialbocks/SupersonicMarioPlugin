@@ -72,8 +72,8 @@ namespace SupersonicMarioInstaller
             this.uxBack = new System.Windows.Forms.Button();
             this.uxOpenFileDialog = new System.Windows.Forms.OpenFileDialog();
             this.uxBackgroundWorker = new System.ComponentModel.BackgroundWorker();
-            this.uxBanner = new System.Windows.Forms.Label();
             this.uxVersion = new System.Windows.Forms.Label();
+            this.uxBanner = new System.Windows.Forms.Label();
             this.uxTabs.SuspendLayout();
             this.uxWelcomePage.SuspendLayout();
             this.uxLicensePage.SuspendLayout();
@@ -535,16 +535,6 @@ namespace SupersonicMarioInstaller
             // 
             this.uxOpenFileDialog.Filter = "z64 files (*.z64)|*.z64";
             // 
-            // uxBanner
-            // 
-            this.uxBanner.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.uxBanner.BackColor = System.Drawing.Color.White;
-            this.uxBanner.Image = global::SupersonicMarioInstaller.Properties.Resources.banner_small;
-            this.uxBanner.Location = new System.Drawing.Point(332, 9);
-            this.uxBanner.Name = "uxBanner";
-            this.uxBanner.Size = new System.Drawing.Size(164, 52);
-            this.uxBanner.TabIndex = 10;
-            // 
             // uxVersion
             // 
             this.uxVersion.AutoSize = true;
@@ -554,6 +544,16 @@ namespace SupersonicMarioInstaller
             this.uxVersion.Name = "uxVersion";
             this.uxVersion.Size = new System.Drawing.Size(0, 13);
             this.uxVersion.TabIndex = 12;
+            // 
+            // uxBanner
+            // 
+            this.uxBanner.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.uxBanner.BackColor = System.Drawing.Color.White;
+            this.uxBanner.Image = global::SupersonicMarioInstaller.Properties.Resources.banner_small;
+            this.uxBanner.Location = new System.Drawing.Point(332, 9);
+            this.uxBanner.Name = "uxBanner";
+            this.uxBanner.Size = new System.Drawing.Size(164, 52);
+            this.uxBanner.TabIndex = 10;
             // 
             // uxInstallerForm
             // 

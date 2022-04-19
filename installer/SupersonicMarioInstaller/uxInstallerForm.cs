@@ -215,6 +215,8 @@ namespace SupersonicMarioInstaller
             File.WriteAllBytes(Path.Combine(assetsPath, "Octane.LICENSE"), Properties.Resources.Octane_LICENSE);
             File.WriteAllBytes(Path.Combine(assetsPath, "Dominus.fbx"), Properties.Resources.Dominus);
             File.WriteAllBytes(Path.Combine(assetsPath, "Dominus.LICENSE"), Properties.Resources.Dominus_LICENSE);
+            File.WriteAllBytes(Path.Combine(assetsPath, "Fennec.fbx"), Properties.Resources.Fennec);
+            File.WriteAllBytes(Path.Combine(assetsPath, "Fennec.LICENSE"), Properties.Resources.Fennec_LICENSE);
 
             // Copy game config
             var cfgContents = DEFAULT_PLUGIN_CONFIG + uxRomPath.Text + "\r\n";

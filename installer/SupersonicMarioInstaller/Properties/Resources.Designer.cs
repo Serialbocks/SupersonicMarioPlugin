@@ -123,6 +123,26 @@ namespace SupersonicMarioInstaller.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] Fennec {
+            get {
+                object obj = ResourceManager.GetObject("Fennec", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] Fennec_LICENSE {
+            get {
+                object obj = ResourceManager.GetObject("Fennec-LICENSE", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] libsoxr_dll {
             get {
                 object obj = ResourceManager.GetObject("libsoxr-dll", resourceCulture);
