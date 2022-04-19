@@ -206,12 +206,15 @@ namespace SupersonicMarioInstaller
             File.WriteAllBytes(Path.Combine(assetsPath, "aifc_decode.exe"), Properties.Resources.aifc_decode);
             File.WriteAllBytes(Path.Combine(assetsPath, "assets.json"), Properties.Resources.assets);
             File.WriteAllBytes(Path.Combine(assetsPath, "extract_assets.exe"), Properties.Resources.extract_assets);
-            File.WriteAllBytes(Path.Combine(assetsPath, "ROCKETBALL.obj"), Properties.Resources.ROCKETBALL);
             File.WriteAllBytes(Path.Combine(assetsPath, "rom-hash.sha1"), Properties.Resources.rom_hash);
             File.WriteAllBytes(Path.Combine(assetsPath, "sm64tools.LICENSE"), Properties.Resources.sm64tools_LICENSE);
             File.WriteAllBytes(Path.Combine(assetsPath, "transparent.png"), Properties.Resources.transparent);
+
+            File.WriteAllBytes(Path.Combine(assetsPath, "ROCKETBALL.obj"), Properties.Resources.ROCKETBALL);
             File.WriteAllBytes(Path.Combine(assetsPath, "Octane.fbx"), Properties.Resources.Octane);
             File.WriteAllBytes(Path.Combine(assetsPath, "Octane.LICENSE"), Properties.Resources.Octane_LICENSE);
+            File.WriteAllBytes(Path.Combine(assetsPath, "Dominus.fbx"), Properties.Resources.Dominus);
+            File.WriteAllBytes(Path.Combine(assetsPath, "Dominus.LICENSE"), Properties.Resources.Dominus_LICENSE);
 
             // Copy game config
             var cfgContents = DEFAULT_PLUGIN_CONFIG + uxRomPath.Text + "\r\n";

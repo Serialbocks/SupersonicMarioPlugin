@@ -93,6 +93,26 @@ namespace SupersonicMarioInstaller.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] Dominus {
+            get {
+                object obj = ResourceManager.GetObject("Dominus", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] Dominus_LICENSE {
+            get {
+                object obj = ResourceManager.GetObject("Dominus-LICENSE", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] extract_assets {
             get {
                 object obj = ResourceManager.GetObject("extract_assets", resourceCulture);

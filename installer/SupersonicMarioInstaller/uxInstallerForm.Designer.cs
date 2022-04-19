@@ -38,6 +38,8 @@ namespace SupersonicMarioInstaller
             this.uxBySerialbocks = new System.Windows.Forms.Label();
             this.uxTabs = new System.Windows.Forms.TabControl();
             this.uxWelcomePage = new System.Windows.Forms.TabPage();
+            this.uxCreditsLabel = new System.Windows.Forms.Label();
+            this.uxCredits = new System.Windows.Forms.TextBox();
             this.uxWelcomeMessage = new System.Windows.Forms.Label();
             this.uxLicensePage = new System.Windows.Forms.TabPage();
             this.uxAcceptLabel = new System.Windows.Forms.Label();
@@ -72,8 +74,6 @@ namespace SupersonicMarioInstaller
             this.uxBackgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.uxBanner = new System.Windows.Forms.Label();
             this.uxVersion = new System.Windows.Forms.Label();
-            this.uxCredits = new System.Windows.Forms.TextBox();
-            this.uxCreditsLabel = new System.Windows.Forms.Label();
             this.uxTabs.SuspendLayout();
             this.uxWelcomePage.SuspendLayout();
             this.uxLicensePage.SuspendLayout();
@@ -180,6 +180,30 @@ namespace SupersonicMarioInstaller
             this.uxWelcomePage.Size = new System.Drawing.Size(502, 236);
             this.uxWelcomePage.TabIndex = 0;
             this.uxWelcomePage.Text = "Welcome";
+            // 
+            // uxCreditsLabel
+            // 
+            this.uxCreditsLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.uxCreditsLabel.AutoSize = true;
+            this.uxCreditsLabel.Location = new System.Drawing.Point(12, 93);
+            this.uxCreditsLabel.Name = "uxCreditsLabel";
+            this.uxCreditsLabel.Size = new System.Drawing.Size(42, 13);
+            this.uxCreditsLabel.TabIndex = 2;
+            this.uxCreditsLabel.Text = "Credits:";
+            // 
+            // uxCredits
+            // 
+            this.uxCredits.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.uxCredits.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.uxCredits.Location = new System.Drawing.Point(12, 112);
+            this.uxCredits.Multiline = true;
+            this.uxCredits.Name = "uxCredits";
+            this.uxCredits.ReadOnly = true;
+            this.uxCredits.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.uxCredits.Size = new System.Drawing.Size(481, 109);
+            this.uxCredits.TabIndex = 1;
+            this.uxCredits.Text = resources.GetString("uxCredits.Text");
             // 
             // uxWelcomeMessage
             // 
@@ -530,30 +554,6 @@ namespace SupersonicMarioInstaller
             this.uxVersion.Name = "uxVersion";
             this.uxVersion.Size = new System.Drawing.Size(0, 13);
             this.uxVersion.TabIndex = 12;
-            // 
-            // uxCredits
-            // 
-            this.uxCredits.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.uxCredits.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.uxCredits.Location = new System.Drawing.Point(12, 112);
-            this.uxCredits.Multiline = true;
-            this.uxCredits.Name = "uxCredits";
-            this.uxCredits.ReadOnly = true;
-            this.uxCredits.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.uxCredits.Size = new System.Drawing.Size(481, 109);
-            this.uxCredits.TabIndex = 1;
-            this.uxCredits.Text = resources.GetString("uxCredits.Text");
-            // 
-            // uxCreditsLabel
-            // 
-            this.uxCreditsLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.uxCreditsLabel.AutoSize = true;
-            this.uxCreditsLabel.Location = new System.Drawing.Point(12, 93);
-            this.uxCreditsLabel.Name = "uxCreditsLabel";
-            this.uxCreditsLabel.Size = new System.Drawing.Size(42, 13);
-            this.uxCreditsLabel.TabIndex = 2;
-            this.uxCreditsLabel.Text = "Credits:";
             // 
             // uxInstallerForm
             // 
