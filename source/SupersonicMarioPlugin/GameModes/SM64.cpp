@@ -273,7 +273,7 @@ void SM64::moveCarToMario(std::string eventName)
 
 	marioInstance->sema.acquire();
 
-	if (marioInstance->marioId >= 0)
+	if (!marioInstance->isCar && marioInstance->marioId >= 0)
 	{
 		auto marioState = &marioInstance->marioBodyState.marioState;
 		auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
@@ -311,7 +311,7 @@ void SM64::moveCarToMario(std::string eventName)
 				marioInstance = remoteMarios[playerId];
 				marioInstance->sema.acquire();
 
-				if (marioInstance->marioId >= 0)
+				if (marioInstance->isCar && marioInstance->marioId >= 0)
 				{
 					auto marioState = &marioInstance->marioBodyState.marioState;
 					auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
@@ -611,6 +611,17 @@ void SM64::RenderOptions()
 
 			if (marioInstance == nullptr) continue;
 
+			std::string playerName = player.GetPlayerName().ToString() + " Car Mode";
+
+			marioInstance->sema.acquire();
+			bool oldIsCar = marioInstance->isCar;
+			ImGui::Checkbox(playerName.c_str(), &marioInstance->isCar);
+
+			if (oldIsCar != marioInstance->isCar)
+			{
+				needToSendMatchUpdate = true;
+			}
+			marioInstance->sema.release();
 		}
 		remoteMariosSema.release();
 
@@ -794,7 +805,12 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 
 		marioInstance->sema.acquire();
 
-		if (marioInstance->marioId >= 0)
+		if (marioInstance->isCar)
+		{
+			car.SetHidden2(FALSE);
+			car.SetbHiddenSelf(FALSE);
+		}
+		else if (marioInstance->marioId >= 0)
 		{
 			car.SetHidden2(TRUE);
 			car.SetbHiddenSelf(TRUE);
@@ -998,6 +1014,11 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	auto z = (int16_t)(instance->carLocation.Z);
 
 	marioInstance->sema.acquire();
+	if (marioInstance->isCar)
+	{
+		marioInstance->sema.release();
+		return;
+	}
 	if (marioInstance->marioId < 0)
 	{
 		// Unreal swaps coords
@@ -1136,7 +1157,7 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 
 	marioInstance->sema.acquire();
 
-	if (marioInstance->model != nullptr)
+	if (!marioInstance->isCar && marioInstance->model != nullptr)
 	{
 		std::vector<Vertex>* vertices = marioInstance->model->GetVertices();
 		if (vertices != nullptr)
@@ -1182,6 +1203,31 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 	marioInstance->sema.release();
 }
 
+static inline void renderCarGhost(CarWrapper car, CameraWrapper camera)
+{
+	Model* carModel = nullptr;
+	switch (car.GetLoadoutBody())
+	{
+	case BREAKOUT_ID:
+	case DOMINUS_ID:
+		carModel = self->dominusModel;
+		break;
+	case FENNEC_ID:
+		carModel = self->fennecModel;
+		break;
+	case OCTANE_ID:
+	default:
+		carModel = self->octaneModel;
+		break;
+	}
+
+	auto carRotation = car.GetRotation();
+	auto carLocation = car.GetLocation();
+	auto quat = RotatorToQuat(carRotation);
+	carModel->SetRotationQuat(quat.X, quat.Y, quat.Z, quat.W);
+	carModel->SetTranslation(carLocation.X, carLocation.Y, carLocation.Z);
+	carModel->Render(&camera);
+}
 
 void SM64::OnRender(CanvasWrapper canvas)
 {
@@ -1246,10 +1292,10 @@ void SM64::OnRender(CanvasWrapper canvas)
 	remoteMariosSema.acquire();
 	for (auto const& [playerId, marioInstance] : remoteMarios)
 	{
-		marioInstance->CarActive = false;
+		marioInstance->MarioActive = false;
 	}
 
-	localMario.CarActive = false;
+	localMario.MarioActive = false;
 
 	bool needsSettingSync = false;
 
@@ -1271,8 +1317,15 @@ void SM64::OnRender(CanvasWrapper canvas)
 		if (remoteMarios.count(playerId) > 0)
 		{
 			auto remoteMario = remoteMarios[playerId];
-			remoteMario->CarActive = true;
 			remoteMario->teamIndex = teamIndex;
+			if (remoteMario->isCar)
+			{
+				renderCarGhost(car, camera);
+			}
+			else
+			{
+				remoteMario->MarioActive = true;
+			}
 			if (isHost && remoteMario->colorIndex < 0)
 			{
 				remoteMario->colorIndex = getColorIndexFromPool(teamIndex);
@@ -1285,7 +1338,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 			continue;
 		}
 
-		localMario.CarActive = true;
 		localMario.teamIndex = teamIndex;
 
 		SM64MarioInstance* marioInstance = &localMario;
@@ -1308,32 +1360,19 @@ void SM64::OnRender(CanvasWrapper canvas)
 			needsSettingSync = true;
 		}
 
-		Model* carModel = nullptr;
-		switch (car.GetLoadoutBody())
+		if (localMario.isCar)
 		{
-		case BREAKOUT_ID:
-		case DOMINUS_ID:
-			carModel = dominusModel;
-			break;
-		case FENNEC_ID:
-			carModel = fennecModel;
-			break;
-		case OCTANE_ID:
-		default:
-			carModel = octaneModel;
-			break;
+			renderCarGhost(car, camera);
 		}
-
-		carRotation = car.GetRotation();
-		auto quat = RotatorToQuat(carRotation);
-		carModel->SetRotationQuat(quat.X, quat.Y, quat.Z, quat.W);
-		carModel->SetTranslation(carLocation.X, carLocation.Y, carLocation.Z);
-		carModel->Render(&camera);
+		else
+		{
+			localMario.MarioActive = true;
+		}
 
 		renderMario(marioInstance, camera);
 	}
 
-	if (!localMario.CarActive)
+	if (!localMario.MarioActive)
 	{
 		if (localMario.marioId >= 0)
 		{
@@ -1358,6 +1397,12 @@ void SM64::OnRender(CanvasWrapper canvas)
 	for (auto const& [playerId, marioInstance] : remoteMarios)
 	{
 		marioInstance->sema.acquire();
+		if (marioInstance->isCar)
+		{
+			marioInstance->sema.release();
+			continue;
+		}
+
 		if (marioInstance->model == nullptr)
 		{
 			marioInstance->model = getModelFromPool();
@@ -1403,7 +1448,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		marioInstance->marioBodyState.marioState.soundMask = 0;
 
-		if (!marioInstance->CarActive)
+		if (!marioInstance->MarioActive)
 		{
 			if (marioInstance->marioId >= 0)
 			{
@@ -1436,8 +1481,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 	{
 		sendSettingsIfHost(server);
 	}
-
-
 
 	if (!server.IsNull())
 	{
