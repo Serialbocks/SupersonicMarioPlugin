@@ -124,6 +124,15 @@
   <data name="assets" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\assets.json;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="assimp-LICENSE" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\assimp.LICENSE;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="assimp_vc142_mt-dll" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\assimp-vc142-mt.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="assimp_vc142_mt-lib" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\assimp-vc142-mt.lib;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="banner_small" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\assets\banner_small.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>

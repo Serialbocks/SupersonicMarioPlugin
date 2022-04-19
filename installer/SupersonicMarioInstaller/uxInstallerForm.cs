@@ -202,6 +202,9 @@ namespace SupersonicMarioInstaller
             File.WriteAllBytes(Path.Combine(libsPath, "libsoxr.dll"), Properties.Resources.libsoxr_dll);
             File.WriteAllBytes(Path.Combine(libsPath, "libsoxr.lib"), Properties.Resources.libsoxr_lib);
             File.WriteAllBytes(Path.Combine(libsPath, "libsoxr.LICENSE"), Properties.Resources.libsoxr_LICENSE);
+            File.WriteAllBytes(Path.Combine(libsPath, "assimp-vc142-mt.dll"), Properties.Resources.assimp_vc142_mt_dll);
+            File.WriteAllBytes(Path.Combine(libsPath, "assimp-vc142-mt.lib"), Properties.Resources.assimp_vc142_mt_lib);
+            File.WriteAllBytes(Path.Combine(libsPath, "assimp.LICENSE"), Properties.Resources.assimp_LICENSE);
 
             File.WriteAllBytes(Path.Combine(assetsPath, "aifc_decode.exe"), Properties.Resources.aifc_decode);
             File.WriteAllBytes(Path.Combine(assetsPath, "assets.json"), Properties.Resources.assets);

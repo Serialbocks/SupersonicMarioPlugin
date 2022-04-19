@@ -81,6 +81,36 @@ namespace SupersonicMarioInstaller.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] assimp_LICENSE {
+            get {
+                object obj = ResourceManager.GetObject("assimp-LICENSE", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] assimp_vc142_mt_dll {
+            get {
+                object obj = ResourceManager.GetObject("assimp_vc142_mt-dll", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] assimp_vc142_mt_lib {
+            get {
+                object obj = ResourceManager.GetObject("assimp_vc142_mt-lib", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap banner_small {

@@ -220,6 +220,8 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <None Include="Resources\assets.json" />
+    <None Include="Resources\assimp-vc142-mt.lib" />
+    <None Include="Resources\assimp.LICENSE" />
     <None Include="Resources\Dominus-LICENSE" />
     <None Include="Resources\Dominus.fbx" />
     <None Include="Resources\Fennec.fbx" />
@@ -255,6 +257,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\libsoxr.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\assimp-vc142-mt.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Fody.6.5.5\build\Fody.targets" Condition="Exists('..\packages\Fody.6.5.5\build\Fody.targets')" />
