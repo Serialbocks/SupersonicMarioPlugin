@@ -8,7 +8,6 @@
 // CONSTANTS
 #define RL_YAW_RANGE 64692
 #define CAR_OFFSET_Z 45.0f
-#define BALL_MODEL_SCALE 5.35f
 #define SM64_TEXTURE_SIZE (4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT)
 #define WINGCAP_VERTEX_INDEX 750
 #define ATTACK_BOOST_DAMAGE 0.20f
@@ -22,6 +21,11 @@
 #define DIVE_BALL_VEL_HORIZ 639.0f
 #define DIVE_BALL_VEL_VERT 166.6f
 #define IM_COL32_ERROR_BANNER (ImColor(211,  47,  47, 255))
+
+#define OCTANE_ID 23
+#define BREAKOUT_ID 22
+#define DOMINUS_ID 403
+#define FENNEC_ID 4284
 
 inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	CarWrapper car,
@@ -401,6 +405,7 @@ void MatchSettingsMessageReceived(char* buf, int len)
 	{
 		int playerId = self->matchSettings.playerIds[i];
 		int colorIndex = self->matchSettings.playerColorIndices[i];
+		bool isCar = self->matchSettings.playerIsCarFlags[i];
 		SM64MarioInstance* marioInstance = nullptr;
 		if (self->remoteMarios.count(playerId) > 0)
 		{
@@ -415,6 +420,7 @@ void MatchSettingsMessageReceived(char* buf, int len)
 		{
 			marioInstance->sema.acquire();
 			marioInstance->colorIndex = colorIndex;
+			marioInstance->isCar = isCar;
 			marioInstance->sema.release();
 		}
 	}
@@ -448,6 +454,7 @@ void SM64::SendSettingsToClients()
 		{
 			matchSettings.playerIds[matchSettings.playerCount] = localMario.playerId;
 			matchSettings.playerColorIndices[matchSettings.playerCount] = localMario.colorIndex;
+			matchSettings.playerIsCarFlags[matchSettings.playerCount] = localMario.isCar;
 			matchSettings.playerCount++;
 		}
 		localMario.sema.release();
@@ -460,6 +467,7 @@ void SM64::SendSettingsToClients()
 			{
 				matchSettings.playerIds[matchSettings.playerCount] = playerId;
 				matchSettings.playerColorIndices[matchSettings.playerCount] = marioInstance->colorIndex;
+				matchSettings.playerIsCarFlags[matchSettings.playerCount] = marioInstance->isCar;
 				matchSettings.playerCount++;
 			}
 			marioInstance->sema.release();
@@ -1136,11 +1144,17 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 	marioInstance->sema.release();
 }
 
+
 void SM64::OnRender(CanvasWrapper canvas)
 {
 	if (!modelsInitialized)
 	{
-		ballModel = new Model(Utils::GetBakkesmodFolderPath() + "data\\assets\\ROCKETBALL.obj");
+		std::string assetsFolder = Utils::GetBakkesmodFolderPath() + "data\\assets\\";
+		ballModel = new Model(assetsFolder + "Rocketball.fbx");
+		octaneModel = new Model(assetsFolder + "Octane.fbx");
+		dominusModel = new Model(assetsFolder + "Dominus.fbx");
+		fennecModel = new Model(assetsFolder + "Fennec.fbx");
+
 		marioModelPoolSema.acquire();
 		for (int i = 0; i < MARIO_MESH_POOL_SIZE; i++)
 		{
@@ -1256,6 +1270,28 @@ void SM64::OnRender(CanvasWrapper canvas)
 			needsSettingSync = true;
 		}
 
+		Model* carModel = nullptr;
+		switch (car.GetLoadoutBody())
+		{
+		case BREAKOUT_ID:
+		case DOMINUS_ID:
+			carModel = dominusModel;
+			break;
+		case FENNEC_ID:
+			carModel = fennecModel;
+			break;
+		case OCTANE_ID:
+		default:
+			carModel = octaneModel;
+			break;
+		}
+
+		carRotation = car.GetRotation();
+		auto quat = RotatorToQuat(carRotation);
+		carModel->SetRotationQuat(quat.X, quat.Y, quat.Z, quat.W);
+		carModel->SetTranslation(carLocation.X, carLocation.Y, carLocation.Z);
+		carModel->Render(&camera);
+
 		renderMario(marioInstance, camera);
 	}
 
@@ -1364,26 +1400,23 @@ void SM64::OnRender(CanvasWrapper canvas)
 	}
 
 
-	if (ballModel != nullptr)
+
+	if (!server.IsNull())
 	{
-		if (!server.IsNull())
+		auto ball = server.GetBall();
+		if (!ball.IsNull())
 		{
-			auto ball = server.GetBall();
-			if (!ball.IsNull())
-			{
-				auto ballLocation = ball.GetLocation();
-				auto ballRotation = ball.GetRotation();
-				auto quat = RotatorToQuat(ballRotation);
+			auto ballLocation = ball.GetLocation();
+			auto ballRotation = ball.GetRotation();
+			auto quat = RotatorToQuat(ballRotation);
 
-				ballModel->SetRotationQuat(quat.X, quat.Y, quat.Z, quat.W);
-				ballModel->SetTranslation(ballLocation.X, ballLocation.Y, ballLocation.Z);
-				ballModel->SetScale(BALL_MODEL_SCALE, BALL_MODEL_SCALE, BALL_MODEL_SCALE);
-				ballModel->Render(&camera);
-
-			}
-
+			ballModel->SetRotationQuat(quat.X, quat.Y, quat.Z, quat.W);
+			ballModel->SetTranslation(ballLocation.X, ballLocation.Y, ballLocation.Z);
+			ballModel->Render(&camera);
 		}
+
 	}
+
 
 
 }

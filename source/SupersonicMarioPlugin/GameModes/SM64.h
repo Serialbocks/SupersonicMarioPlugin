@@ -48,7 +48,7 @@ struct MatchSettings
     int playerCount = 0;
     int playerIds[MAX_NUM_PLAYERS] = { 0 };
     int playerColorIndices[MAX_NUM_PLAYERS] = { 0 };
-    bool playerStemFlags[MAX_NUM_PLAYERS] = { 0 };
+    bool playerIsCarFlags[MAX_NUM_PLAYERS] = { 0 };
 };
 
 class SM64MarioInstance
@@ -73,6 +73,7 @@ public:
     int teamIndex = -1;
     unsigned long tickCount = 0;
     unsigned long lastBallInteraction = 0;
+    bool isCar = false;
 };
 
 class SM64 final : public RocketGameMode
@@ -120,9 +121,6 @@ public:
     std::shared_ptr<GameWrapper> gameWrapper;
     Vector cameraLoc = Vector(0, 0, 0);
     ControllerInput playerInputs;
-    bool inputManagerInitialized = false;
-    std::vector<Vertex> ballVertices;
-    std::vector<UINT> ballIndices;
     Rotator carRotation;
     char netcodeOutBuf[SM64_NETCODE_BUF_LEN];
     std::vector<Model*> marioModelPool;
@@ -147,7 +145,11 @@ public:
     };
     int menuStackCount = 0;
     bool Sm64Initialized = false;
+
     Model* ballModel = nullptr;
+    Model* octaneModel = nullptr;
+    Model* dominusModel = nullptr;
+    Model* fennecModel = nullptr;
 
 private:
     /* SM64 Members */
