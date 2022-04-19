@@ -1,8 +1,6 @@
 #include "Model.h"
 
-Model* self = nullptr;
-
-void backgroundLoadData()
+void backgroundLoadData(Model* self)
 {
 	self->LoadModel();
 
@@ -13,9 +11,8 @@ void backgroundLoadData()
 
 Model::Model(std::string path)
 {
-	self = this;
 	modelPath = path;
-	std::thread loadMeshesThread(backgroundLoadData);
+	std::thread loadMeshesThread(backgroundLoadData, this);
 	loadMeshesThread.detach();
 	Renderer::getInstance().AddModel(this);
 }
@@ -47,7 +44,7 @@ bool Model::NeedsInitialized()
 bool Model::ShouldRender()
 {
 	sema.acquire();
-	bool shouldRender = meshesInitialized;
+	bool shouldRender = meshesInitialized && backgroundDataLoaded;
 	sema.release();
 	return shouldRender;
 }
@@ -91,7 +88,7 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene)
 	for (UINT i = 0; i < node->mNumMeshes; i++)
 	{
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		ProcessMesh(mesh, scene);
+		ProcessMesh(mesh, scene, node);
 	}
 
 	for (UINT i = 0; i < node->mNumChildren; i++)
@@ -100,7 +97,7 @@ void Model::ProcessNode(aiNode* node, const aiScene* scene)
 	}
 }
 
-void Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
+void Model::ProcessMesh(aiMesh* mesh, const aiScene* scene, const aiNode* node)
 {
 	std::vector<Vertex> vertices;
 	std::vector<UINT> indices;
@@ -109,9 +106,11 @@ void Model::ProcessMesh(aiMesh* mesh, const aiScene* scene)
 	{
 		Vertex vertex;
 
-		vertex.pos.x = mesh->mVertices[i].x;
-		vertex.pos.y = mesh->mVertices[i].y;
-		vertex.pos.z = mesh->mVertices[i].z;
+		aiVector3D aiVertex = node->mTransformation * mesh->mVertices[i];
+
+		vertex.pos.x = aiVertex.x;
+		vertex.pos.y = aiVertex.y;
+		vertex.pos.z = aiVertex.z;
 
 		vertex.normal.x = mesh->mNormals[i].x;
 		vertex.normal.y = mesh->mNormals[i].y;

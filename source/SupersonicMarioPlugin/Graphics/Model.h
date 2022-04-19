@@ -30,7 +30,7 @@ public:
 	// Model loading
 	bool LoadModel();
 	void ProcessNode(aiNode* node, const aiScene* scene);
-	void ProcessMesh(aiMesh* mesh, const aiScene* scene);
+	void ProcessMesh(aiMesh* mesh, const aiScene* scene, const aiNode* node);
 
 	// Model Manipulation
 	void Render(CameraWrapper* camera);
