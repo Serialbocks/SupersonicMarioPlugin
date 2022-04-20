@@ -811,15 +811,38 @@ bool AudioFile<T>::decodeAiffFile (std::vector<uint8_t>& fileData)
 
 //=============================================================
 template <class T>
-uint32_t AudioFile<T>::getAiffSampleRate (std::vector<uint8_t>& fileData, int sampleRateStartIndex)
+uint32_t AudioFile<T>::getAiffSampleRate(std::vector<uint8_t>& fileData, int sampleRateStartIndex)
 {
     for (auto it : aiffSampleRateTable)
     {
-        if (tenByteMatch (fileData, sampleRateStartIndex, it.second, 0))
+        if (tenByteMatch(fileData, sampleRateStartIndex, it.second, 0))
             return it.first;
     }
-    
-    return 0;
+
+    // This isn't a common sample rate, so convert the 10 bytes from 
+    // Extended 80-bit floating-point format to double, then unsigned int
+    uint8_t signBit = (fileData[sampleRateStartIndex] & 0x80) >> 7;
+
+    int exponent = 0;
+    exponent += (uint16_t)(fileData[sampleRateStartIndex] & 0x7F) << 8;
+    exponent += fileData[sampleRateStartIndex + 1];
+    exponent -= 16383;
+
+    double sampleRate = 0.5;
+    for (int i = 2; i < 10; i++)
+    {
+        uint8_t byte = fileData[sampleRateStartIndex + i];
+        sampleRate += ((byte & 0x80) >> 7) * pow(2, exponent--);
+        sampleRate += ((byte & 0x40) >> 6) * pow(2, exponent--);
+        sampleRate += ((byte & 0x20) >> 5) * pow(2, exponent--);
+        sampleRate += ((byte & 0x10) >> 4) * pow(2, exponent--);
+        sampleRate += ((byte & 0x08) >> 3) * pow(2, exponent--);
+        sampleRate += ((byte & 0x04) >> 2) * pow(2, exponent--);
+        sampleRate += ((byte & 0x02) >> 1) * pow(2, exponent--);
+        sampleRate += (byte & 0x01) * pow(2, exponent--);
+    }
+
+    return (uint32_t)sampleRate;
 }
 
 //=============================================================
