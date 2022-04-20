@@ -277,7 +277,7 @@ void SM64::moveCarToMario(std::string eventName)
 	{
 		auto marioState = &marioInstance->marioBodyState.marioState;
 		auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-		if( marioState->interpolatedPosition[0] == 0 && marioState->interpolatedPosition[1] == 0 && marioState->interpolatedPosition[2] == 0 )
+		if( marioState->position[0] == 0 && marioState->position[1] == 0 && marioState->position[2] == 0 )
 		{
 			marioInstance->sema.release();
 			return;
@@ -810,49 +810,56 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 			car.SetHidden2(FALSE);
 			car.SetbHiddenSelf(FALSE);
 		}
-		else if (marioInstance->marioId >= 0)
+		else
 		{
-			car.SetHidden2(TRUE);
-			car.SetbHiddenSelf(TRUE);
-			auto marioState = &marioInstance->marioBodyState.marioState;
-			auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
-			if( marioState->interpolatedPosition[0] == 0 && marioState->interpolatedPosition[1] == 0 && marioState->interpolatedPosition[2] == 0 )
+			if (marioInstance->marioId >= 0)
 			{
-				marioInstance->sema.release();
-				return;
+				car.SetHidden2(TRUE);
+				car.SetbHiddenSelf(TRUE);
+				auto marioState = &marioInstance->marioBodyState.marioState;
+				auto marioYaw = (int)(-marioState->faceAngle * (RL_YAW_RANGE / 6)) + (RL_YAW_RANGE / 4);
+				if (marioState->position[0] == 0 && marioState->position[1] == 0 && marioState->position[2] == 0)
+				{
+					marioInstance->sema.release();
+					return;
+				}
+				auto carPosition = Vector(marioState->interpolatedPosition[0], marioState->interpolatedPosition[2], marioState->interpolatedPosition[1] + CAR_OFFSET_Z);
+				car.SetLocation(carPosition);
+				car.SetVelocity(Vector(marioState->velocity[0], marioState->velocity[2], marioState->velocity[1]));
+				auto carRot = car.GetRotation();
+				carRot.Yaw = marioYaw;
+				carRot.Roll = carRotation.Roll;
+				carRot.Pitch = carRotation.Pitch;
+				car.SetRotation(carRot);
+				contInput->Jump = 0;
+				contInput->Handbrake = 0;
+				contInput->Throttle = 0;
+				contInput->Steer = 0;
+				contInput->Pitch = 0;
 			}
-			auto carPosition = Vector(marioState->interpolatedPosition[0], marioState->interpolatedPosition[2], marioState->interpolatedPosition[1] + CAR_OFFSET_Z);
-			car.SetLocation(carPosition);
-			car.SetVelocity(Vector(marioState->velocity[0], marioState->velocity[2], marioState->velocity[1]));
-			auto carRot = car.GetRotation();
-			carRot.Yaw = marioYaw;
-			carRot.Roll = carRotation.Roll;
-			carRot.Pitch = carRotation.Pitch;
-			car.SetRotation(carRot);
-			contInput->Jump = 0;
-			contInput->Handbrake = 0;
-			contInput->Throttle = 0;
-			contInput->Steer = 0;
-			contInput->Pitch = 0;
 
 			// If attacked flag is set, decrement boost and demo if out of boost
-			auto boostComponent = car.GetBoostComponent();
-			if (marioInstance->marioBodyState.marioState.isAttacked && !boostComponent.IsNull())
+			if (marioInstance->marioState.isUpdateFrame)
 			{
-				marioInstance->marioInputs.attackInput.isAttacked = false;
-				marioInstance->marioBodyState.marioState.isAttacked = false;
-				float curBoostAmt = boostComponent.GetCurrentBoostAmount();
-				if (curBoostAmt >= 0.01f)
+				auto boostComponent = car.GetBoostComponent();
+				if (marioInstance->marioBodyState.marioState.isAttacked && !boostComponent.IsNull())
 				{
-					curBoostAmt -= attackBoostDamage;
-					curBoostAmt = curBoostAmt < 0 ? 0 : curBoostAmt;
-				}
-				boostComponent.SetCurrentBoostAmount(curBoostAmt);
-				if (curBoostAmt < 0.01f)
-				{
-					car.Demolish();
+					marioInstance->marioInputs.attackInput.isAttacked = false;
+					marioInstance->marioBodyState.marioState.isAttacked = false;
+					float curBoostAmt = boostComponent.GetCurrentBoostAmount();
+					if (curBoostAmt >= 0.01f)
+					{
+						curBoostAmt -= attackBoostDamage;
+						curBoostAmt = curBoostAmt < 0 ? 0 : curBoostAmt;
+					}
+					boostComponent.SetCurrentBoostAmount(curBoostAmt);
+					if (curBoostAmt < 0.01f)
+					{
+						car.Demolish();
+					}
 				}
 			}
+
 
 			// Check if mario attacked ball and set velocity if so
 			if (isHost)
@@ -868,9 +875,9 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 					auto ball = server.GetBall();
 					if (!ball.IsNull())
 					{
-						Vector marioVector(marioInstance->marioBodyState.marioState.interpolatedPosition[0],
-							marioInstance->marioBodyState.marioState.interpolatedPosition[2],
-							marioInstance->marioBodyState.marioState.interpolatedPosition[1]);
+						Vector marioVector(marioInstance->marioBodyState.marioState.position[0],
+							marioInstance->marioBodyState.marioState.position[2],
+							marioInstance->marioBodyState.marioState.position[1]);
 						Vector ballVector = ball.GetLocation();
 						Vector ballVelocity = ball.GetVelocity();
 						float distance = Utils::Distance(marioVector, ballVector);
@@ -927,8 +934,8 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 				}
 
 			}
-
 		}
+
 
 		marioInstance->sema.release();
 
@@ -1081,7 +1088,8 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 			marioInstance->marioState.position[2]);
 		for (auto const& [playerId, remoteMarioInstance] : instance->remoteMarios)
 		{
-			if (marioInstance->marioInputs.attackInput.isAttacked)
+			if (marioInstance->marioInputs.attackInput.isAttacked ||
+				!sm64_get_interpolation_should_update())
 				break;
 
 			if (remoteMarioInstance->marioId < 0)
@@ -1094,7 +1102,7 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 				remoteMarioInstance->marioBodyState.marioState.position[2]);
 
 			auto distance = Utils::Distance(localMarioVector, remoteMarioVector);
-			if (distance < 100.0f && remoteMarioInstance->marioBodyState.action & ACT_FLAG_ATTACKING) // TODO if in our direction
+			if (distance < 100.0f && remoteMarioInstance->marioBodyState.action & ACT_FLAG_ATTACKING)
 			{
 				marioInstance->marioInputs.attackInput.isAttacked = true;
 				marioInstance->marioInputs.attackInput.attackedPosX = remoteMarioVector.X;
@@ -1439,7 +1447,6 @@ void SM64::OnRender(CanvasWrapper canvas)
 			&marioInstance->marioBodyState.marioState,
 			&marioInstance->marioGeometry,
 			&marioInstance->marioBodyState);
-		marioInstance->marioState.isUpdateFrame = false;
 
 		auto marioVector = Vector(marioInstance->marioBodyState.marioState.position[0],
 			marioInstance->marioBodyState.marioState.position[2],
@@ -1451,15 +1458,14 @@ void SM64::OnRender(CanvasWrapper canvas)
 		cameraLoc = camera.GetLocation();
 		Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 
-		if(marioInstance->marioBodyState.marioState.isUpdateFrame)
-			MarioAudio::getInstance().UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
-				marioVector,
-				marioVel,
-				cameraLoc,
-				cameraAt,
-				&marioInstance->slidingHandle,
-				&marioInstance->yahooHandle,
-				marioInstance->marioBodyState.action);
+		MarioAudio::getInstance().UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
+			marioVector,
+			marioVel,
+			cameraLoc,
+			cameraAt,
+			&marioInstance->slidingHandle,
+			&marioInstance->yahooHandle,
+			marioInstance->marioBodyState.action);
 
 		marioInstance->marioBodyState.marioState.soundMask = 0;
 
