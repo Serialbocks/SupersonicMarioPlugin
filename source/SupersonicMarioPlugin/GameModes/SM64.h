@@ -39,6 +39,14 @@ extern "C" {
 #define TEAM_COLOR_POOL_SIZE 4
 #define MAX_NUM_PLAYERS 8
 
+#ifndef minV
+#define minV(a, b) ((a) <= (b) ? (a) : (b))
+#endif
+
+#ifndef maxV
+#define maxV(a, b) ((a) > (b) ? (a) : (b))
+#endif
+
 struct MatchSettings
 {
     SM64MarioBljInput bljSetup;

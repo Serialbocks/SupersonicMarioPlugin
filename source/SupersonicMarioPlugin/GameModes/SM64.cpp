@@ -1124,14 +1124,15 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	instance->cameraLoc = camera.GetLocation();
 	Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 
-	MarioAudio::getInstance().UpdateSounds(marioInstance->marioState.soundMask,
-		marioVector,
-		marioVel,
-		instance->cameraLoc,
-		cameraAt,
-		&marioInstance->slidingHandle,
-		&marioInstance->yahooHandle,
-		marioInstance->marioBodyState.action);
+	if (marioInstance->marioBodyState.marioState.isUpdateFrame)
+		MarioAudio::getInstance().UpdateSounds(marioInstance->marioState.soundMask,
+			marioVector,
+			marioVel,
+			instance->cameraLoc,
+			cameraAt,
+			&marioInstance->slidingHandle,
+			&marioInstance->yahooHandle,
+			marioInstance->marioBodyState.action);
 
 	marioInstance->playerId = car.GetPRI().GetPlayerID();
 	memcpy(self->netcodeOutBuf, &marioInstance->playerId, sizeof(int));
@@ -1277,6 +1278,15 @@ void SM64::OnRender(CanvasWrapper canvas)
 	}
 
 	if (server.IsNull()) return;
+
+	auto engine = gameWrapper->GetEngine();
+	if (!engine.IsNull())
+	{
+		auto statGraph = engine.GetStatGraphs().GetPerfStatGraph();
+		auto fps = statGraph.GetTargetFPS();
+		if (sm64_get_interpolation_should_update())
+			sm64_set_interpolation_interval(maxV(1, fps / 30));
+	}
 
 	auto localCar = gameWrapper->GetLocalCar();
 	std::string localPlayerName = "";
@@ -1437,14 +1447,15 @@ void SM64::OnRender(CanvasWrapper canvas)
 		cameraLoc = camera.GetLocation();
 		Vector cameraAt = RotateVectorWithQuat(Vector(1, 0, 0), quat);
 
-		MarioAudio::getInstance().UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
-			marioVector,
-			marioVel,
-			cameraLoc,
-			cameraAt,
-			&marioInstance->slidingHandle,
-			&marioInstance->yahooHandle,
-			marioInstance->marioBodyState.action);
+		if(marioInstance->marioBodyState.marioState.isUpdateFrame)
+			MarioAudio::getInstance().UpdateSounds(marioInstance->marioBodyState.marioState.soundMask,
+				marioVector,
+				marioVel,
+				cameraLoc,
+				cameraAt,
+				&marioInstance->slidingHandle,
+				&marioInstance->yahooHandle,
+				marioInstance->marioBodyState.action);
 
 		marioInstance->marioBodyState.marioState.soundMask = 0;
 
