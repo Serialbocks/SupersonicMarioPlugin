@@ -159,6 +159,7 @@ public:
     };
     int menuStackCount = 0;
     bool Sm64Initialized = false;
+    uint32_t interpolationInterval = 1;
 
     Model* ballModel = nullptr;
     Model* octaneModel = nullptr;
@@ -185,6 +186,7 @@ private:
     float attackBoostDamage;
     float diveBallVelHoriz;
     float diveBallVelVert;
+
 
 protected:
     const std::string vehicleInputCheck = "Function TAGame.Car_TA.SetVehicleInput";

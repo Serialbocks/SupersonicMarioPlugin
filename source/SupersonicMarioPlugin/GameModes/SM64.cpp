@@ -1109,13 +1109,14 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 
 	if (!self->gameWrapper->IsPaused())
 	{
+		marioInstance->marioInputs.isInput = true;
+		marioInstance->marioInputs.giveWingcap = true;
+		marioInstance->marioInputs.interpolationInterval = self->interpolationInterval;
 		sm64_mario_tick(marioInstance->marioId,
 			&marioInstance->marioInputs,
 			&marioInstance->marioState,
 			&marioInstance->marioGeometry,
-			&marioInstance->marioBodyState,
-			true,
-			true);
+			&marioInstance->marioBodyState);
 	}
 
 	auto marioVector = Vector(marioInstance->marioState.position[0], marioInstance->marioState.position[2], marioInstance->marioState.position[1]);
@@ -1135,9 +1136,12 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 			marioInstance->marioBodyState.action);
 
 	marioInstance->playerId = car.GetPRI().GetPlayerID();
-	memcpy(self->netcodeOutBuf, &marioInstance->playerId, sizeof(int));
-	memcpy(self->netcodeOutBuf + sizeof(int), &marioInstance->marioBodyState, sizeof(struct SM64MarioBodyState));
-	Networking::SendBytes(self->netcodeOutBuf, sizeof(struct SM64MarioBodyState) + sizeof(int));
+	if (marioInstance->marioBodyState.marioState.isUpdateFrame)
+	{
+		memcpy(self->netcodeOutBuf, &marioInstance->playerId, sizeof(int));
+		memcpy(self->netcodeOutBuf + sizeof(int), &marioInstance->marioBodyState, sizeof(struct SM64MarioBodyState));
+		Networking::SendBytes(self->netcodeOutBuf, sizeof(struct SM64MarioBodyState) + sizeof(int));
+	}
 	marioInstance->sema.release();
 }
 
@@ -1284,8 +1288,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 	{
 		auto statGraph = engine.GetStatGraphs().GetPerfStatGraph();
 		auto fps = statGraph.GetTargetFPS();
-		if (sm64_get_interpolation_should_update())
-			sm64_set_interpolation_interval(maxV(1, fps / 30));
+		interpolationInterval = maxV(1, fps / 30);
 	}
 
 	auto localCar = gameWrapper->GetLocalCar();
@@ -1429,13 +1432,14 @@ void SM64::OnRender(CanvasWrapper canvas)
 				(int16_t)marioInstance->marioState.position[2]);
 		}
 
+		marioInstance->marioInputs.isInput = false;
+		marioInstance->marioInputs.giveWingcap = false;
+		marioInstance->marioInputs.interpolationInterval = interpolationInterval;
 		sm64_mario_tick(marioInstance->marioId,
 			&marioInstance->marioInputs,
 			&marioInstance->marioBodyState.marioState,
 			&marioInstance->marioGeometry,
-			&marioInstance->marioBodyState,
-			false,
-			false);
+			&marioInstance->marioBodyState);
 
 		auto marioVector = Vector(marioInstance->marioBodyState.marioState.position[0],
 			marioInstance->marioBodyState.marioState.position[2],
