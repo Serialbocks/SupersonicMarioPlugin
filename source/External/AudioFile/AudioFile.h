@@ -823,6 +823,10 @@ uint32_t AudioFile<T>::getAiffSampleRate(std::vector<uint8_t>& fileData, int sam
     // Extended 80-bit floating-point format to double, then unsigned int
     uint8_t signBit = (fileData[sampleRateStartIndex] & 0x80) >> 7;
 
+    // We should never have a negative sample rate!
+    if (signBit)
+        return 0;
+
     int exponent = 0;
     exponent += (uint16_t)(fileData[sampleRateStartIndex] & 0x7F) << 8;
     exponent += fileData[sampleRateStartIndex + 1];
