@@ -868,9 +868,9 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 					auto ball = server.GetBall();
 					if (!ball.IsNull())
 					{
-						Vector marioVector(marioInstance->marioBodyState.marioState.position[0],
-							marioInstance->marioBodyState.marioState.position[2],
-							marioInstance->marioBodyState.marioState.position[1]);
+						Vector marioVector(marioInstance->marioBodyState.marioState.interpolatedPosition[0],
+							marioInstance->marioBodyState.marioState.interpolatedPosition[2],
+							marioInstance->marioBodyState.marioState.interpolatedPosition[1]);
 						Vector ballVector = ball.GetLocation();
 						Vector ballVelocity = ball.GetVelocity();
 						float distance = Utils::Distance(marioVector, ballVector);
@@ -1111,7 +1111,6 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 	{
 		marioInstance->marioInputs.isInput = true;
 		marioInstance->marioInputs.giveWingcap = true;
-		marioInstance->marioInputs.interpolationInterval = self->interpolationInterval;
 		sm64_mario_tick(marioInstance->marioId,
 			&marioInstance->marioInputs,
 			&marioInstance->marioState,
@@ -1288,7 +1287,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 	{
 		auto statGraph = engine.GetStatGraphs().GetPerfStatGraph();
 		auto fps = statGraph.GetTargetFPS();
-		interpolationInterval = maxV(1, fps / 30);
+		if (sm64_get_interpolation_should_update())
+			sm64_set_interpolation_interval(maxV(1, fps / 30));
 	}
 
 	auto localCar = gameWrapper->GetLocalCar();
@@ -1434,12 +1434,12 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		marioInstance->marioInputs.isInput = false;
 		marioInstance->marioInputs.giveWingcap = false;
-		marioInstance->marioInputs.interpolationInterval = interpolationInterval;
 		sm64_mario_tick(marioInstance->marioId,
 			&marioInstance->marioInputs,
 			&marioInstance->marioBodyState.marioState,
 			&marioInstance->marioGeometry,
 			&marioInstance->marioBodyState);
+		marioInstance->marioState.isUpdateFrame = false;
 
 		auto marioVector = Vector(marioInstance->marioBodyState.marioState.position[0],
 			marioInstance->marioBodyState.marioState.position[2],
