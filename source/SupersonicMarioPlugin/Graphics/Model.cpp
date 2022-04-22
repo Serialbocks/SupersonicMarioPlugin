@@ -264,3 +264,12 @@ std::vector<Vertex>* Model::GetVertices()
 	}
 	return &Meshes[0]->Vertices;
 }
+
+std::vector<Model::Frame>* Model::GetFrames()
+{
+	if (Frames.size() == 0)
+	{
+		Frames.push_back(currentFrame);
+	}
+	return &Frames;
+}

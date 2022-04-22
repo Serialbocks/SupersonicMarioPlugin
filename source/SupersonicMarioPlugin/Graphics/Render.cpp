@@ -292,9 +292,10 @@ void Renderer::DrawModels()
 			continue;
 		}
 
-		for (auto m = 0; m < model->Frames.size(); m++)
+		auto frames = model->GetFrames();
+		for (auto m = 0; m < frames->size(); m++)
 		{
-			auto frame = model->Frames[m];
+			auto frame = (*frames)[m];
 			model->SetFrame(&frame);
 
 			for (auto i = 0; i < model->Meshes.size(); i++)
@@ -305,7 +306,7 @@ void Renderer::DrawModels()
 					mesh->UpdateVertices = false;
 					continue;
 				};
-				mesh->render = false;
+				//mesh->render = false;
 
 				PixelConstBufferData.capColor.x = mesh->CapColorR;
 				PixelConstBufferData.capColor.y = mesh->CapColorG;

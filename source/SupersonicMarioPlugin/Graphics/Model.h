@@ -61,6 +61,7 @@ public:
 
 	void SetFrame(Frame* frame);
 	std::vector<Vertex>* GetVertices();
+	std::vector<Frame>* GetFrames();
 private:
 	void pushRenderFrame(bool updateVertices, CameraWrapper* camera);
 
