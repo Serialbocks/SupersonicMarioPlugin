@@ -839,7 +839,7 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 			}
 
 			// If attacked flag is set, decrement boost and demo if out of boost
-			if (marioInstance->marioState.isUpdateFrame)
+			if (marioInstance->marioBodyState.marioState.isUpdateFrame)
 			{
 				auto boostComponent = car.GetBoostComponent();
 				if (marioInstance->marioBodyState.marioState.isAttacked && !boostComponent.IsNull())
