@@ -20,6 +20,7 @@
 #define PUNCH_BALL_VEL_VERT 250.0f
 #define DIVE_BALL_VEL_HORIZ 639.0f
 #define DIVE_BALL_VEL_VERT 166.6f
+#define FLY_BALL_VEL 500.0f
 #define IM_COL32_ERROR_BANNER (ImColor(211,  47,  47, 255))
 
 #define OCTANE_ID 23
@@ -57,6 +58,7 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	punchBallVelVert = PUNCH_BALL_VEL_VERT;
 	diveBallVelHoriz = DIVE_BALL_VEL_HORIZ;
 	diveBallVelVert = DIVE_BALL_VEL_VERT;
+	flyBallVel = FLY_BALL_VEL;
 
 	matchSettings.bljSetup.bljState = SM64_BLJ_STATE_DISABLED;
 	matchSettings.bljSetup.bljVel = 0;
@@ -545,6 +547,8 @@ void SM64::RenderOptions()
 	ImGui::SliderFloat("Dive Ball Vel Horiz", &diveBallVelHoriz, 0.0f, 10000.0f);
 	ImGui::SliderFloat("Dive Ball Vel Vert", &diveBallVelVert, 0.0f, 10000.0f);
 
+	ImGui::SliderFloat("Aerial Ball Vel", &flyBallVel, 0.0f, 10000.0f);
+
 	ImGui::NewLine();
 
 	ImGui::Text("BLJ Configuration");
@@ -885,7 +889,7 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 						float dx = ballVector.X - marioVector.X;
 						float dy = ballVector.Y - marioVector.Y;
 
-						bool attackedRecently = marioInstance->tickCount - marioInstance->lastBallInteraction < 10;
+						bool attackedRecently = marioInstance->tickCount - marioInstance->lastBallInteraction < (10 * interpolationFactor);
 
 						float angleToBall = atan2f(dy, dx);
 						if (attackedRecently)
@@ -924,6 +928,19 @@ void SM64::onSetVehicleInput(CarWrapper car, void* params)
 							ballVelocity.X += diveBallVelHoriz * cosf(angleToBall);
 							ballVelocity.Y += diveBallVelHoriz * sinf(angleToBall);
 							ballVelocity.Z += diveBallVelVert;
+							ball.SetVelocity(ballVelocity);
+							marioInstance->lastBallInteraction = marioInstance->tickCount;
+						}
+						else if (marioInstance->marioBodyState.action == ACT_FLYING &&
+							distance < attackBallRadius)
+						{
+							float dz = ballVector.Z - marioVector.Z;
+							float dxVert = atan2f(dz, dx);
+							auto zFactor = sinf(dxVert);
+
+							ballVelocity.X += flyBallVel * cosf(angleToBall) * abs(zFactor);
+							ballVelocity.Y += flyBallVel * sinf(angleToBall) * abs(zFactor);
+							ballVelocity.Z += flyBallVel * zFactor;
 							ball.SetVelocity(ballVelocity);
 							marioInstance->lastBallInteraction = marioInstance->tickCount;
 						}
@@ -1296,8 +1313,9 @@ void SM64::OnRender(CanvasWrapper canvas)
 	{
 		auto statGraph = engine.GetStatGraphs().GetPerfStatGraph();
 		auto fps = statGraph.GetTargetFPS();
+		interpolationFactor = maxV(1, fps / 30);
 		if (sm64_get_interpolation_should_update())
-			sm64_set_interpolation_interval(maxV(1, fps / 30));
+			sm64_set_interpolation_interval(interpolationFactor);
 	}
 
 	auto localCar = gameWrapper->GetLocalCar();

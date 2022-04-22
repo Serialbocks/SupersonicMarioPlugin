@@ -186,7 +186,8 @@ private:
     float attackBoostDamage;
     float diveBallVelHoriz;
     float diveBallVelVert;
-
+    float flyBallVel;
+    int interpolationFactor = 1;
 
 protected:
     const std::string vehicleInputCheck = "Function TAGame.Car_TA.SetVehicleInput";
