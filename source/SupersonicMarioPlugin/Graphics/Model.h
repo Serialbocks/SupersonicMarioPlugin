@@ -32,13 +32,14 @@ public:
 		bool showAltTexture;
 	} Frame;
 
-	Model(std::string path);
+	Model(std::string path, bool inRenderAlways = false);
 	Model(size_t inMaxTriangles,
 		uint8_t* inTexture,
 		uint8_t* inAltTexture,
 		size_t inTexSize,
 		uint16_t inTexWidth,
-		uint16_t inTexHeight);
+		uint16_t inTexHeight,
+		bool inRenderAlways = false);
 	bool NeedsInitialized();
 	bool ShouldRender();
 	void InitMeshes(Microsoft::WRL::ComPtr<ID3D11Device> device, int windowWidth, int windowHeight);
@@ -76,6 +77,7 @@ private:
 	bool meshesInitialized = false;
 	std::string modelPath;
 	Frame currentFrame;
+	bool renderAlways = false;
 
 	// Single mesh init vals
 	size_t maxTriangles = 0;

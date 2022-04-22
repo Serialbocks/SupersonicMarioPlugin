@@ -9,11 +9,12 @@ void backgroundLoadData(Model* self)
 	self->sema.release();
 }
 
-Model::Model(std::string path)
+Model::Model(std::string path, bool inRenderAlways)
 {
 	modelPath = path;
 	std::thread loadMeshesThread(backgroundLoadData, this);
 	loadMeshesThread.detach();
+	renderAlways = inRenderAlways;
 	Renderer::getInstance().AddModel(this);
 }
 
@@ -22,13 +23,15 @@ Model::Model(size_t inMaxTriangles,
 	uint8_t* inAltTexture,
 	size_t inTexSize,
 	uint16_t inTexWidth,
-	uint16_t inTexHeight)
+	uint16_t inTexHeight,
+	bool inRenderAlways)
 {
 	maxTriangles = inMaxTriangles;
 	texture = inTexture;
 	texSize = inTexSize;
 	texWidth = inTexWidth;
 	texHeight = inTexHeight;
+	renderAlways = inRenderAlways;
 	backgroundDataLoaded = true;
 	Renderer::getInstance().AddModel(this);
 }
@@ -267,7 +270,7 @@ std::vector<Vertex>* Model::GetVertices()
 
 std::vector<Model::Frame>* Model::GetFrames()
 {
-	if (Frames.size() == 0)
+	if (renderAlways && Frames.size() == 0)
 	{
 		Frames.push_back(currentFrame);
 	}

@@ -1259,7 +1259,8 @@ void SM64::OnRender(CanvasWrapper canvas)
 				nullptr,
 				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
 				SM64_TEXTURE_WIDTH,
-				SM64_TEXTURE_HEIGHT));
+				SM64_TEXTURE_HEIGHT,
+				true));
 		}
 		marioModelPoolSema.release();
 
