@@ -38,6 +38,29 @@ void SupersonicMarioPlugin::OnRender()
 
     ImGui::SetNextWindowSizeConstraints(ImVec2(800, 600), ImVec2(FLT_MAX, FLT_MAX));
     if (ImGui::Begin((menuTitle + "###SupersonicMarioPlugin").c_str(), &isWindowOpen)) {
+        if (Update::getInstance().NeedsUpdate())
+        {
+            std::string updateStr = "You version of SupersonicMario is out of date. Click below to update.";
+            std::string updateButtonStr = "Update to " + Update::getInstance().GetCurrentVersion();
+
+            ImGui::Banner(updateStr.c_str(), IM_COL32_WARNING);
+            ImGui::Spacing();
+
+            if (Update::getInstance().Updating())
+            {
+                ImGui::TextUnformatted("Downloading update...");
+            }
+            else
+            {
+                if (ImGui::Button(updateButtonStr.c_str()))
+                {
+                    Update::getInstance().GetUpdate();
+                }
+            }
+
+
+            ImGui::Separator();
+        }
         if (ImGui::BeginTabBar("#RPTabBar", ImGuiTabBarFlags_NoCloseWithMiddleMouseButton | ImGuiTabBarFlags_NoTooltip)) {
             if (isHostingSm64Game())
             {

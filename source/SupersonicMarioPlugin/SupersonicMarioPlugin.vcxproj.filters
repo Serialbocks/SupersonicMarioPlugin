@@ -49,6 +49,9 @@
     <Filter Include="External\AudioFile">
       <UniqueIdentifier>{115018b0-aa2f-4b57-a066-c5d0116f018b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External\cpp-httplib">
+      <UniqueIdentifier>{8d59cce4-4516-4d71-a40d-9b607b7f0d61}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SupersonicMarioPlugin.h">
@@ -197,6 +200,12 @@
     </ClInclude>
     <ClInclude Include="Graphics\Model.h">
       <Filter>Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="..\External\cpp-httplib\httplib.h">
+      <Filter>External\cpp-httplib</Filter>
+    </ClInclude>
+    <ClInclude Include="Modules\Update.h">
+      <Filter>Modules</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -382,6 +391,9 @@
     </ClCompile>
     <ClCompile Include="Graphics\Model.cpp">
       <Filter>Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\Update.cpp">
+      <Filter>Modules</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

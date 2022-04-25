@@ -680,6 +680,21 @@ void SM64::RenderPreferences()
 				IM_COL32_ERROR_BANNER);
 		}
 	}
+	bool disabled = Update::getInstance().CheckingForUpdates();
+	if (disabled)
+	{
+		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+	}
+	if (ImGui::Button("Check for Updates"))
+	{
+		Update::getInstance().CheckForUpdates();
+	}
+	if (disabled)
+	{
+		ImGui::PopItemFlag();
+		ImGui::PopStyleVar();
+	}
 }
 
 bool SM64::IsActive()
@@ -752,6 +767,8 @@ void SM64::InitSM64()
 	locationInit = false;
 
 	Sm64Initialized = true;
+
+	Update::getInstance().CheckForUpdates();
 }
 
 void SM64::DestroySM64()
