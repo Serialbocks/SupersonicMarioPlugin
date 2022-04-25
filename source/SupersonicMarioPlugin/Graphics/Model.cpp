@@ -159,11 +159,13 @@ void Model::pushRenderFrame(bool updateVertices, CameraWrapper* camera)
 
 void Model::Render(CameraWrapper* camera)
 {
+	Disabled = false;
 	pushRenderFrame(false, camera);
 }
 
 void Model::RenderUpdateVertices(size_t numTrianglesUsed, CameraWrapper* camera)
 {
+	Disabled = false;
 	currentFrame.numTrianglesUsed = numTrianglesUsed;
 	pushRenderFrame(true, camera);
 }
@@ -268,8 +270,13 @@ std::vector<Vertex>* Model::GetVertices()
 	return &Meshes[0]->Vertices;
 }
 
+std::vector<Model::Frame> empty;
 std::vector<Model::Frame>* Model::GetFrames()
 {
+	if (Disabled)
+	{
+		return &empty;
+	}
 	if (renderAlways && Frames.size() == 0)
 	{
 		Frames.push_back(currentFrame);

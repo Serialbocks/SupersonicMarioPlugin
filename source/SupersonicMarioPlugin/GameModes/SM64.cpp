@@ -240,6 +240,15 @@ void SM64::OnGameLeft(bool deleteMario)
 	}
 
 	remoteMariosSema.release();
+
+	if (ballModel != nullptr)
+		ballModel->Disabled = true;
+	if (octaneModel != nullptr)
+		octaneModel->Disabled = true;
+	if (dominusModel != nullptr)
+		dominusModel->Disabled = true;
+	if (fennecModel != nullptr)
+		fennecModel->Disabled = true;
 }
 
 void SM64::moveCarToMario(std::string eventName)
@@ -1263,7 +1272,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 	if (!modelsInitialized)
 	{
 		std::string assetsFolder = Utils::GetBakkesmodFolderPath() + "data\\assets\\";
-		ballModel = new Model(assetsFolder + "Rocketball.fbx");
+		ballModel = new Model(assetsFolder + "Rocketball.fbx", true);
 		octaneModel = new Model(assetsFolder + "Octane.fbx");
 		dominusModel = new Model(assetsFolder + "Dominus.fbx");
 		fennecModel = new Model(assetsFolder + "Fennec.fbx");
@@ -1360,6 +1369,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 			remoteMario->teamIndex = teamIndex;
 			if (remoteMario->isCar)
 			{
+				remoteMario->model->RenderUpdateVertices(0, nullptr);
 				renderCarGhost(car, camera);
 			}
 			else
@@ -1402,6 +1412,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		if (localMario.isCar)
 		{
+			localMario.model->RenderUpdateVertices(0, nullptr);
 			renderCarGhost(car, camera);
 		}
 		else
