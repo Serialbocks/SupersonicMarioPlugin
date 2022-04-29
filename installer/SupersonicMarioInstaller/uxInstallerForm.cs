@@ -325,6 +325,17 @@ namespace SupersonicMarioInstaller
 
             switch (_currentStep)
             {
+                case Step.ROM:
+                    {
+                        var appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                        var configPath = Path.Combine(appdata, "bakkesmod/bakkesmod/data/supersonicmario.cfg");
+                        if(File.Exists(configPath))
+                        {
+                            Next();
+                            return;
+                        }
+                    }
+                    break;
                 case Step.Bakkesmod:
                     if (IsBakkesmodInstalled())
                     {
