@@ -35,6 +35,7 @@ namespace SupersonicMarioInstaller
         private const string MSYS_BASE_ARGS = "-w hide /bin/env MSYSTEM=MINGW64 /bin/bash -l -c \"";
         private const string LIBSM64_REPO_URL = "https://github.com/Serialbocks/libsm64-supersonic-mario.git";
         private const string LIBSM64_REPO_NAME = "libsm64-supersonic-mario";
+        private const string LIBSM64_REPO_COMMIT = "788c7b81488a9fef6e494f32a3f336358ab55fca";
         private const string DEFAULT_PLUGIN_CONFIG = "volume,50\r\nrom,";
 
         private Step _currentStep = Step.Welcome;
@@ -158,7 +159,7 @@ namespace SupersonicMarioInstaller
                 uxInstallStatus.Text = "Building libsm64...";
             });
 
-            ExecuteMSYS2Command($"cd ./{LIBSM64_REPO_NAME} && make", 60);
+            ExecuteMSYS2Command($"cd ./{LIBSM64_REPO_NAME} && git checkout {LIBSM64_REPO_COMMIT} && make", 60);
             uxBackgroundWorker.ReportProgress(85);
 
             uxInstallStatus.Invoke((MethodInvoker)delegate
