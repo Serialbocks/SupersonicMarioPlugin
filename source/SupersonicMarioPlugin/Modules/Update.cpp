@@ -8,6 +8,8 @@ httplib::Client* httpClient = nullptr;
 std::counting_semaphore<1> sema{ 1 };
 std::string updatePath;
 std::string currentVersion;
+std::string baseUrl;
+std::string backupBaseUrl;
 bool hasCheckedForUpdates = false;
 bool checkingForUpdates = false;
 bool needsUpdate = false;
@@ -42,6 +44,8 @@ void checkUpdatesThread(Update* self)
 	simdjson::ondemand::document doc = parser.iterate(paddedData);
 	currentVersion = std::string(std::string_view(doc["number"]));
 	updatePath = std::string(std::string_view(doc["link"]));
+	baseUrl = std::string(std::string_view(doc["baseUrl"]));
+	backupBaseUrl = std::string(std::string_view(doc["backupBaseUrl"]));
 
 	sema.acquire();
 	hasCheckedForUpdates = true;
@@ -90,7 +94,23 @@ std::string Update::GetCurrentVersion()
 
 void updateThread(Update* self)
 {
-	auto response = http.Get(updatePath.c_str());
+	auto currentClient = httpClient;
+	auto baseHttp = httplib::Client(baseUrl);
+	auto backupBaseHttp = httplib::Client(backupBaseUrl);
+
+	bool hasBaseUrl = baseUrl.size() > 0;
+
+	if (hasBaseUrl) {
+		currentClient = &baseHttp;
+	}
+
+	auto response = currentClient->Get(updatePath.c_str());
+
+	if (response.error() != httplib::Error::Success)
+	{
+		currentClient = &backupBaseHttp;
+		response = currentClient->Get(updatePath.c_str());
+	}
 
 	if (response.error() == httplib::Error::Success)
 	{
