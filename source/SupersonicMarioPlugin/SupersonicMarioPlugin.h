@@ -218,6 +218,7 @@ public:
 
 private:
     void renderMultiplayerTabHost();
+    void renderMultiplayerTabServerBrowser();
     void renderMultiplayerTabHostTeamSettings();
     void renderMultiplayerTabHostMutatorSettings();
     void renderMultiplayerTabHostAdvancedSettings();
@@ -246,6 +247,8 @@ private:
     std::string hostPswd;
     unsigned short hostPortInternal = DEFAULT_PORT;
     unsigned short hostPortExternal = DEFAULT_PORT;
+    bool isHostScreen = false;
+    bool isPublicMatch = true;
 
     /* Join Settings */
 public:

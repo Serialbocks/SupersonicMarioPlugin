@@ -237,7 +237,8 @@ void SupersonicMarioPlugin::renderMatchOptionsTab()
 
 void SupersonicMarioPlugin::renderPreferencesTab()
 {
-    if (ImGui::BeginTabItem("Preferences")) {
+    if (ImGui::BeginTabItem("Preferences"))
+    {
         renderSm64Preferences();
         ImGui::EndTabItem();
     }
@@ -246,13 +247,25 @@ void SupersonicMarioPlugin::renderPreferencesTab()
 /// <summary>Renders the multiplayer tab.</summary>
 void SupersonicMarioPlugin::renderMultiplayerTab()
 {
-    if (ImGui::BeginTabItem("Multiplayer")) {
-        if (!errors.empty()) {
-            if (ImGui::Banner(errors.front().c_str(), IM_COL32_ERROR_BANNER)) {
+    if (ImGui::BeginTabItem("Multiplayer"))
+    {
+        if (!errors.empty())
+        {
+            if (ImGui::Banner(errors.front().c_str(), IM_COL32_ERROR_BANNER))
+            {
                 errors.pop();
             }
         }
-        renderMultiplayerTabHost();
+
+        if (isHostScreen)
+        {
+            renderMultiplayerTabHost();
+        }
+        else
+        {
+
+        }
+        
         ImGui::SameLine();
         renderMultiplayerTabJoin();
         ImGui::EndTabItem();
@@ -301,8 +314,18 @@ void SupersonicMarioPlugin::renderMultiplayerTabHost()
         ImGui::Indent(5);
         ImGui::Spacing();
 
-        ImGui::TextUnformatted("Host a local game");
+        ImGui::TextUnformatted("Host game");
         ImGui::Separator();
+
+        if (ImGui::RadioButton("Public", isPublicMatch))
+        {
+            isPublicMatch = true;
+        }
+        ImGui::SameLine();
+        if (ImGui::RadioButton("Private", !isPublicMatch))
+        {
+            isPublicMatch = false;
+        }
 
         ImGui::TextUnformatted(" Game Mode:");
         ImGui::Combo("##GameMode", &gameModes.CurrentSelected, gameModes.DisplayName, "No maps found");
@@ -395,6 +418,20 @@ void SupersonicMarioPlugin::renderMultiplayerTabHost()
     ImGui::EndChild();
 }
 
+static int currentIndex = -1;
+static const char* listItems[10] = 
+{
+    "Hello test",
+    "A second item",
+    "A third one too"
+};
+
+void SupersonicMarioPlugin::renderMultiplayerTabServerBrowser()
+{
+    ImGui::ListBoxHeader("Test listbox header");
+    ImGui::ListBox("Test listbox", &currentIndex, listItems, 3);
+    ImGui::ListBoxFooter();
+}
 
 /// <summary>Renders the team settings in the host section in game multiplayer tab.</summary>
 void SupersonicMarioPlugin::renderMultiplayerTabHostTeamSettings()
@@ -861,7 +898,7 @@ void SupersonicMarioPlugin::renderMultiplayerTabJoin()
         ImGui::Indent(5);
         ImGui::Spacing();
 
-        ImGui::TextUnformatted("Join a local game");
+        ImGui::TextUnformatted("Join by IP");
         ImGui::Separator();
 
         ImGui::TextUnformatted(" IP Address:");
