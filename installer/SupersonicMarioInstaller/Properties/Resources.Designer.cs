@@ -173,6 +173,26 @@ namespace SupersonicMarioInstaller.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] libcrypto {
+            get {
+                object obj = ResourceManager.GetObject("libcrypto", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] libcrypto_3_x64 {
+            get {
+                object obj = ResourceManager.GetObject("libcrypto_3_x64", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] libsoxr_dll {
             get {
                 object obj = ResourceManager.GetObject("libsoxr-dll", resourceCulture);
@@ -203,6 +223,26 @@ namespace SupersonicMarioInstaller.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] libssl {
+            get {
+                object obj = ResourceManager.GetObject("libssl", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] libssl_3_x64 {
+            get {
+                object obj = ResourceManager.GetObject("libssl_3_x64", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] Octane {
             get {
                 object obj = ResourceManager.GetObject("Octane", resourceCulture);
@@ -216,6 +256,16 @@ namespace SupersonicMarioInstaller.Properties {
         internal static byte[] Octane_LICENSE {
             get {
                 object obj = ResourceManager.GetObject("Octane-LICENSE", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] openssl_LICENSE {
+            get {
+                object obj = ResourceManager.GetObject("openssl-LICENSE", resourceCulture);
                 return ((byte[])(obj));
             }
         }

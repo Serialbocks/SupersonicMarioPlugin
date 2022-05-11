@@ -20,6 +20,7 @@
 #include "../Modules/Utils.h"
 #include "../Modules/MarioAudio.h"
 #include "../Modules/MarioConfig.h"
+#include "../Modules/Update.h"
 #include "imgui/imgui.h"
 #include "imgui/imgui_additions.h"
 #include "imgui/imgui_internal.h"

@@ -151,6 +151,12 @@
   <data name="Fennec-LICENSE" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Fennec.LICENSE;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="libcrypto" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\libcrypto.lib;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="libcrypto_3_x64" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\libcrypto-3-x64.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="libsoxr-dll" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\libsoxr.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
@@ -160,11 +166,20 @@
   <data name="libsoxr-LICENSE" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\libsoxr.LICENSE;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="libssl" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\libssl.lib;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="libssl_3_x64" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\libssl-3-x64.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="Octane" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Octane.fbx;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="Octane-LICENSE" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Octane.LICENSE;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="openssl-LICENSE" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\openssl.LICENSE;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="Rocketball" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Rocketball.fbx;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>

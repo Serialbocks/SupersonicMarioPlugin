@@ -20,7 +20,7 @@ namespace SupersonicMarioInstaller
 {
     public partial class uxInstallerForm : Form
     {
-        private const string VERSION = "V0.1.0";
+        private const string VERSION = "V1.0.0";
 
         private const string NEXT_BUTTON_TEXT = "Next >";
         private const string AGREE_BUTTON_TEXT = "I Agree";
@@ -35,6 +35,7 @@ namespace SupersonicMarioInstaller
         private const string MSYS_BASE_ARGS = "-w hide /bin/env MSYSTEM=MINGW64 /bin/bash -l -c \"";
         private const string LIBSM64_REPO_URL = "https://github.com/Serialbocks/libsm64-supersonic-mario.git";
         private const string LIBSM64_REPO_NAME = "libsm64-supersonic-mario";
+        private const string LIBSM64_REPO_COMMIT = "788c7b81488a9fef6e494f32a3f336358ab55fca";
         private const string DEFAULT_PLUGIN_CONFIG = "volume,50\r\nrom,";
 
         private Step _currentStep = Step.Welcome;
@@ -158,7 +159,7 @@ namespace SupersonicMarioInstaller
                 uxInstallStatus.Text = "Building libsm64...";
             });
 
-            ExecuteMSYS2Command($"cd ./{LIBSM64_REPO_NAME} && make", 60);
+            ExecuteMSYS2Command($"cd ./{LIBSM64_REPO_NAME} && git checkout {LIBSM64_REPO_COMMIT} && make", 60);
             uxBackgroundWorker.ReportProgress(85);
 
             uxInstallStatus.Invoke((MethodInvoker)delegate
@@ -205,6 +206,11 @@ namespace SupersonicMarioInstaller
             File.WriteAllBytes(Path.Combine(libsPath, "assimp-vc142-mt.dll"), Properties.Resources.assimp_vc142_mt_dll);
             File.WriteAllBytes(Path.Combine(libsPath, "assimp-vc142-mt.lib"), Properties.Resources.assimp_vc142_mt_lib);
             File.WriteAllBytes(Path.Combine(libsPath, "assimp.LICENSE"), Properties.Resources.assimp_LICENSE);
+            File.WriteAllBytes(Path.Combine(libsPath, "libcrypto.lib"), Properties.Resources.libcrypto);
+            File.WriteAllBytes(Path.Combine(libsPath, "libcrypto-3-x64.dll"), Properties.Resources.libcrypto_3_x64);
+            File.WriteAllBytes(Path.Combine(libsPath, "libssl.lib"), Properties.Resources.libssl);
+            File.WriteAllBytes(Path.Combine(libsPath, "libssl-3-x64.dll"), Properties.Resources.libssl_3_x64);
+            File.WriteAllBytes(Path.Combine(libsPath, "openssl.LICENSE"), Properties.Resources.openssl_LICENSE);
 
             File.WriteAllBytes(Path.Combine(assetsPath, "aifc_decode.exe"), Properties.Resources.aifc_decode);
             File.WriteAllBytes(Path.Combine(assetsPath, "assets.json"), Properties.Resources.assets);
@@ -320,6 +326,17 @@ namespace SupersonicMarioInstaller
 
             switch (_currentStep)
             {
+                case Step.ROM:
+                    {
+                        var appdata = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                        var configPath = Path.Combine(appdata, "bakkesmod/bakkesmod/data/supersonicmario.cfg");
+                        if(File.Exists(configPath))
+                        {
+                            Next();
+                            return;
+                        }
+                    }
+                    break;
                 case Step.Bakkesmod:
                     if (IsBakkesmodInstalled())
                     {

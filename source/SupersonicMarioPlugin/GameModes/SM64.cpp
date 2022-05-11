@@ -240,6 +240,15 @@ void SM64::OnGameLeft(bool deleteMario)
 	}
 
 	remoteMariosSema.release();
+
+	if (ballModel != nullptr)
+		ballModel->Disabled = true;
+	if (octaneModel != nullptr)
+		octaneModel->Disabled = true;
+	if (dominusModel != nullptr)
+		dominusModel->Disabled = true;
+	if (fennecModel != nullptr)
+		fennecModel->Disabled = true;
 }
 
 void SM64::moveCarToMario(std::string eventName)
@@ -671,6 +680,21 @@ void SM64::RenderPreferences()
 				IM_COL32_ERROR_BANNER);
 		}
 	}
+	bool disabled = Update::getInstance().CheckingForUpdates();
+	if (disabled)
+	{
+		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+		ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+	}
+	if (ImGui::Button("Check for Updates"))
+	{
+		Update::getInstance().CheckForUpdates();
+	}
+	if (disabled)
+	{
+		ImGui::PopItemFlag();
+		ImGui::PopStyleVar();
+	}
 }
 
 bool SM64::IsActive()
@@ -743,6 +767,8 @@ void SM64::InitSM64()
 	locationInit = false;
 
 	Sm64Initialized = true;
+
+	Update::getInstance().CheckForUpdates();
 }
 
 void SM64::DestroySM64()
@@ -1263,7 +1289,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 	if (!modelsInitialized)
 	{
 		std::string assetsFolder = Utils::GetBakkesmodFolderPath() + "data\\assets\\";
-		ballModel = new Model(assetsFolder + "Rocketball.fbx");
+		ballModel = new Model(assetsFolder + "Rocketball.fbx", true);
 		octaneModel = new Model(assetsFolder + "Octane.fbx");
 		dominusModel = new Model(assetsFolder + "Dominus.fbx");
 		fennecModel = new Model(assetsFolder + "Fennec.fbx");
@@ -1360,6 +1386,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 			remoteMario->teamIndex = teamIndex;
 			if (remoteMario->isCar)
 			{
+				remoteMario->model->RenderUpdateVertices(0, nullptr);
 				renderCarGhost(car, camera);
 			}
 			else
@@ -1402,6 +1429,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 
 		if (localMario.isCar)
 		{
+			localMario.model->RenderUpdateVertices(0, nullptr);
 			renderCarGhost(car, camera);
 		}
 		else
