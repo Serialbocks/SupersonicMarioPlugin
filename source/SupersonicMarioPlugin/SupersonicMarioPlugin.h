@@ -1,6 +1,7 @@
 #pragma once
 #include "Version.h"
 #include "Networking/Networking.h"
+#include "Modules/Update.h"
 
 #include "Modules/SupersonicMarioPluginModule.h"
 

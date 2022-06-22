@@ -73,6 +73,7 @@ public:
 	std::counting_semaphore<1> sema{ 1 };
 	bool backgroundDataLoaded = false;
 	std::vector<Frame> Frames;
+	bool Disabled = false;
 private:
 	bool meshesInitialized = false;
 	std::string modelPath;
