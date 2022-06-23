@@ -12,10 +12,15 @@
 #include <sstream>
 #include <thread>
 #include <semaphore>
+#include "cpp-httplib/httplib.h"
 
 #pragma comment (lib, "ws2_32.lib")
 
 #define TCP_BUF_SIZE 1048576
+
+extern httplib::Client http;
+extern httplib::Client https;
+extern httplib::Client* httpClient;
 
 namespace Networking
 {

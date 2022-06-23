@@ -437,11 +437,36 @@ void SupersonicMarioPlugin::renderMultiplayerTabHost()
                 ImGui::InputScalar("##sm64_port_host", ImGuiDataType_U16, sm64HostPort.get());
             }
 
-            if (ImGui::Button("Host")) {
-                Execute([this](GameWrapper*) {
-                    HostGame();
-                });
+            if (isPublicMatch)
+            {
+                ImGui::TextUnformatted(" Lobby Name:");
+                ImGui::InputText("##lobbyName", &lobbyName);
             }
+            ImGui::TextUnformatted(" Password (optional):");
+            ImGui::InputText("##pswd_host", &hostPswd, ImGuiInputTextFlags_Password);
+
+            bool hostDisabled = isPublicMatch && lobbyName.length() == 0;
+            if (hostDisabled)
+            {
+                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+            }
+            if (ImGui::Button("Host"))
+            {
+                Execute([this](GameWrapper*)
+                    {
+                        HostGame();
+                    });
+            }
+            if (hostDisabled)
+            {
+                ImGui::Banner(
+                    "Please enter a lobby name",
+                    IM_COL32_ERROR_BANNER);
+                ImGui::PopItemFlag();
+                ImGui::PopStyleVar();
+            }
+
         }
     }
     ImGui::EndChild();
@@ -477,12 +502,6 @@ void SupersonicMarioPlugin::renderMultiplayerTabServerBrowser()
         ImGui::Spacing();
         ImGui::Separator();
 
-        if (ImGui::Button("Host Game"))
-        {
-            isHostScreen = true;
-        }
-
-        ImGui::SameLine();
         bool joinDisabled = currentIndex < 0;
         if (joinDisabled)
         {
@@ -497,6 +516,18 @@ void SupersonicMarioPlugin::renderMultiplayerTabServerBrowser()
         {
             ImGui::PopItemFlag();
             ImGui::PopStyleVar();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Refresh"))
+        {
+
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Host Game"))
+        {
+            isHostScreen = true;
         }
 
     }

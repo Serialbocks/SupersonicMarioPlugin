@@ -73,7 +73,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>false</TreatWarningAsError>
       <AdditionalIncludeDirectories>.\;..\External;..\External\assimp;..\External\BakkesModAdditions\include;..\External\BakkesModSDK\include;..\External\fmt\include;..\External\libsm64-supersonic-mario\dist\include;..\External\openssl\include;..\External\simdjson\singleheader;%(AdditionalIncludeDirectories);..\External\soloud\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;WITH_MINIAUDIO</PreprocessorDefinitions>
+      <PreprocessorDefinitions>DEBUG;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;WITH_MINIAUDIO;CPPHTTPLIB_OPENSSL_SUPPORT</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -110,7 +110,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <TreatWarningAsError>false</TreatWarningAsError>
       <AdditionalIncludeDirectories>.\;..\External;..\External\assimp;..\External\BakkesModAdditions\include;..\External\BakkesModSDK\include;..\External\fmt\include;..\External\libsm64-supersonic-mario\dist\include;..\External\openssl\include;..\External\simdjson\singleheader;..\External\libsm64\dist\include;%(AdditionalIncludeDirectories);..\External\soloud\include</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;WITH_MINIAUDIO</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS;WITH_MINIAUDIO;CPPHTTPLIB_OPENSSL_SUPPORT</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ExceptionHandling>Async</ExceptionHandling>
@@ -185,6 +185,7 @@
     <ClInclude Include="miniconf.h" />
     <ClInclude Include="Modules\MarioAudio.h" />
     <ClInclude Include="Modules\MarioConfig.h" />
+    <ClInclude Include="Modules\ServerBrowser.h" />
     <ClInclude Include="Modules\Update.h" />
     <ClInclude Include="Modules\Utils.h" />
     <ClInclude Include="SMPConfig.h" />
@@ -247,6 +248,7 @@
     <ClCompile Include="Graphics\Lighting.cpp" />
     <ClCompile Include="Modules\MarioAudio.cpp" />
     <ClCompile Include="Modules\MarioConfig.cpp" />
+    <ClCompile Include="Modules\ServerBrowser.cpp" />
     <ClCompile Include="Modules\Update.cpp" />
     <ClCompile Include="Networking\TcpClient.cpp" />
     <ClCompile Include="Networking\TcpServer.cpp" />

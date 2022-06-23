@@ -207,6 +207,9 @@
     <ClInclude Include="Modules\Update.h">
       <Filter>Modules</Filter>
     </ClInclude>
+    <ClInclude Include="Modules\ServerBrowser.h">
+      <Filter>Modules</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SupersonicMarioPlugin.cpp">
@@ -393,6 +396,9 @@
       <Filter>Graphics</Filter>
     </ClCompile>
     <ClCompile Include="Modules\Update.cpp">
+      <Filter>Modules</Filter>
+    </ClCompile>
+    <ClCompile Include="Modules\ServerBrowser.cpp">
       <Filter>Modules</Filter>
     </ClCompile>
   </ItemGroup>
