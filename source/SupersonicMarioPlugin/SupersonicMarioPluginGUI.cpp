@@ -313,7 +313,7 @@ void SupersonicMarioPlugin::renderShortMultiplayerTab()
             }
         }
 
-        if (ImGui::Button("Host New Match")) {
+        if (ImGui::Button("Next Match")) {
             Execute([this](GameWrapper*) {
                 ForceJoin();
             });
@@ -472,7 +472,6 @@ void SupersonicMarioPlugin::renderMultiplayerTabHost()
     ImGui::EndChild();
 }
 
-static int currentIndex = -1;
 static const char* listItems[10] = 
 {
     "Hello test",
@@ -495,14 +494,38 @@ void SupersonicMarioPlugin::renderMultiplayerTabServerBrowser()
         ImGui::Indent(5);
         ImGui::Spacing();
 
+        bool loadingMatches = ServerBrowser::getInstance().IsLoadingMatches();
+        bool errorLoadingMatches = ServerBrowser::getInstance().HasErrorLoadingMatches();
+        if (!loadingMatches && !errorLoadingMatches)
+        {
+            matchNames = ServerBrowser::getInstance().GetMatchNames();
+        }
+        else
+        {
+            currentMatchIndex = -1;
+            std::vector<const char*> empty;
+            empty.swap(matchNames);
+        }
+
         ImGui::TextUnformatted(" Server Browser");
         ImGui::Separator();
-        ImGui::ListBox("", &currentIndex, listItems, 9, 5);
+        ImGui::ListBox("", &currentMatchIndex, matchNames.data(), matchNames.size(), 5);
 
         ImGui::Spacing();
         ImGui::Separator();
 
-        bool joinDisabled = currentIndex < 0;
+
+        if (!matchesLoaded)
+        {
+            matchesLoaded = true;
+            loadingMatches = true;
+            currentMatchIndex = -1;
+            ServerBrowser::getInstance().GetMatches();
+        }
+
+
+
+        bool joinDisabled = currentMatchIndex < 0 || ServerBrowser::getInstance().IsLoadingMatches();
         if (joinDisabled)
         {
             ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
@@ -519,9 +542,21 @@ void SupersonicMarioPlugin::renderMultiplayerTabServerBrowser()
         }
 
         ImGui::SameLine();
+        bool refreshDisabled = loadingMatches;
+        if (refreshDisabled)
+        {
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+        }
         if (ImGui::Button("Refresh"))
         {
-
+            currentMatchIndex = -1;
+            ServerBrowser::getInstance().GetMatches();
+        }
+        if (refreshDisabled)
+        {
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
         }
 
         ImGui::SameLine();
