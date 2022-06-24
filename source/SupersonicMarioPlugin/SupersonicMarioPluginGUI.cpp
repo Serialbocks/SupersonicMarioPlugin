@@ -318,7 +318,10 @@ void SupersonicMarioPlugin::renderShortMultiplayerTab()
                 ForceJoin();
             });
             Execute([this](GameWrapper*) {
+                bool previousPublicMatchVal = isPublicMatch;
+                isPublicMatch = false;
                 HostGame();
+                isPublicMatch = previousPublicMatchVal;
             });
         }
         ImGui::EndTabItem();
