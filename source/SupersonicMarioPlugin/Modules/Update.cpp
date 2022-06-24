@@ -2,9 +2,6 @@
 
 #define VERSION_REQUEST "/version"
 
-httplib::Client http("http://136.32.164.93:3000");
-httplib::Client https("https://serialbocks.com");
-httplib::Client* httpClient = nullptr;
 std::counting_semaphore<1> sema{ 1 };
 std::string updatePath;
 std::string currentVersion;

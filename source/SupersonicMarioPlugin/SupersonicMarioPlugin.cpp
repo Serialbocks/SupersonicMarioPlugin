@@ -732,7 +732,11 @@ void SupersonicMarioPlugin::HostGame(std::string arena)
     SetTimeout([this, command = command](GameWrapper*) {
         gameWrapper->ExecuteUnrealCommand(command);
     }, 0.1f);
+
     TcpServer::getInstance().StartServer(*sm64HostPort);
+    if (isPublicMatch) {
+        ServerBrowser::getInstance().HostNewMatch(lobbyName, numConnections, (int)hostPortExternal, *sm64HostPort);
+    }
     sm64->Activate(true);
 }
 

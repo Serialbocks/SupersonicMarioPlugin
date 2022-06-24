@@ -9,11 +9,11 @@
 #pragma comment(lib, "libssl.lib")
 
 #include "simdjson/singleheader/simdjson.h"
-#define CPPHTTPLIB_OPENSSL_SUPPORT
 #include "cpp-httplib/httplib.h"
 
 #include "Version.h"
 #include "Utils.h"
+#include "Networking/Networking.h"
 
 class Update
 {

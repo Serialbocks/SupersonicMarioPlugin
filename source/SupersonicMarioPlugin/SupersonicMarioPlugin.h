@@ -2,6 +2,7 @@
 #include "Version.h"
 #include "Networking/Networking.h"
 #include "Modules/Update.h"
+#include "Modules/ServerBrowser.h"
 
 #include "Modules/SupersonicMarioPluginModule.h"
 
@@ -246,10 +247,14 @@ private:
     GameSetting botDifficulties;
     std::vector<std::filesystem::path> presetPaths;
     std::string hostPswd;
+    std::string lobbyName;
+    bool matchesLoaded = false;
     unsigned short hostPortInternal = DEFAULT_PORT;
     unsigned short hostPortExternal = DEFAULT_PORT;
     bool isHostScreen = false;
     bool isPublicMatch = true;
+    int currentMatchIndex = -1;
+    std::vector<const char*> matchNames;
 
     /* Join Settings */
 public:
@@ -258,6 +263,7 @@ private:
 
     int joiningPartyPort = DEFAULT_PORT;
     std::shared_ptr<std::string> joinIP;
+    std::shared_ptr<std::string> hostMatchName;
     std::shared_ptr<int> joinPort;
     std::shared_ptr<int> sm64HostPort;
     std::shared_ptr<int> sm64JoinPort;

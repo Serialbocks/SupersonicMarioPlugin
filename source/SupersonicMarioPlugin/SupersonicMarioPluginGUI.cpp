@@ -280,13 +280,21 @@ void SupersonicMarioPlugin::renderMultiplayerTab()
             }
         }
 
+        if (!sm64Initialized())
+        {
+            ImGui::Banner(
+                "Could not load the SM64 ROM or is not a valid SM64 US version ROM. Please check your ROM path in the Preferences tab.",
+                IM_COL32_ERROR_BANNER);
+            return;
+        }
+
         if (isHostScreen)
         {
             renderMultiplayerTabHost();
         }
         else
         {
-
+            renderMultiplayerTabServerBrowser();
         }
         
         ImGui::SameLine();
@@ -305,12 +313,15 @@ void SupersonicMarioPlugin::renderShortMultiplayerTab()
             }
         }
 
-        if (ImGui::Button("Host New Match")) {
+        if (ImGui::Button("Next Match")) {
             Execute([this](GameWrapper*) {
                 ForceJoin();
             });
             Execute([this](GameWrapper*) {
+                bool previousPublicMatchVal = isPublicMatch;
+                isPublicMatch = false;
                 HostGame();
+                isPublicMatch = previousPublicMatchVal;
             });
         }
         ImGui::EndTabItem();
@@ -324,18 +335,16 @@ void SupersonicMarioPlugin::renderShortMultiplayerTab()
 /// <summary>Renders the host section in game multiplayer tab.</summary>
 void SupersonicMarioPlugin::renderMultiplayerTabHost()
 {
-    if (!sm64Initialized())
-    {
-        ImGui::Banner(
-            "Could not load the SM64 ROM or is not a valid SM64 US version ROM. Please check your ROM path in the Preferences tab.",
-            IM_COL32_ERROR_BANNER);
-        return;
-    }
     const ImVec2 hostGameTabSize = { -ImGui::GetFrameWidthWithSpacing() * 6,
                                      -ImGui::GetFrameHeightWithSpacing() + 23 };
     if (ImGui::BeginChild("#HostGame", hostGameTabSize, true)) {
         ImGui::Indent(5);
         ImGui::Spacing();
+
+        if (ImGui::Button("< Server Browser"))
+        {
+            isHostScreen = false;
+        }
 
         ImGui::TextUnformatted("Host game");
         ImGui::Separator();
@@ -431,29 +440,136 @@ void SupersonicMarioPlugin::renderMultiplayerTabHost()
                 ImGui::InputScalar("##sm64_port_host", ImGuiDataType_U16, sm64HostPort.get());
             }
 
-            if (ImGui::Button("Host")) {
-                Execute([this](GameWrapper*) {
-                    HostGame();
-                });
+            if (isPublicMatch)
+            {
+                ImGui::TextUnformatted(" Lobby Name:");
+                ImGui::InputText("##lobbyName", &lobbyName);
             }
+            ImGui::TextUnformatted(" Password (optional):");
+            ImGui::InputText("##pswd_host", &hostPswd, ImGuiInputTextFlags_Password);
+
+            bool hostDisabled = isPublicMatch && lobbyName.length() == 0;
+            if (hostDisabled)
+            {
+                ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+                ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+            }
+            if (ImGui::Button("Host"))
+            {
+                Execute([this](GameWrapper*)
+                    {
+                        HostGame();
+                    });
+            }
+            if (hostDisabled)
+            {
+                ImGui::Banner(
+                    "Please enter a lobby name",
+                    IM_COL32_ERROR_BANNER);
+                ImGui::PopItemFlag();
+                ImGui::PopStyleVar();
+            }
+
         }
     }
     ImGui::EndChild();
 }
 
-static int currentIndex = -1;
 static const char* listItems[10] = 
 {
     "Hello test",
     "A second item",
-    "A third one too"
+    "A third one too",
+    "Hello test",
+    "A second item",
+    "A third one too",
+    "Hello test",
+    "A second item",
+    "A third one too",
 };
 
 void SupersonicMarioPlugin::renderMultiplayerTabServerBrowser()
 {
-    ImGui::ListBoxHeader("Test listbox header");
-    ImGui::ListBox("Test listbox", &currentIndex, listItems, 3);
-    ImGui::ListBoxFooter();
+    const ImVec2 serverBrowserTabSize = { -ImGui::GetFrameWidthWithSpacing() * 6,
+                                     -ImGui::GetFrameHeightWithSpacing() + 23 };
+    if (ImGui::BeginChild("#ServerBrowser", serverBrowserTabSize, true))
+    {
+        ImGui::Indent(5);
+        ImGui::Spacing();
+
+        bool loadingMatches = ServerBrowser::getInstance().IsLoadingMatches();
+        bool errorLoadingMatches = ServerBrowser::getInstance().HasErrorLoadingMatches();
+        if (!loadingMatches && !errorLoadingMatches)
+        {
+            matchNames = ServerBrowser::getInstance().GetMatchNames();
+        }
+        else
+        {
+            currentMatchIndex = -1;
+            std::vector<const char*> empty;
+            empty.swap(matchNames);
+        }
+
+        ImGui::TextUnformatted(" Server Browser");
+        ImGui::Separator();
+        ImGui::ListBox("", &currentMatchIndex, matchNames.data(), matchNames.size(), 5);
+
+        ImGui::Spacing();
+        ImGui::Separator();
+
+
+        if (!matchesLoaded)
+        {
+            matchesLoaded = true;
+            loadingMatches = true;
+            currentMatchIndex = -1;
+            ServerBrowser::getInstance().GetMatches();
+        }
+
+
+
+        bool joinDisabled = currentMatchIndex < 0 || ServerBrowser::getInstance().IsLoadingMatches();
+        if (joinDisabled)
+        {
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+        }
+        if (ImGui::Button("Join Game"))
+        {
+
+        }
+        if (joinDisabled)
+        {
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
+        }
+
+        ImGui::SameLine();
+        bool refreshDisabled = loadingMatches;
+        if (refreshDisabled)
+        {
+            ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, ImGui::GetStyle().Alpha * 0.5f);
+        }
+        if (ImGui::Button("Refresh"))
+        {
+            currentMatchIndex = -1;
+            ServerBrowser::getInstance().GetMatches();
+        }
+        if (refreshDisabled)
+        {
+            ImGui::PopItemFlag();
+            ImGui::PopStyleVar();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("Host Game"))
+        {
+            isHostScreen = true;
+        }
+
+    }
+    ImGui::EndChild();
 }
 
 /// <summary>Renders the team settings in the host section in game multiplayer tab.</summary>
@@ -985,17 +1101,6 @@ void SupersonicMarioPlugin::renderMultiplayerTabJoin()
 
         ImGui::Unindent(5);
         static bool isCurrentMapJoinable = true;
-        if (ImGui::Checkbox("Joining a custom map", &joinCustomMap)) {
-            if (joinCustomMap) {
-                refreshCustomMapPaths = true;
-                Execute([this](GameWrapper*) {
-                    isCurrentMapJoinable = isMapJoinable(currentJoinMap);
-                });
-            }
-            else {
-                isCurrentMapJoinable = true;
-            }
-        }
         if (ImGui::IsItemHovered()) {
             ImGui::SetTooltip("Select this if you are joining a non Rocket League map.");
         }
