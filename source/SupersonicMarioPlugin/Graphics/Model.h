@@ -33,6 +33,7 @@ public:
 	} Frame;
 
 	Model(std::string path, bool inRenderAlways = false);
+	Model(std::vector<std::string> meshPaths, bool inRenderAlways = false);
 	Model(size_t inMaxTriangles,
 		uint8_t* inTexture,
 		uint8_t* inAltTexture,

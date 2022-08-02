@@ -18,6 +18,16 @@ Model::Model(std::string path, bool inRenderAlways)
 	Renderer::getInstance().AddModel(this);
 }
 
+Model::Model(std::vector<std::string> meshPaths, bool inRenderAlways = false)
+{
+	renderAlways = inRenderAlways;
+	for(int i = 0; i < meshPaths.size(); i++)
+	{
+		modelPath = meshPaths[i];
+		LoadModel();
+	}
+}
+
 Model::Model(size_t inMaxTriangles,
 	uint8_t* inTexture,
 	uint8_t* inAltTexture,
