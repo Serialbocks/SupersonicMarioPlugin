@@ -330,6 +330,18 @@ void SupersonicMarioPlugin::renderMultiplayerTabHost()
         ImGui::TextUnformatted(" Game Mode:");
         ImGui::Combo("##GameMode", &gameModes.CurrentSelected, gameModes.DisplayName, "No maps found");
         ImGui::TextUnformatted(" Arena:");
+        if (gameWrapper->IsUsingSteamVersion()) {
+            ImGui::SameLine();
+            if (ImGui::Checkbox("Enable workshop maps", &enableWorkshopMaps)) {
+                currentMap.clear();
+                refreshCustomMapPaths = true;
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Checkbox("Enable custom maps", &enableCustomMaps)) {
+            currentMap.clear();
+            refreshCustomMapPaths = true;
+        }
         if (!enableWorkshopMaps && !enableCustomMaps) {
             const bool currentMapIsModdedCache = currentMapIsModded;
             if (currentMapIsModdedCache) {
