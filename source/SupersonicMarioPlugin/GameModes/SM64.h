@@ -11,6 +11,7 @@
 #include <shlwapi.h>
 #include <stdlib.h>
 #include <math.h>
+#include <libloaderapi.h>
 
 #include "shlobj.h"
 

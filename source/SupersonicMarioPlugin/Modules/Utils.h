@@ -6,6 +6,7 @@
 #include "../Graphics/GraphicsTypes.h"
 #include <math.h>
 #include <sys/stat.h>
+#include <filesystem>
 class Utils
 {
 public:
@@ -30,6 +31,20 @@ public:
 			stm << std::use_facet< std::ctype<wchar_t> >(std::locale()).narrow(*s++, '?');
 		}
 		return stm.str();
+	}
+
+	static std::string GetMapFolderPath()
+	{
+		char filePath[MAX_PATH];
+		GetModuleFileNameA(NULL, filePath, MAX_PATH);
+		std::filesystem::path exePath(filePath);
+		
+		return exePath
+			.parent_path()
+			.parent_path()
+			.parent_path()
+			.append("TAGame\\CookedPCConsole")
+			.string();
 	}
 
 	static std::vector<std::string> SplitStr(std::string str, char delimiter)

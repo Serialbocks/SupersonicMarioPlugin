@@ -18,7 +18,7 @@ Model::Model(std::string path, bool inRenderAlways)
 	Renderer::getInstance().AddModel(this);
 }
 
-Model::Model(std::vector<std::string> meshPaths, bool inRenderAlways = false)
+Model::Model(std::vector<std::string> meshPaths, bool inRenderAlways)
 {
 	renderAlways = inRenderAlways;
 	for(int i = 0; i < meshPaths.size(); i++)

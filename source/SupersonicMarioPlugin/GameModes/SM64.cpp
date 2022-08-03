@@ -662,6 +662,10 @@ void SM64::RenderPreferences()
 	matchSettingsSema.acquire();
 	bool inSm64Game = matchSettings.isInSm64Game;
 	matchSettingsSema.release();
+
+	std::string mapPath = Utils::GetMapFolderPath();
+	ImGui::TextUnformatted(mapPath.c_str());
+
 	if (!inSm64Game)
 	{
 		std::string romPath = marioConfig->GetRomPath();
