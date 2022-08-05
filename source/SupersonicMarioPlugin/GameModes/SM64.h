@@ -18,6 +18,7 @@
 #include "../Graphics/Renderer.h"
 #include "../Graphics/GraphicsTypes.h"
 #include "../Graphics/Model.h"
+#include "../Graphics/surface_terrains.h"
 #include "../Modules/Utils.h"
 #include "../Modules/MarioAudio.h"
 #include "../Modules/MarioConfig.h"
@@ -114,6 +115,8 @@ public:
     void MarioMessageReceived(char* buf, int len);
     void SendJoinCommandToClients();
 
+    void LoadStaticSurfaces(std::vector<Vertex>* vertices = nullptr);
+
 private:
     void onCharacterSpawn(ServerWrapper server);
     void onCountdownEnd(ServerWrapper server);
@@ -133,6 +136,8 @@ private:
     void addColorIndexToPool(int colorIndex);
 
 public:
+    Model* testMapModel;
+    std::vector<Vertex> testMapModelVertices;
     SM64MarioInstance localMario;
     std::shared_ptr<GameWrapper> gameWrapper;
     Vector cameraLoc = Vector(0, 0, 0);

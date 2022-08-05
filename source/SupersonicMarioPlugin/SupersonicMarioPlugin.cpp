@@ -650,7 +650,7 @@ std::vector<std::string> SupersonicMarioPlugin::complete(const std::vector<std::
     return suggestions;
 }
 
-void SupersonicMarioPlugin::loadMapModel(const std::string& inArena)
+bool SupersonicMarioPlugin::loadMapModel(const std::string& inArena, std::vector<Vertex>* vertices)
 {
     std::string arena = "";
     if (file_exists(inArena))
@@ -665,7 +665,7 @@ void SupersonicMarioPlugin::loadMapModel(const std::string& inArena)
         if (!file_exists(arena))
         {
             BM_ERROR_LOG("Could not find map file for extraction.");
-            return;
+            return false;
         }
     }
     std::filesystem::path arenaPath(arena);
@@ -701,7 +701,7 @@ void SupersonicMarioPlugin::loadMapModel(const std::string& inArena)
     if (!Utils::FileExists(outDir))
     {
         std::filesystem::remove_all(tempDir);
-        return;
+        return false;
     }
 
     std::vector<std::string> gltfPaths;
@@ -713,18 +713,18 @@ void SupersonicMarioPlugin::loadMapModel(const std::string& inArena)
         }
     }
 
-    Model *m = new Model(gltfPaths);
-    std::vector<Vertex> allVertices;
+    Model *m = new Model(gltfPaths, true);
     for (int i = 0; i < m->modelIndicesArr.size(); i++)
     {
         auto indices = m->modelIndicesArr[i];
-        auto vertices = m->modelVerticesArr[i];
+        auto modelVertices = m->modelVerticesArr[i];
         for (int k = 0; k < indices.size(); k++)
         {
-            allVertices.push_back(vertices[indices[k]]);
+            vertices->push_back(modelVertices[indices[k]]);
         }
     }
     std::filesystem::remove_all(tempDir);
+    return true;
 }
 
 
@@ -771,8 +771,6 @@ void SupersonicMarioPlugin::HostGame(std::string arena)
     std::ranges::replace(arena, '/', '\\');
 #endif
 
-    loadMapModel(arena);
-
     const std::string gameMode = gameModes.GetSelected();
     std::string gameTags = getGameTags();
     // Available PlayerCounts are 2, 4, 6 and 8.
@@ -813,6 +811,16 @@ void SupersonicMarioPlugin::HostGame(std::string arena)
     SetTimeout([this, command = command](GameWrapper*) {
         gameWrapper->ExecuteUnrealCommand(command);
     }, 0.1f);
+
+    std::vector<Vertex> vertices;
+    if (loadMapModel(arena, &vertices))
+    {
+        sm64->LoadStaticSurfaces(&vertices);
+    }
+    else
+    {
+        sm64->LoadStaticSurfaces();
+    }
     TcpServer::getInstance().StartServer(*sm64HostPort);
     sm64->Activate(true);
 }

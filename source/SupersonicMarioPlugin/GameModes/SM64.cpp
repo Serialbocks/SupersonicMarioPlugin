@@ -539,6 +539,68 @@ void SM64::SendJoinCommandToClients()
 	matchSettingsSema.release();
 }
 
+void SM64::LoadStaticSurfaces(std::vector<Vertex>* vertices)
+{
+	if (vertices == nullptr
+		|| vertices->size() % 3 != 0)
+	{
+		// Load default map surfaces
+		sm64_static_surfaces_load(surfaces, surfaces_count);
+	}
+	else
+	{
+		int numSurfaces = vertices->size() / 3;
+		struct SM64Surface* staticSurfaces = (SM64Surface*)malloc(sizeof(struct SM64Surface) * numSurfaces);
+		testMapModel = new Model(numSurfaces, texture, nullptr, 4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
+			SM64_TEXTURE_WIDTH,
+			SM64_TEXTURE_HEIGHT,
+			true);
+		auto modelVertices = testMapModel->GetVertices();
+		testMapModelVertices.clear();
+		for (int i = 0; i < vertices->size(); i++)
+		{
+			Vertex v;
+			v.pos.x = (*vertices)[i].pos.z * -100;
+			v.pos.y = (*vertices)[i].pos.x * 100;
+			v.pos.z = (*vertices)[i].pos.y * 100;
+			v.color.w = 0.3f;
+			v.color.x = 1.0f;
+			v.color.y = 1.0f;
+			v.color.z = 1.0f;
+			v.texCoord.x = 0.5f;
+			v.texCoord.y = 0.5f;
+			v.normal.x = 0.0f;
+			v.normal.y = 0.0f;
+			v.normal.z = 0.0f;
+			testMapModelVertices.push_back(v);
+		}
+
+		
+		for (int i = 0; i < vertices->size() / 3; i++)
+		{
+			struct SM64Surface* surface = &staticSurfaces[i];
+			Vertex* surfaceVertices = &((*vertices)[i * 3]);
+			surface->type = SURFACE_DEFAULT;
+			surface->force = 0;
+			surface->terrain = TERRAIN_GRASS;
+
+			surface->vertices[0][0] = (int16_t)(surfaceVertices[0].pos.z * -100);
+			surface->vertices[0][1] = (int16_t)(surfaceVertices[0].pos.y * 100) - 1000;
+			surface->vertices[0][2] = (int16_t)(surfaceVertices[0].pos.x * 100);
+
+			surface->vertices[1][0] = (int16_t)(surfaceVertices[1].pos.z * -100);
+			surface->vertices[1][1] = (int16_t)(surfaceVertices[1].pos.y * 100) - 1000;
+			surface->vertices[1][2] = (int16_t)(surfaceVertices[1].pos.x * 100);
+
+			surface->vertices[2][0] = (int16_t)(surfaceVertices[2].pos.z * -100);
+			surface->vertices[2][1] = (int16_t)(surfaceVertices[2].pos.y * 100) - 1000;
+			surface->vertices[2][2] = (int16_t)(surfaceVertices[2].pos.x * 100);
+		}
+		sm64_static_surfaces_load(staticSurfaces, numSurfaces);
+
+	}
+}
+
 /// <summary>Renders the available options for the game mode.</summary>
 void SM64::RenderOptions()
 {
@@ -654,6 +716,11 @@ void SM64::RenderPreferences()
 	MarioConfig* marioConfig = &MarioConfig::getInstance();
 
 	ImGui::TextUnformatted("Preferences");
+
+	ImGui::SliderFloat("CarX", &carLocation.X, -8000, 8000);
+	ImGui::SliderFloat("CarY", &carLocation.Y, -8000, 8000);
+	ImGui::SliderFloat("CarZ", &carLocation.Z, -8000, 8000);
+
 	ImGui::SliderInt("Mario Volume", &marioAudio->MasterVolume, 0, 100);
 	if (ImGui::IsItemDeactivatedAfterChange())
 	{
@@ -757,7 +824,7 @@ void SM64::InitSM64()
 	if (!Sm64Initialized)
 	{
 		sm64_global_init(rom, texture, NULL, NULL);
-		sm64_static_surfaces_load(surfaces, surfaces_count);
+		LoadStaticSurfaces();
 	}
 
 	cameraPos[0] = 0.0f;
@@ -1075,15 +1142,23 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		// Unreal swaps coords
 		instance->carRotation = car.GetRotation();
 		marioInstance->marioId = sm64_mario_create(x, z, y);
-		if (marioInstance->marioId < 0) return;
+		if (marioInstance->marioId < 0)
+		{
+			marioInstance->sema.release();
+			return;
+		}
 	}
 	else if (marioInstance->marioBodyState.marioState.position[0] == 0.0f &&
 		marioInstance->marioBodyState.marioState.position[1] == 0.0f &&
 		marioInstance->marioBodyState.marioState.position[2] == 0.0f)
 	{
-		sm64_mario_delete(marioInstance->marioId);
-		marioInstance->marioId = sm64_mario_create(x, z, y);
-		if (marioInstance->marioId < 0) return;
+		 sm64_mario_delete(marioInstance->marioId);
+		 marioInstance->marioId = sm64_mario_create(x, z, y);
+		 if (marioInstance->marioId < 0)
+		 {
+		 	marioInstance->sema.release();
+		 	return;
+		 }
 	}
 
 	auto camera = instance->gameWrapper->GetCamera();
@@ -1563,6 +1638,17 @@ void SM64::OnRender(CanvasWrapper canvas)
 			ballModel->SetRotationQuat(quat.X, quat.Y, quat.Z, quat.W);
 			ballModel->SetTranslation(ballLocation.X, ballLocation.Y, ballLocation.Z);
 			ballModel->Render(&camera);
+
+			//auto modelVertices = testMapModel->GetVertices();
+			//if (modelVertices != nullptr)
+			//{
+			//	for (int i = 0; i < modelVertices->size(); i++)
+			//	{
+			//		(*modelVertices)[i] = testMapModelVertices[i];
+			//	}
+			//	testMapModel->RenderUpdateVertices(modelVertices->size() / 3, &camera);
+			//}
+
 		}
 
 	}

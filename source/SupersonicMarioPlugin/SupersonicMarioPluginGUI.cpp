@@ -239,7 +239,7 @@ bool SupersonicMarioPlugin::renderCustomMapsSelection(std::map<std::filesystem::
     }
 
     bool valueChanged = false;
-    if (ImGui::SearchableCombo("##CustomMaps", currentCustomMap, customMaps, "No maps found", "type to search")) {
+    if (ImGui::SearchableCombo("##Maps", currentCustomMap, customMaps, "No maps found", "type to search")) {
         valueChanged = true;
     }
     if (ImGui::IsItemActivated()) {
