@@ -90,6 +90,7 @@ public:
     void ForceJoin();
 
 private:
+    void loadMapModel(const std::string& arena);
     std::string getGameTags() const;
     void savePreset(const std::string& presetName);
     void loadPreset(const std::filesystem::path& presetPath);

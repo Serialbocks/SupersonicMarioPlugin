@@ -4,6 +4,7 @@
 // Modified by:     Serialbocks
 #include "SMPConfig.h"
 #include "SupersonicMarioPlugin.h"
+#include "Graphics/Model.h"
 
 // Game modes
 #include "GameModes/SM64.h"
@@ -649,6 +650,83 @@ std::vector<std::string> SupersonicMarioPlugin::complete(const std::vector<std::
     return suggestions;
 }
 
+void SupersonicMarioPlugin::loadMapModel(const std::string& inArena)
+{
+    std::string arena = "";
+    if (file_exists(inArena))
+    {
+        arena = inArena;
+    }
+    else
+    {
+        std::filesystem::path mapPath(Utils::GetMapFolderPath());
+        mapPath.append(inArena + ".upk");
+        arena = mapPath.string();
+        if (!file_exists(arena))
+        {
+            BM_ERROR_LOG("Could not find map file for extraction.");
+            return;
+        }
+    }
+    std::filesystem::path arenaPath(arena);
+
+    std::string bakkesmodFolderPath = Utils::GetBakkesmodFolderPath();
+    std::string assetsPath = bakkesmodFolderPath + "data\\assets";
+    std::string umodelPath = assetsPath + "\\umodel_64.exe";
+    std::string tempDir = std::filesystem::temp_directory_path().string() + "supersonic-mario-mapdata";
+
+    if (!Utils::FileExists(tempDir))
+    {
+        std::filesystem::create_directories(tempDir);
+    }
+
+    std::ostringstream pathWithArgsStm;
+    pathWithArgsStm << umodelPath << " -path=\"" << arenaPath.parent_path().string() << "\" -export " << arenaPath.filename().string();
+    pathWithArgsStm << " -noanim -notex -gltf -out=\"" << tempDir << "\"";
+    std::string pathWithArgs = pathWithArgsStm.str();
+
+    STARTUPINFOA si;
+    PROCESS_INFORMATION pi;
+    if (Utils::FileExists(umodelPath))
+    {
+        ZeroMemory(&si, sizeof(si));
+        si.cb = sizeof(si);
+        ZeroMemory(&pi, sizeof(pi));
+        CreateProcessA(NULL, (LPSTR)pathWithArgs.c_str(), NULL, NULL,
+            FALSE, CREATE_NO_WINDOW, NULL, assetsPath.c_str(), &si, &pi);
+        WaitForSingleObject(pi.hProcess, INFINITE);
+    }
+
+    std::string outDir = tempDir + "\\" + arenaPath.stem().string() + "\\StaticMesh3";
+    if (!Utils::FileExists(outDir))
+    {
+        std::filesystem::remove_all(tempDir);
+        return;
+    }
+
+    std::vector<std::string> gltfPaths;
+    for (auto& p : std::filesystem::recursive_directory_iterator(outDir))
+    {
+        if (p.path().extension() == ".gltf")
+        {
+            gltfPaths.push_back(p.path().string());
+        }
+    }
+
+    Model *m = new Model(gltfPaths);
+    std::vector<Vertex> allVertices;
+    for (int i = 0; i < m->modelIndicesArr.size(); i++)
+    {
+        auto indices = m->modelIndicesArr[i];
+        auto vertices = m->modelVerticesArr[i];
+        for (int k = 0; k < indices.size(); k++)
+        {
+            allVertices.push_back(vertices[indices[k]]);
+        }
+    }
+    std::filesystem::remove_all(tempDir);
+}
+
 
 /*
  *  Host/Join Match
@@ -692,6 +770,9 @@ void SupersonicMarioPlugin::HostGame(std::string arena)
     /* Cos we as windows want our baguettes the left way. */
     std::ranges::replace(arena, '/', '\\');
 #endif
+
+    loadMapModel(arena);
+
     const std::string gameMode = gameModes.GetSelected();
     std::string gameTags = getGameTags();
     // Available PlayerCounts are 2, 4, 6 and 8.

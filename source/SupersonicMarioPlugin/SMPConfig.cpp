@@ -185,10 +185,10 @@ void SMPConfig::parseBotDifficulties(simdjson::ondemand::document& doc, Superson
 /// <param name="maps">Map to save the parsed available maps to</param>
 void SMPConfig::parseAvailableMaps(simdjson::ondemand::document& doc, std::map<std::string, std::string>& maps)
 {
-    maps.clear();
-    for (simdjson::ondemand::field field : doc["Maps"].get_object()) {
-        maps.emplace(std::string_view(field.unescaped_key()), std::string_view(field.value()));
-    }
+    //maps.clear();
+    //for (simdjson::ondemand::field field : doc["Maps"].get_object()) {
+    //    maps.emplace(std::string_view(field.unescaped_key()), std::string_view(field.value()));
+    //}
 }
 
 
