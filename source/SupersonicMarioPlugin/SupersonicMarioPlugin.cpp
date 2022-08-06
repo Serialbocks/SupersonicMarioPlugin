@@ -843,7 +843,12 @@ void SupersonicMarioPlugin::JoinGame(const char* pswd)
         }
     }
 
-    Model* m = loadMapModel(currentJoinMap.string());
+    Model* m = nullptr;
+    if (joinCustomMap)
+    {
+        m = loadMapModel(currentJoinMap.string());
+    }
+
     sm64->LoadStaticSurfaces(m);
 
     TcpClient::getInstance().ConnectToServer(*joinIP, *sm64HostPort);
