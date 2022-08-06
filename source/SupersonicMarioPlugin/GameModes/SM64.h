@@ -137,8 +137,6 @@ private:
     void addColorIndexToPool(int colorIndex);
 
 public:
-    //Model* testMapModel;
-    //std::vector<Vertex> testMapModelVertices;
     SM64MarioInstance localMario;
     std::shared_ptr<GameWrapper> gameWrapper;
     Vector cameraLoc = Vector(0, 0, 0);
@@ -174,6 +172,7 @@ public:
     Model* dominusModel = nullptr;
     Model* fennecModel = nullptr;
     Model* mapModel = nullptr;
+    std::vector<Vertex> mapVertices;
 
 private:
     /* SM64 Members */

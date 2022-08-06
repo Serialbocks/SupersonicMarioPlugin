@@ -249,6 +249,8 @@ void SM64::OnGameLeft(bool deleteMario)
 		dominusModel->Disabled = true;
 	if (fennecModel != nullptr)
 		fennecModel->Disabled = true;
+	if (mapModel != nullptr)
+		mapModel->Disabled = true;
 }
 
 void SM64::moveCarToMario(std::string eventName)
@@ -541,7 +543,6 @@ void SM64::SendJoinCommandToClients()
 
 void SM64::LoadStaticSurfaces(Model* model)
 {
-	mapModel = model;
 	if (model == nullptr)
 	{
 		// Load default map surfaces
@@ -560,8 +561,25 @@ void SM64::LoadStaticSurfaces(Model* model)
 			}
 		}
 
+		if (mapModel != nullptr)
+		{
+			mapModel->Disabled = true;
+		}
+
 		int numSurfaces = vertices.size() / 3;
 		struct SM64Surface* staticSurfaces = (SM64Surface*)malloc(sizeof(struct SM64Surface) * numSurfaces);
+		mapVertices.clear();
+
+		for (int i = 0; i < vertices.size(); i++)
+		{
+			Vertex v;
+
+			v.pos.x = vertices[i].pos.z * -100;
+			v.pos.y = vertices[i].pos.x * -100;
+			v.pos.z = (vertices[i].pos.y * 100) - Z_MAP_OFFSET;
+
+			mapVertices.push_back(v);
+		}
 
 		for (int i = 0; i < vertices.size() / 3; i++)
 		{
@@ -703,10 +721,6 @@ void SM64::RenderPreferences()
 	MarioConfig* marioConfig = &MarioConfig::getInstance();
 
 	ImGui::TextUnformatted("Preferences");
-
-	ImGui::SliderFloat("CarX", &carLocation.X, -8000, 8000);
-	ImGui::SliderFloat("CarY", &carLocation.Y, -8000, 8000);
-	ImGui::SliderFloat("CarZ", &carLocation.Z, -8000, 8000);
 
 	ImGui::SliderInt("Mario Volume", &marioAudio->MasterVolume, 0, 100);
 	if (ImGui::IsItemDeactivatedAfterChange())
@@ -1356,6 +1370,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		octaneModel = new Model(assetsFolder + "Octane.fbx");
 		dominusModel = new Model(assetsFolder + "Dominus.fbx");
 		fennecModel = new Model(assetsFolder + "Fennec.fbx");
+		mapModel = new Model(10000000, nullptr, nullptr, 0, 0, 0, true);
 
 		marioModelPoolSema.acquire();
 		for (int i = 0; i < MARIO_MESH_POOL_SIZE; i++)
@@ -1626,9 +1641,15 @@ void SM64::OnRender(CanvasWrapper canvas)
 			ballModel->SetTranslation(ballLocation.X, ballLocation.Y, ballLocation.Z);
 			ballModel->Render(&camera);
 		}
-		if (mapModel != nullptr)
+
+		auto modelVertices = mapModel->GetVertices();
+		if (modelVertices != nullptr)
 		{
-			mapModel->Render(&camera);
+			for (int i = 0; i < mapVertices.size(); i++)
+			{
+				(*modelVertices)[i] = mapVertices[i];
+			}
+			mapModel->RenderUpdateVertices(mapVertices.size() / 3, &camera);
 		}
 	}
 

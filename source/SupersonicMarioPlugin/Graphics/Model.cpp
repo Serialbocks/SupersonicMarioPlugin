@@ -26,6 +26,8 @@ Model::Model(std::vector<std::string> meshPaths, bool inRenderAlways)
 		modelPath = meshPaths[i];
 		LoadModel();
 	}
+	backgroundDataLoaded = true;
+	Renderer::getInstance().AddModel(this);
 }
 
 Model::Model(size_t inMaxTriangles,
