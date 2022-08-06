@@ -41,6 +41,7 @@ extern "C" {
 #define MARIO_MESH_POOL_SIZE 10
 #define TEAM_COLOR_POOL_SIZE 4
 #define MAX_NUM_PLAYERS 8
+#define Z_MAP_OFFSET 1024
 
 #ifndef minV
 #define minV(a, b) ((a) <= (b) ? (a) : (b))
@@ -136,8 +137,8 @@ private:
     void addColorIndexToPool(int colorIndex);
 
 public:
-    Model* testMapModel;
-    std::vector<Vertex> testMapModelVertices;
+    //Model* testMapModel;
+    //std::vector<Vertex> testMapModelVertices;
     SM64MarioInstance localMario;
     std::shared_ptr<GameWrapper> gameWrapper;
     Vector cameraLoc = Vector(0, 0, 0);
