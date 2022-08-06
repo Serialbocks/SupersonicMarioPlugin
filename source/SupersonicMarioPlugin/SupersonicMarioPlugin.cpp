@@ -804,7 +804,6 @@ void SupersonicMarioPlugin::HostGame(std::string arena)
         gameWrapper->ExecuteUnrealCommand(command);
     }, 0.1f);
 
-    std::vector<Vertex> vertices;
     Model* m = loadMapModel(arena);
     sm64->LoadStaticSurfaces(m);
 
@@ -843,6 +842,9 @@ void SupersonicMarioPlugin::JoinGame(const char* pswd)
             PushError("Error Loading Map\ncheck the console for more details(F6)");
         }
     }
+
+    Model* m = loadMapModel(currentJoinMap.string());
+    sm64->LoadStaticSurfaces(m);
 
     TcpClient::getInstance().ConnectToServer(*joinIP, *sm64HostPort);
     gameWrapper->ExecuteUnrealCommand(fmt::format("start {:s}:{:d}/?Lan?Password={:s}", *joinIP, *joinPort, pswd));
