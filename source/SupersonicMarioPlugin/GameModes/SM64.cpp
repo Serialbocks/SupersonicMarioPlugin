@@ -539,54 +539,34 @@ void SM64::SendJoinCommandToClients()
 	matchSettingsSema.release();
 }
 
-void SM64::LoadStaticSurfaces(std::vector<Vertex>* vertices)
+void SM64::LoadStaticSurfaces(Model* model)
 {
-	if (vertices == nullptr
-		|| vertices->size() % 3 != 0)
+	mapModel = model;
+	if (model == nullptr)
 	{
 		// Load default map surfaces
 		sm64_static_surfaces_load(surfaces, surfaces_count);
 	}
 	else
 	{
-		int numSurfaces = vertices->size() / 3;
+		std::vector<Vertex> vertices;
+		for (int i = 0; i < model->modelIndicesArr.size(); i++)
+		{
+			auto indices = model->modelIndicesArr[i];
+			auto modelVertices = model->modelVerticesArr[i];
+			for (int k = 0; k < indices.size(); k++)
+			{
+				vertices.push_back(modelVertices[indices[k]]);
+			}
+		}
+
+		int numSurfaces = vertices.size() / 3;
 		struct SM64Surface* staticSurfaces = (SM64Surface*)malloc(sizeof(struct SM64Surface) * numSurfaces);
 
-		//testMapModel = new Model(numSurfaces, texture, nullptr, 4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
-		//	SM64_TEXTURE_WIDTH,
-		//	SM64_TEXTURE_HEIGHT,
-		//	true);
-		//auto modelVertices = testMapModel->GetVertices();
-		//testMapModelVertices.clear();
-		//static volatile int vertConfig = 1;
-		//
-		//for (int i = 0; i < vertices->size(); i++)
-		//{
-		//	Vertex v;
-		//	else if (vertConfig == 1)
-		//	{
-		//		v.pos.x = (*vertices)[i].pos.z * -100;
-		//		v.pos.y = (*vertices)[i].pos.x * -100;
-		//		v.pos.z = ((*vertices)[i].pos.y * 100) - Z_MAP_OFFSET;
-		//	}
-		//
-		//	v.color.w = 0.3f;
-		//	v.color.x = (*vertices)[i].normal.x;
-		//	v.color.y = (*vertices)[i].normal.y;
-		//	v.color.z = (*vertices)[i].normal.z;
-		//	v.texCoord.x = 0.0f;
-		//	v.texCoord.y = 0.0f;
-		//	v.normal.x = (*vertices)[i].normal.x;
-		//	v.normal.y = (*vertices)[i].normal.y;
-		//	v.normal.z = (*vertices)[i].normal.z;
-		//	testMapModelVertices.push_back(v);
-		//}
-
-
-		for (int i = 0; i < vertices->size() / 3; i++)
+		for (int i = 0; i < vertices.size() / 3; i++)
 		{
 			struct SM64Surface* surface = &staticSurfaces[i];
-			Vertex* surfaceVertices = &((*vertices)[i * 3]);
+			Vertex* surfaceVertices = &vertices[i * 3];
 			surface->type = SURFACE_DEFAULT;
 			surface->force = 0;
 			surface->terrain = TERRAIN_GRASS;
@@ -1645,19 +1625,11 @@ void SM64::OnRender(CanvasWrapper canvas)
 			ballModel->SetRotationQuat(quat.X, quat.Y, quat.Z, quat.W);
 			ballModel->SetTranslation(ballLocation.X, ballLocation.Y, ballLocation.Z);
 			ballModel->Render(&camera);
-
-			//auto modelVertices = testMapModel->GetVertices();
-			//if (modelVertices != nullptr)
-			//{
-			//	for (int i = 0; i < modelVertices->size(); i++)
-			//	{
-			//		(*modelVertices)[i] = testMapModelVertices[i];
-			//	}
-			//	testMapModel->RenderUpdateVertices(modelVertices->size() / 3, &camera);
-			//}
-
 		}
-
+		if (mapModel != nullptr)
+		{
+			mapModel->Render(&camera);
+		}
 	}
 
 

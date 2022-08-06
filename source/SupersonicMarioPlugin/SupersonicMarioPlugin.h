@@ -2,6 +2,7 @@
 #include "Version.h"
 #include "Networking/Networking.h"
 #include "Modules/Update.h"
+#include "Graphics/Model.h"
 
 #include "Modules/SupersonicMarioPluginModule.h"
 
@@ -90,7 +91,7 @@ public:
     void ForceJoin();
 
 private:
-    bool loadMapModel(const std::string& arena, std::vector<Vertex>* vertices);
+    Model* loadMapModel(const std::string& arena);
     std::string getGameTags() const;
     void savePreset(const std::string& presetName);
     void loadPreset(const std::filesystem::path& presetPath);

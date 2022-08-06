@@ -116,7 +116,7 @@ public:
     void MarioMessageReceived(char* buf, int len);
     void SendJoinCommandToClients();
 
-    void LoadStaticSurfaces(std::vector<Vertex>* vertices = nullptr);
+    void LoadStaticSurfaces(Model* model = nullptr);
 
 private:
     void onCharacterSpawn(ServerWrapper server);
@@ -173,6 +173,7 @@ public:
     Model* octaneModel = nullptr;
     Model* dominusModel = nullptr;
     Model* fennecModel = nullptr;
+    Model* mapModel = nullptr;
 
 private:
     /* SM64 Members */

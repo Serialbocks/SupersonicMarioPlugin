@@ -650,7 +650,7 @@ std::vector<std::string> SupersonicMarioPlugin::complete(const std::vector<std::
     return suggestions;
 }
 
-bool SupersonicMarioPlugin::loadMapModel(const std::string& inArena, std::vector<Vertex>* vertices)
+Model* SupersonicMarioPlugin::loadMapModel(const std::string& inArena)
 {
     std::string arena = "";
     if (file_exists(inArena))
@@ -665,7 +665,7 @@ bool SupersonicMarioPlugin::loadMapModel(const std::string& inArena, std::vector
         if (!file_exists(arena))
         {
             BM_ERROR_LOG("Could not find map file for extraction.");
-            return false;
+            return nullptr;
         }
     }
     std::filesystem::path arenaPath(arena);
@@ -701,7 +701,7 @@ bool SupersonicMarioPlugin::loadMapModel(const std::string& inArena, std::vector
     if (!Utils::FileExists(outDir))
     {
         std::filesystem::remove_all(tempDir);
-        return false;
+        return nullptr;
     }
 
     std::vector<std::string> gltfPaths;
@@ -713,18 +713,10 @@ bool SupersonicMarioPlugin::loadMapModel(const std::string& inArena, std::vector
         }
     }
 
-    Model *m = new Model(gltfPaths, true);
-    for (int i = 0; i < m->modelIndicesArr.size(); i++)
-    {
-        auto indices = m->modelIndicesArr[i];
-        auto modelVertices = m->modelVerticesArr[i];
-        for (int k = 0; k < indices.size(); k++)
-        {
-            vertices->push_back(modelVertices[indices[k]]);
-        }
-    }
+    Model *m = new Model(gltfPaths);
+
     std::filesystem::remove_all(tempDir);
-    return true;
+    return m;
 }
 
 
@@ -813,14 +805,9 @@ void SupersonicMarioPlugin::HostGame(std::string arena)
     }, 0.1f);
 
     std::vector<Vertex> vertices;
-    if (loadMapModel(arena, &vertices))
-    {
-        sm64->LoadStaticSurfaces(&vertices);
-    }
-    else
-    {
-        sm64->LoadStaticSurfaces();
-    }
+    Model* m = loadMapModel(arena);
+    sm64->LoadStaticSurfaces(m);
+
     TcpServer::getInstance().StartServer(*sm64HostPort);
     sm64->Activate(true);
 }
