@@ -1645,15 +1645,16 @@ void SM64::OnRender(CanvasWrapper canvas)
 		auto modelVertices = mapModel->GetVertices();
 		if (modelVertices != nullptr)
 		{
-			for (int i = 0; i < mapVertices.size(); i++)
+			for (int i = 0; i < mapVertices.size() / 3; i++)
 			{
-				(*modelVertices)[i] = mapVertices[i];
+				int index = i * 3;
+				(*modelVertices)[index + 2] = mapVertices[index ];
+				(*modelVertices)[index + 1] = mapVertices[index + 1];
+				(*modelVertices)[index] = mapVertices[index + 2];
 			}
 			mapModel->RenderUpdateVertices(mapVertices.size() / 3, &camera);
 		}
 	}
-
-
 
 }
 

@@ -105,7 +105,7 @@ void Renderer::InitBuffers()
 	D3D11_RASTERIZER_DESC rsDesc;
 	ZeroMemory(&rsDesc, sizeof(D3D11_RASTERIZER_DESC));
 	rsDesc.FillMode = D3D11_FILL_SOLID;
-	rsDesc.CullMode = D3D11_CULL_NONE;
+	rsDesc.CullMode = D3D11_CULL_FRONT;
 	rsDesc.FrontCounterClockwise = FALSE;
 	rsDesc.DepthClipEnable = TRUE;
 
