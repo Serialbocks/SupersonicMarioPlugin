@@ -9,7 +9,7 @@
 #define RL_YAW_RANGE 64692
 #define CAR_OFFSET_Z 45.0f
 #define SM64_TEXTURE_SIZE (4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT)
-#define WINGCAP_TRIANGLE_INDEX 752
+#define WINGCAP_VERTEX_INDEX 750
 #define ATTACK_BOOST_DAMAGE 0.20f
 #define GROUND_POUND_BALL_RADIUS 200.0f
 #define GROUND_POUND_PINCH_VELOCITY 2708.0f
@@ -1294,34 +1294,27 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 		std::vector<Vertex>* vertices = marioInstance->model->GetVertices();
 		if (vertices != nullptr)
 		{
-			for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed && i < WINGCAP_TRIANGLE_INDEX; i++)
+			for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed * 3; i++)
 			{
-				auto position = &marioInstance->marioGeometry.position[i * 9];
-				auto color = &marioInstance->marioGeometry.color[i * 9];
-				auto uv = &marioInstance->marioGeometry.uv[i * 6];
-				auto normal = &marioInstance->marioGeometry.normal[i * 9];
+				auto position = &marioInstance->marioGeometry.position[i * 3];
+				auto color = &marioInstance->marioGeometry.color[i * 3];
+				auto uv = &marioInstance->marioGeometry.uv[i * 2];
+				auto normal = &marioInstance->marioGeometry.normal[i * 3];
 
-				auto isWingcapIndex = i >= (WINGCAP_TRIANGLE_INDEX);
-				for (auto k = 0; k < 3; k++)
-				{
-					auto currentVertex = &(*vertices)[(i * 3) + k];
-					auto vertIndexModifier = k * 3;
-					auto uvIndexModifier = k * 2;
-					// Unreal engine swaps x and y coords for 3d model
-					currentVertex->pos.x = position[0 + vertIndexModifier];
-					currentVertex->pos.y = position[2 + vertIndexModifier];
-					currentVertex->pos.z = position[1 + vertIndexModifier];
-					currentVertex->color.x = color[0 + vertIndexModifier];
-					currentVertex->color.y = color[1 + vertIndexModifier];
-					currentVertex->color.z = color[2 + vertIndexModifier];
-					currentVertex->color.w = isWingcapIndex ? 0.0f : 1.0f;
-					currentVertex->texCoord.x = uv[0 + uvIndexModifier];
-					currentVertex->texCoord.y = uv[1 + uvIndexModifier];
-					currentVertex->normal.x = normal[0 + vertIndexModifier];
-					currentVertex->normal.y = normal[2 + vertIndexModifier];
-					currentVertex->normal.z = normal[1 + vertIndexModifier];
-				}
-			
+				auto currentVertex = &(*vertices)[i];
+				// Unreal engine swaps x and y coords for 3d model
+				currentVertex->pos.x = position[0];
+				currentVertex->pos.y = position[2];
+				currentVertex->pos.z = position[1];
+				currentVertex->color.x = color[0];
+				currentVertex->color.y = color[1];
+				currentVertex->color.z = color[2];
+				currentVertex->color.w = i >= (WINGCAP_VERTEX_INDEX * 3) ? 0.0f : 1.0f;
+				currentVertex->texCoord.x = uv[0];
+				currentVertex->texCoord.y = uv[1];
+				currentVertex->normal.x = normal[0];
+				currentVertex->normal.y = normal[2];
+				currentVertex->normal.z = normal[1];
 			}
 
 			if (marioInstance->colorIndex >= 0)
@@ -1334,9 +1327,6 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 					self->teamColors[trueIndex + 4],
 					self->teamColors[trueIndex + 5]);
 			}
-
-			static volatile int numTrianglesDiff = 0;
-			marioInstance->marioGeometry.numTrianglesUsed -= numTrianglesDiff;
 
 			marioInstance->model->RenderUpdateVertices(marioInstance->marioGeometry.numTrianglesUsed, &camera);
 		}
