@@ -1289,19 +1289,21 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 
 	marioInstance->sema.acquire();
 
+	static volatile int wingcapTriangleIndex = 752;
 	if (!marioInstance->isCar && marioInstance->model != nullptr)
 	{
 		std::vector<Vertex>* vertices = marioInstance->model->GetVertices();
+		std::vector<Vertex> wingcapVertices;
 		if (vertices != nullptr)
 		{
-			for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed && i < WINGCAP_TRIANGLE_INDEX; i++)
+			for (auto i = 0; i < marioInstance->marioGeometry.numTrianglesUsed; i++)
 			{
 				auto position = &marioInstance->marioGeometry.position[i * 9];
 				auto color = &marioInstance->marioGeometry.color[i * 9];
 				auto uv = &marioInstance->marioGeometry.uv[i * 6];
 				auto normal = &marioInstance->marioGeometry.normal[i * 9];
 
-				auto isWingcapIndex = i >= (WINGCAP_TRIANGLE_INDEX);
+				auto isWingcapIndex = i >= (wingcapTriangleIndex);
 				for (auto k = 0; k < 3; k++)
 				{
 					auto currentVertex = &(*vertices)[(i * 3) + k];
@@ -1320,9 +1322,36 @@ inline void renderMario(SM64MarioInstance* marioInstance, CameraWrapper camera)
 					currentVertex->normal.x = normal[0 + vertIndexModifier];
 					currentVertex->normal.y = normal[2 + vertIndexModifier];
 					currentVertex->normal.z = normal[1 + vertIndexModifier];
+
+					if (isWingcapIndex)
+					{
+						wingcapVertices.push_back(*currentVertex);
+					}
 				}
 			
 			}
+
+			int wingcapTriangles = wingcapVertices.size() / 3;
+			static volatile float posIncrease = 10.0f;
+			for (int i = 0; i < wingcapTriangles; i++)
+			{
+				int vertexIndex = (i * 3) + (marioInstance->marioGeometry.numTrianglesUsed * 3);
+				
+				(*vertices)[vertexIndex] = wingcapVertices[i + 2];
+				(*vertices)[vertexIndex].pos.x += posIncrease;
+				(*vertices)[vertexIndex].pos.y += posIncrease;
+				(*vertices)[vertexIndex].pos.z += posIncrease;
+				(*vertices)[vertexIndex + 1] = wingcapVertices[i + 1];
+				(*vertices)[vertexIndex + 1].pos.x += posIncrease;
+				(*vertices)[vertexIndex + 1].pos.y += posIncrease;
+				(*vertices)[vertexIndex + 1].pos.z += posIncrease;
+				(*vertices)[vertexIndex + 2] = wingcapVertices[i];
+				(*vertices)[vertexIndex + 2].pos.x += posIncrease;
+				(*vertices)[vertexIndex + 2].pos.y += posIncrease;
+				(*vertices)[vertexIndex + 2].pos.z += posIncrease;
+			}
+
+			marioInstance->marioGeometry.numTrianglesUsed += wingcapTriangles;
 
 			if (marioInstance->colorIndex >= 0)
 			{
