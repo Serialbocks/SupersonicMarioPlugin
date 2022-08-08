@@ -36,7 +36,8 @@ Model::Model(size_t inMaxTriangles,
 	size_t inTexSize,
 	uint16_t inTexWidth,
 	uint16_t inTexHeight,
-	bool inRenderAlways)
+	bool inRenderAlways,
+	bool noCull)
 {
 	maxTriangles = inMaxTriangles;
 	texture = inTexture;
@@ -45,6 +46,7 @@ Model::Model(size_t inMaxTriangles,
 	texHeight = inTexHeight;
 	renderAlways = inRenderAlways;
 	backgroundDataLoaded = true;
+	NoCull = noCull;
 	Renderer::getInstance().AddModel(this);
 }
 

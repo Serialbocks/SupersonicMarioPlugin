@@ -40,7 +40,8 @@ public:
 		size_t inTexSize,
 		uint16_t inTexWidth,
 		uint16_t inTexHeight,
-		bool inRenderAlways = false);
+		bool inRenderAlways = false,
+		bool noCull = false);
 	bool NeedsInitialized();
 	bool ShouldRender();
 	void InitMeshes(Microsoft::WRL::ComPtr<ID3D11Device> device, int windowWidth, int windowHeight);
@@ -75,6 +76,7 @@ public:
 	bool backgroundDataLoaded = false;
 	std::vector<Frame> Frames;
 	bool Disabled = false;
+	bool NoCull = false;
 private:
 	bool meshesInitialized = false;
 	std::string modelPath;
