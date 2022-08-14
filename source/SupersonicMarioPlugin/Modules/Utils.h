@@ -98,4 +98,28 @@ public:
 		ltrim(s);
 		rtrim(s);
 	}
+
+	static inline uint8_t* readFileAlloc(std::string path, size_t* fileLength)
+	{
+		FILE* f;
+		fopen_s(&f, path.c_str(), "rb");
+
+		if (!f) return NULL;
+
+		fseek(f, 0, SEEK_END);
+		size_t length = (size_t)ftell(f);
+		rewind(f);
+		uint8_t* buffer = (uint8_t*)malloc(length + 1);
+		if (buffer != NULL)
+		{
+			fread(buffer, 1, length, f);
+			buffer[length] = 0;
+		}
+
+		fclose(f);
+
+		if (fileLength) *fileLength = length;
+
+		return (uint8_t*)buffer;
+	}
 };

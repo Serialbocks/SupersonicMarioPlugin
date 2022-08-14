@@ -650,6 +650,17 @@ std::vector<std::string> SupersonicMarioPlugin::complete(const std::vector<std::
     return suggestions;
 }
 
+typedef struct supported_maps_type_t
+{
+    XXH128_hash_t hash;
+    std::string fbx;
+} supported_maps_type;
+
+const supported_maps_type supported_maps[] = {
+    { { 0x5073cdbb305dc3e5, 0x388fab8b69718b78 }, "LethSM64.fbx" }
+};
+const uint32_t supported_maps_count = sizeof(supported_maps) / sizeof(supported_maps[0]);
+
 Model* SupersonicMarioPlugin::loadMapModel(const std::string& inArena)
 {
     std::string arena = "";
@@ -671,52 +682,32 @@ Model* SupersonicMarioPlugin::loadMapModel(const std::string& inArena)
     std::filesystem::path arenaPath(arena);
 
     std::string bakkesmodFolderPath = Utils::GetBakkesmodFolderPath();
-    std::string assetsPath = bakkesmodFolderPath + "data\\assets";
-    std::string umodelPath = assetsPath + "\\umodel_64.exe";
-    std::string tempDir = std::filesystem::temp_directory_path().string() + "supersonic-mario-mapdata";
+    std::string assetsPath = bakkesmodFolderPath + "data\\assets\\";
 
-    if (!Utils::FileExists(tempDir))
+    size_t fileLength;
+    uint8_t* mapData = Utils::readFileAlloc(arena, &fileLength);
+    const auto mapHash = XXH3_128bits(mapData, fileLength);
+    free(mapData);
+
+    bool mapIndex = -1;
+    for (int i = 0; i < supported_maps_count; i++)
     {
-        std::filesystem::create_directories(tempDir);
-    }
-
-    std::ostringstream pathWithArgsStm;
-    pathWithArgsStm << umodelPath << " -path=\"" << arenaPath.parent_path().string() << "\" -export " << arenaPath.filename().string();
-    pathWithArgsStm << " -noanim -notex -gltf -out=\"" << tempDir << "\"";
-    std::string pathWithArgs = pathWithArgsStm.str();
-
-    STARTUPINFOA si;
-    PROCESS_INFORMATION pi;
-    if (Utils::FileExists(umodelPath))
-    {
-        ZeroMemory(&si, sizeof(si));
-        si.cb = sizeof(si);
-        ZeroMemory(&pi, sizeof(pi));
-        CreateProcessA(NULL, (LPSTR)pathWithArgs.c_str(), NULL, NULL,
-            FALSE, CREATE_NO_WINDOW, NULL, assetsPath.c_str(), &si, &pi);
-        WaitForSingleObject(pi.hProcess, INFINITE);
-    }
-
-    std::string outDir = tempDir + "\\" + arenaPath.stem().string() + "\\StaticMesh3";
-    if (!Utils::FileExists(outDir))
-    {
-        std::filesystem::remove_all(tempDir);
-        return nullptr;
-    }
-
-    std::vector<std::string> gltfPaths;
-    for (auto& p : std::filesystem::recursive_directory_iterator(outDir))
-    {
-        if (p.path().extension() == ".gltf")
+        if (XXH128_isEqual(mapHash, supported_maps[i].hash))
         {
-            gltfPaths.push_back(p.path().string());
+            mapIndex = i;
+            break;
         }
     }
 
-    Model *m = new Model(gltfPaths);
+    if (mapIndex < 0)
+    {
+        return nullptr; // map not found
+    }
 
-    std::filesystem::remove_all(tempDir);
-    return m;
+    std::string fbxPath = assetsPath + supported_maps[mapIndex].fbx;
+    std::vector<std::string> fbxList;
+    fbxList.push_back(fbxPath);
+    return new Model(fbxList);
 }
 
 

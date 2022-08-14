@@ -41,7 +41,6 @@ extern "C" {
 #define MARIO_MESH_POOL_SIZE 10
 #define TEAM_COLOR_POOL_SIZE 4
 #define MAX_NUM_PLAYERS 8
-#define Z_MAP_OFFSET 1024
 
 #ifndef minV
 #define minV(a, b) ((a) <= (b) ? (a) : (b))
@@ -130,7 +129,6 @@ private:
     void onGoalScored(std::string eventName);
     void menuPushed(ServerWrapper server);
     void menuPopped(ServerWrapper server);
-    uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
     Model* getModelFromPool();
     void addModelToPool(Model*);
     int getColorIndexFromPool(int teamIndex);

@@ -574,9 +574,13 @@ void SM64::LoadStaticSurfaces(Model* model)
 		{
 			Vertex v;
 
-			v.pos.x = vertices[i].pos.z * -100;
-			v.pos.y = vertices[i].pos.x * -100;
-			v.pos.z = (vertices[i].pos.y * 100) - Z_MAP_OFFSET;
+			v.pos.x = vertices[i].pos.x;
+			v.pos.y = -vertices[i].pos.y;
+			v.pos.z = -vertices[i].pos.z;
+
+			v.normal.x = vertices[i].pos.x;
+			v.normal.y = -vertices[i].pos.y;
+			v.normal.z = -vertices[i].pos.z;
 
 			mapVertices.push_back(v);
 		}
@@ -589,17 +593,17 @@ void SM64::LoadStaticSurfaces(Model* model)
 			surface->force = 0;
 			surface->terrain = TERRAIN_GRASS;
 
-			surface->vertices[2][0] = (int16_t)(surfaceVertices[0].pos.z * -100);
-			surface->vertices[2][1] = (int16_t)(surfaceVertices[0].pos.y * 100) - Z_MAP_OFFSET;
-			surface->vertices[2][2] = (int16_t)(surfaceVertices[0].pos.x * -100);
+			surface->vertices[2][0] = (int16_t)surfaceVertices[0].pos.x;
+			surface->vertices[2][1] = -(int16_t)surfaceVertices[0].pos.z;
+			surface->vertices[2][2] = -(int16_t)surfaceVertices[0].pos.y;
 
-			surface->vertices[1][0] = (int16_t)(surfaceVertices[1].pos.z * -100);
-			surface->vertices[1][1] = (int16_t)(surfaceVertices[1].pos.y * 100) - Z_MAP_OFFSET;
-			surface->vertices[1][2] = (int16_t)(surfaceVertices[1].pos.x * -100);
+			surface->vertices[1][0] = (int16_t)surfaceVertices[1].pos.x;
+			surface->vertices[1][1] = -(int16_t)surfaceVertices[1].pos.z;
+			surface->vertices[1][2] = -(int16_t)surfaceVertices[1].pos.y;
 
-			surface->vertices[0][0] = (int16_t)(surfaceVertices[2].pos.z * -100);
-			surface->vertices[0][1] = (int16_t)(surfaceVertices[2].pos.y * 100) - Z_MAP_OFFSET;
-			surface->vertices[0][2] = (int16_t)(surfaceVertices[2].pos.x * -100);
+			surface->vertices[0][0] = (int16_t)surfaceVertices[2].pos.x;
+			surface->vertices[0][1] = -(int16_t)surfaceVertices[2].pos.z;
+			surface->vertices[0][2] = -(int16_t)surfaceVertices[2].pos.y;
 		}
 		sm64_static_surfaces_load(staticSurfaces, numSurfaces);
 
@@ -806,7 +810,7 @@ void SM64::InitSM64()
 {
 	size_t romSize;
 	std::string romPath = MarioConfig::getInstance().GetRomPath();
-	uint8_t* rom = utilsReadFileAlloc(romPath, &romSize);
+	uint8_t* rom = Utils::readFileAlloc(romPath, &romSize);
 	if (rom == NULL)
 	{
 		return;
@@ -1724,28 +1728,6 @@ void SM64::addColorIndexToPool(int colorIndex)
 	colorPool->insert(colorPool->begin(), colorIndex);
 }
 
-uint8_t* SM64::utilsReadFileAlloc(std::string path, size_t* fileLength)
-{
-	FILE* f;
-	fopen_s(&f, path.c_str(), "rb");
 
-	if (!f) return NULL;
-
-	fseek(f, 0, SEEK_END);
-	size_t length = (size_t)ftell(f);
-	rewind(f);
-	uint8_t* buffer = (uint8_t*)malloc(length + 1);
-	if (buffer != NULL)
-	{
-		fread(buffer, 1, length, f);
-		buffer[length] = 0;
-	}
-
-	fclose(f);
-
-	if (fileLength) *fileLength = length;
-
-	return (uint8_t*)buffer;
-}
 
 

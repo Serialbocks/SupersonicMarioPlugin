@@ -3,6 +3,7 @@
 #include "Networking/Networking.h"
 #include "Modules/Update.h"
 #include "Graphics/Model.h"
+#include "xxHash/xxhash.h"
 
 #include "Modules/SupersonicMarioPluginModule.h"
 
