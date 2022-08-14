@@ -218,9 +218,6 @@ namespace SupersonicMarioInstaller
             File.WriteAllBytes(Path.Combine(assetsPath, "rom-hash.sha1"), Properties.Resources.rom_hash);
             File.WriteAllBytes(Path.Combine(assetsPath, "sm64tools.LICENSE"), Properties.Resources.sm64tools_LICENSE);
             File.WriteAllBytes(Path.Combine(assetsPath, "transparent.png"), Properties.Resources.transparent);
-            File.WriteAllBytes(Path.Combine(assetsPath, "umodel_64.exe"), Properties.Resources.umodel_64);
-            File.WriteAllBytes(Path.Combine(assetsPath, "umodel.LICENSE"), Properties.Resources.umodel_LICENSE);
-            File.WriteAllBytes(Path.Combine(assetsPath, "SDL2_64.dll"), Properties.Resources.SDL2_64_dll);
 
             File.WriteAllBytes(Path.Combine(assetsPath, "Rocketball.fbx"), Properties.Resources.Rocketball);
             File.WriteAllBytes(Path.Combine(assetsPath, "Rocketball.LICENSE"), Properties.Resources.Rocketball_LICENSE);

@@ -190,9 +190,6 @@
   <data name="rom_hash" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\rom-hash.sha1;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
-  <data name="SDL2_64-dll" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\SDL2_64.dll;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="sm64" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\sm64.lib;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
@@ -204,11 +201,5 @@
   </data>
   <data name="transparent" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\transparent;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="umodel-LICENSE" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\umodel.LICENSE;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="umodel_64" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\umodel_64.exe;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
 </root>

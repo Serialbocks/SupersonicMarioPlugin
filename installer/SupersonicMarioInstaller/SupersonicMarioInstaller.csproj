@@ -239,7 +239,6 @@
     <None Include="Resources\rom-hash.sha1" />
     <None Include="Resources\sm64.lib" />
     <None Include="Resources\sm64tools.LICENSE" />
-    <None Include="Resources\umodel.LICENSE" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -270,12 +269,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\libssl-3-x64.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\umodel_64.exe" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\SDL2_64.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\Fody.6.5.5\build\Fody.targets" Condition="Exists('..\packages\Fody.6.5.5\build\Fody.targets')" />

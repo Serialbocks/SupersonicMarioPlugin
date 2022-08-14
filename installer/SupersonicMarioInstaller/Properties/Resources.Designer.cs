@@ -19,7 +19,7 @@ namespace SupersonicMarioInstaller.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -303,16 +303,6 @@ namespace SupersonicMarioInstaller.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
-        internal static byte[] SDL2_64_dll {
-            get {
-                object obj = ResourceManager.GetObject("SDL2_64-dll", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
         internal static byte[] sm64 {
             get {
                 object obj = ResourceManager.GetObject("sm64", resourceCulture);
@@ -346,26 +336,6 @@ namespace SupersonicMarioInstaller.Properties {
         internal static byte[] transparent {
             get {
                 object obj = ResourceManager.GetObject("transparent", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] umodel_64 {
-            get {
-                object obj = ResourceManager.GetObject("umodel_64", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] umodel_LICENSE {
-            get {
-                object obj = ResourceManager.GetObject("umodel-LICENSE", resourceCulture);
                 return ((byte[])(obj));
             }
         }
