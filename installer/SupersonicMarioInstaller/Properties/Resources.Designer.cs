@@ -173,6 +173,16 @@ namespace SupersonicMarioInstaller.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] LethSM64_fbx {
+            get {
+                object obj = ResourceManager.GetObject("LethSM64-fbx", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] libcrypto {
             get {
                 object obj = ResourceManager.GetObject("libcrypto", resourceCulture);
