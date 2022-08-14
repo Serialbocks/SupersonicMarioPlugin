@@ -226,6 +226,7 @@
     <None Include="Resources\Dominus.fbx" />
     <None Include="Resources\Fennec.fbx" />
     <None Include="Resources\Fennec.LICENSE" />
+    <None Include="Resources\LethSM64.fbx" />
     <None Include="Resources\libcrypto.lib" />
     <None Include="Resources\libsoxr.lib" />
     <None Include="Resources\libsoxr.LICENSE" />
