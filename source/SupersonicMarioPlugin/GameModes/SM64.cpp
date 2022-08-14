@@ -606,7 +606,7 @@ void SM64::LoadStaticSurfaces(Model* model)
 			surface->vertices[0][2] = -(int16_t)surfaceVertices[2].pos.y;
 		}
 		sm64_static_surfaces_load(staticSurfaces, numSurfaces);
-
+		mapInitialized = false;
 	}
 }
 
@@ -1647,18 +1647,31 @@ void SM64::OnRender(CanvasWrapper canvas)
 			ballModel->Render(&camera);
 		}
 
-		auto modelVertices = mapModel->GetVertices();
-		if (modelVertices != nullptr)
+		if (mapModel != nullptr)
 		{
-			for (int i = 0; i < mapVertices.size() / 3; i++)
+			auto modelVertices = mapModel->GetVertices();
+			if (modelVertices != nullptr)
 			{
-				int index = i * 3;
-				(*modelVertices)[index + 2] = mapVertices[index ];
-				(*modelVertices)[index + 1] = mapVertices[index + 1];
-				(*modelVertices)[index] = mapVertices[index + 2];
+				if (mapInitialized)
+				{
+					mapModel->Render(&camera);
+				}
+				else
+				{
+					for (int i = 0; i < mapVertices.size() / 3; i++)
+					{
+						int index = i * 3;
+						(*modelVertices)[index + 2] = mapVertices[index];
+						(*modelVertices)[index + 1] = mapVertices[index + 1];
+						(*modelVertices)[index] = mapVertices[index + 2];
+					}
+					mapModel->RenderUpdateVertices(mapVertices.size() / 3, &camera);
+					mapInitialized = true;
+				}
+
 			}
-			mapModel->RenderUpdateVertices(mapVertices.size() / 3, &camera);
 		}
+
 	}
 
 }

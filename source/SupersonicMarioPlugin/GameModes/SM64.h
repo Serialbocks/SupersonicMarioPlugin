@@ -171,6 +171,7 @@ public:
     Model* fennecModel = nullptr;
     Model* mapModel = nullptr;
     std::vector<Vertex> mapVertices;
+    bool mapInitialized = false;
 
 private:
     /* SM64 Members */
