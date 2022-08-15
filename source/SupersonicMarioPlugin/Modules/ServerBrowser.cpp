@@ -112,6 +112,14 @@ std::vector<const char*> ServerBrowser::GetMatchNames()
 	return matchNames;
 }
 
+ServerBrowser::Match* ServerBrowser::GetMatchInfo(int matchIndex)
+{
+	sema.acquire();
+	auto match = matches[matchIndex];
+	sema.release();
+	return match;
+}
+
 bool ServerBrowser::IsLoadingMatches()
 {
 	bool isLoading = false;

@@ -13,6 +13,7 @@
 #define IM_COL32_WARNING      (ImColor(255,  60,   0,  80))
 #define IM_COL32_ERROR_BANNER (ImColor(211,  47,  47, 255))
 
+static char pswdBuf[64] = "";
 
 /*
  *  Plugin window overrides
@@ -487,19 +488,6 @@ void SupersonicMarioPlugin::renderMultiplayerTabHost()
     ImGui::EndChild();
 }
 
-static const char* listItems[10] = 
-{
-    "Hello test",
-    "A second item",
-    "A third one too",
-    "Hello test",
-    "A second item",
-    "A third one too",
-    "Hello test",
-    "A second item",
-    "A third one too",
-};
-
 void SupersonicMarioPlugin::renderMultiplayerTabServerBrowser()
 {
     const ImVec2 serverBrowserTabSize = { -ImGui::GetFrameWidthWithSpacing() * 6,
@@ -538,8 +526,6 @@ void SupersonicMarioPlugin::renderMultiplayerTabServerBrowser()
             ServerBrowser::getInstance().GetMatches();
         }
 
-
-
         bool joinDisabled = currentMatchIndex < 0 || ServerBrowser::getInstance().IsLoadingMatches();
         if (joinDisabled)
         {
@@ -548,7 +534,13 @@ void SupersonicMarioPlugin::renderMultiplayerTabServerBrowser()
         }
         if (ImGui::Button("Join Game"))
         {
-
+            auto match = ServerBrowser::getInstance().GetMatchInfo(currentMatchIndex);
+            *joinIP = match->ipAddress;
+            *joinPort = match->port;
+            *sm64JoinPort = match->sm64Port;
+            Execute([this](GameWrapper*) {
+                JoinGame(pswdBuf);
+            });
         }
         if (joinDisabled)
         {
@@ -1107,7 +1099,6 @@ void SupersonicMarioPlugin::renderMultiplayerTabJoin()
             ImGui::InputScalar("##sm64_port_join", ImGuiDataType_U16, sm64JoinPort.get());
         }
         ImGui::TextUnformatted(" Password: (optional)");
-        static char pswdBuf[64] = "";
         ImGui::InputText("##pswd_join", pswdBuf, 64, ImGuiInputTextFlags_Password);
         ImGui::Separator();
 

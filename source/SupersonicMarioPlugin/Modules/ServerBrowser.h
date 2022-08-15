@@ -32,6 +32,7 @@ public:
 	std::vector<const char*> GetMatchNames();
 	bool IsLoadingMatches();
 	bool HasErrorLoadingMatches();
+	Match* GetMatchInfo(int matchIndex);
 
 private:
 	ServerBrowser();
