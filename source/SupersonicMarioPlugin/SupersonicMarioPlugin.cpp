@@ -657,7 +657,10 @@ typedef struct supported_maps_type_t
 } supported_maps_type;
 
 const supported_maps_type supported_maps[] = {
-    { { 0x5073cdbb305dc3e5, 0x388fab8b69718b78 }, "LethSM64.fbx" }
+    { { 0x5073cdbb305dc3e5, 0x388fab8b69718b78 }, "LethSM64.fbx" },
+    //{ { 0xe9708ff5ad55b6e1, 0x7165ef3aff368c3 }, "LethBlockFort.fbx" },
+    //{ { 17947140482627331743, 11142468266187614088 }, "LethParkourEgypt.fbx" },
+    //{ { 0xfd9d4ae1ff8facd5, 0xb38fe29c8455095f }, "LethFallGuys.fbx" },
 };
 const uint32_t supported_maps_count = sizeof(supported_maps) / sizeof(supported_maps[0]);
 
@@ -689,7 +692,7 @@ Model* SupersonicMarioPlugin::loadMapModel(const std::string& inArena)
     const auto mapHash = XXH3_128bits(mapData, fileLength);
     free(mapData);
 
-    bool mapIndex = -1;
+    int mapIndex = -1;
     for (int i = 0; i < supported_maps_count; i++)
     {
         if (XXH128_isEqual(mapHash, supported_maps[i].hash))
