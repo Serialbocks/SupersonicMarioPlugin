@@ -230,8 +230,12 @@ namespace SupersonicMarioInstaller
             File.WriteAllBytes(Path.Combine(assetsPath, "Fennec.LICENSE"), Properties.Resources.Fennec_LICENSE);
 
             // Copy game config
-            var cfgContents = DEFAULT_PLUGIN_CONFIG + uxRomPath.Text + "\r\n";
-            File.WriteAllText(Path.Combine(dataPath, "supersonicmario.cfg"), cfgContents);
+            var cfgPath = Path.Combine(dataPath, "supersonicmario.cfg");
+            if(!File.Exists(cfgPath))
+            {
+                var cfgContents = DEFAULT_PLUGIN_CONFIG + uxRomPath.Text + "\r\n";
+                File.WriteAllText(cfgPath, cfgContents);
+            }
 
             uxInstallStatus.Invoke((MethodInvoker)delegate
             {
