@@ -249,6 +249,8 @@ void SM64::OnGameLeft(bool deleteMario)
 		dominusModel->Disabled = true;
 	if (fennecModel != nullptr)
 		fennecModel->Disabled = true;
+	if (mapModel != nullptr)
+		mapModel->Disabled = true;
 }
 
 void SM64::moveCarToMario(std::string eventName)
@@ -539,6 +541,75 @@ void SM64::SendJoinCommandToClients()
 	matchSettingsSema.release();
 }
 
+void SM64::LoadStaticSurfaces(Model* model)
+{
+	if (model == nullptr)
+	{
+		// Load default map surfaces
+		sm64_static_surfaces_load(surfaces, surfaces_count);
+	}
+	else
+	{
+		std::vector<Vertex> vertices;
+		for (int i = 0; i < model->modelIndicesArr.size(); i++)
+		{
+			auto indices = model->modelIndicesArr[i];
+			auto modelVertices = model->modelVerticesArr[i];
+			for (int k = 0; k < indices.size(); k++)
+			{
+				vertices.push_back(modelVertices[indices[k]]);
+			}
+		}
+
+		if (mapModel != nullptr)
+		{
+			mapModel->Disabled = true;
+		}
+
+		int numSurfaces = vertices.size() / 3;
+		struct SM64Surface* staticSurfaces = (SM64Surface*)malloc(sizeof(struct SM64Surface) * numSurfaces);
+		mapVertices.clear();
+
+		for (int i = 0; i < vertices.size(); i++)
+		{
+			Vertex v;
+
+			v.pos.x = vertices[i].pos.x;
+			v.pos.y = -vertices[i].pos.y;
+			v.pos.z = -vertices[i].pos.z;
+
+			v.normal.x = vertices[i].pos.x;
+			v.normal.y = -vertices[i].pos.y;
+			v.normal.z = -vertices[i].pos.z;
+
+			mapVertices.push_back(v);
+		}
+
+		for (int i = 0; i < vertices.size() / 3; i++)
+		{
+			struct SM64Surface* surface = &staticSurfaces[i];
+			Vertex* surfaceVertices = &vertices[i * 3];
+			surface->type = SURFACE_DEFAULT;
+			surface->force = 0;
+			surface->terrain = TERRAIN_GRASS;
+
+			surface->vertices[2][0] = (int16_t)surfaceVertices[0].pos.x;
+			surface->vertices[2][1] = -(int16_t)surfaceVertices[0].pos.z;
+			surface->vertices[2][2] = -(int16_t)surfaceVertices[0].pos.y;
+
+			surface->vertices[1][0] = (int16_t)surfaceVertices[1].pos.x;
+			surface->vertices[1][1] = -(int16_t)surfaceVertices[1].pos.z;
+			surface->vertices[1][2] = -(int16_t)surfaceVertices[1].pos.y;
+
+			surface->vertices[0][0] = (int16_t)surfaceVertices[2].pos.x;
+			surface->vertices[0][1] = -(int16_t)surfaceVertices[2].pos.z;
+			surface->vertices[0][2] = -(int16_t)surfaceVertices[2].pos.y;
+		}
+		sm64_static_surfaces_load(staticSurfaces, numSurfaces);
+		mapInitialized = false;
+	}
+}
+
 /// <summary>Renders the available options for the game mode.</summary>
 void SM64::RenderOptions()
 {
@@ -654,6 +725,7 @@ void SM64::RenderPreferences()
 	MarioConfig* marioConfig = &MarioConfig::getInstance();
 
 	ImGui::TextUnformatted("Preferences");
+
 	ImGui::SliderInt("Mario Volume", &marioAudio->MasterVolume, 0, 100);
 	if (ImGui::IsItemDeactivatedAfterChange())
 	{
@@ -662,6 +734,7 @@ void SM64::RenderPreferences()
 	matchSettingsSema.acquire();
 	bool inSm64Game = matchSettings.isInSm64Game;
 	matchSettingsSema.release();
+
 	if (!inSm64Game)
 	{
 		std::string romPath = marioConfig->GetRomPath();
@@ -737,7 +810,7 @@ void SM64::InitSM64()
 {
 	size_t romSize;
 	std::string romPath = MarioConfig::getInstance().GetRomPath();
-	uint8_t* rom = utilsReadFileAlloc(romPath, &romSize);
+	uint8_t* rom = Utils::readFileAlloc(romPath, &romSize);
 	if (rom == NULL)
 	{
 		return;
@@ -756,7 +829,7 @@ void SM64::InitSM64()
 	if (!Sm64Initialized)
 	{
 		sm64_global_init(rom, texture, NULL, NULL);
-		sm64_static_surfaces_load(surfaces, surfaces_count);
+		LoadStaticSurfaces();
 	}
 
 	cameraPos[0] = 0.0f;
@@ -1074,15 +1147,23 @@ inline void tickMarioInstance(SM64MarioInstance* marioInstance,
 		// Unreal swaps coords
 		instance->carRotation = car.GetRotation();
 		marioInstance->marioId = sm64_mario_create(x, z, y);
-		if (marioInstance->marioId < 0) return;
+		if (marioInstance->marioId < 0)
+		{
+			marioInstance->sema.release();
+			return;
+		}
 	}
 	else if (marioInstance->marioBodyState.marioState.position[0] == 0.0f &&
 		marioInstance->marioBodyState.marioState.position[1] == 0.0f &&
 		marioInstance->marioBodyState.marioState.position[2] == 0.0f)
 	{
-		sm64_mario_delete(marioInstance->marioId);
-		marioInstance->marioId = sm64_mario_create(x, z, y);
-		if (marioInstance->marioId < 0) return;
+		 sm64_mario_delete(marioInstance->marioId);
+		 marioInstance->marioId = sm64_mario_create(x, z, y);
+		 if (marioInstance->marioId < 0)
+		 {
+		 	marioInstance->sema.release();
+		 	return;
+		 }
 	}
 
 	auto camera = instance->gameWrapper->GetCamera();
@@ -1293,6 +1374,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 		octaneModel = new Model(assetsFolder + "Octane.fbx");
 		dominusModel = new Model(assetsFolder + "Dominus.fbx");
 		fennecModel = new Model(assetsFolder + "Fennec.fbx");
+		mapModel = new Model(10000000, nullptr, nullptr, 0, 0, 0, true);
 
 		marioModelPoolSema.acquire();
 		for (int i = 0; i < MARIO_MESH_POOL_SIZE; i++)
@@ -1303,6 +1385,7 @@ void SM64::OnRender(CanvasWrapper canvas)
 				4 * SM64_TEXTURE_WIDTH * SM64_TEXTURE_HEIGHT,
 				SM64_TEXTURE_WIDTH,
 				SM64_TEXTURE_HEIGHT,
+				true,
 				true));
 		}
 		marioModelPoolSema.release();
@@ -1564,9 +1647,32 @@ void SM64::OnRender(CanvasWrapper canvas)
 			ballModel->Render(&camera);
 		}
 
+		if (mapModel != nullptr)
+		{
+			auto modelVertices = mapModel->GetVertices();
+			if (modelVertices != nullptr)
+			{
+				if (mapInitialized)
+				{
+					mapModel->Render(&camera);
+				}
+				else
+				{
+					for (int i = 0; i < mapVertices.size() / 3; i++)
+					{
+						int index = i * 3;
+						(*modelVertices)[index + 2] = mapVertices[index];
+						(*modelVertices)[index + 1] = mapVertices[index + 1];
+						(*modelVertices)[index] = mapVertices[index + 2];
+					}
+					mapModel->RenderUpdateVertices(mapVertices.size() / 3, &camera);
+					mapInitialized = true;
+				}
+
+			}
+		}
+
 	}
-
-
 
 }
 
@@ -1635,28 +1741,6 @@ void SM64::addColorIndexToPool(int colorIndex)
 	colorPool->insert(colorPool->begin(), colorIndex);
 }
 
-uint8_t* SM64::utilsReadFileAlloc(std::string path, size_t* fileLength)
-{
-	FILE* f;
-	fopen_s(&f, path.c_str(), "rb");
 
-	if (!f) return NULL;
-
-	fseek(f, 0, SEEK_END);
-	size_t length = (size_t)ftell(f);
-	rewind(f);
-	uint8_t* buffer = (uint8_t*)malloc(length + 1);
-	if (buffer != NULL)
-	{
-		fread(buffer, 1, length, f);
-		buffer[length] = 0;
-	}
-
-	fclose(f);
-
-	if (fileLength) *fileLength = length;
-
-	return (uint8_t*)buffer;
-}
 
 

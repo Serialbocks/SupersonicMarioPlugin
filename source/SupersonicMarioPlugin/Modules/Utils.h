@@ -6,6 +6,7 @@
 #include "../Graphics/GraphicsTypes.h"
 #include <math.h>
 #include <sys/stat.h>
+#include <filesystem>
 class Utils
 {
 public:
@@ -30,6 +31,20 @@ public:
 			stm << std::use_facet< std::ctype<wchar_t> >(std::locale()).narrow(*s++, '?');
 		}
 		return stm.str();
+	}
+
+	static std::string GetMapFolderPath()
+	{
+		char filePath[MAX_PATH];
+		GetModuleFileNameA(NULL, filePath, MAX_PATH);
+		std::filesystem::path exePath(filePath);
+		
+		return exePath
+			.parent_path()
+			.parent_path()
+			.parent_path()
+			.append("TAGame\\CookedPCConsole")
+			.string();
 	}
 
 	static std::vector<std::string> SplitStr(std::string str, char delimiter)
@@ -82,5 +97,29 @@ public:
 	static inline void trim(std::string& s) {
 		ltrim(s);
 		rtrim(s);
+	}
+
+	static inline uint8_t* readFileAlloc(std::string path, size_t* fileLength)
+	{
+		FILE* f;
+		fopen_s(&f, path.c_str(), "rb");
+
+		if (!f) return NULL;
+
+		fseek(f, 0, SEEK_END);
+		size_t length = (size_t)ftell(f);
+		rewind(f);
+		uint8_t* buffer = (uint8_t*)malloc(length + 1);
+		if (buffer != NULL)
+		{
+			fread(buffer, 1, length, f);
+			buffer[length] = 0;
+		}
+
+		fclose(f);
+
+		if (fileLength) *fileLength = length;
+
+		return (uint8_t*)buffer;
 	}
 };

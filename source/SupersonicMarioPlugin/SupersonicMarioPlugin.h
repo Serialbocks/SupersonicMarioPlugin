@@ -2,6 +2,8 @@
 #include "Version.h"
 #include "Networking/Networking.h"
 #include "Modules/Update.h"
+#include "Graphics/Model.h"
+#include "xxHash/xxhash.h"
 
 #include "Modules/SupersonicMarioPluginModule.h"
 
@@ -90,6 +92,7 @@ public:
     void ForceJoin();
 
 private:
+    Model* loadMapModel(const std::string& arena);
     std::string getGameTags() const;
     void savePreset(const std::string& presetName);
     void loadPreset(const std::filesystem::path& presetPath);
@@ -236,6 +239,7 @@ private:
     bool refreshCustomMapPaths = true;
     // maps / customMapPaths key or map path.
     std::string currentMap;
+    std::filesystem::path currentMapPath;
     // Maps internal name to display name.
     std::map<std::string, std::string> maps;
     bool currentMapIsModded = false;

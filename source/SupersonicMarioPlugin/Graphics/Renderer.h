@@ -65,6 +65,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerState = nullptr;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> rasterizerStateNoCull = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilState> depthStencilState = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11Texture2D> depthStencilBuffer = nullptr;
 	Microsoft::WRL::ComPtr<ID3D11DepthStencilView> depthStencilView = nullptr;

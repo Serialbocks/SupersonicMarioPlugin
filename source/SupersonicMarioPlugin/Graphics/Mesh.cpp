@@ -144,6 +144,11 @@ void Mesh::init(Microsoft::WRL::ComPtr<ID3D11Device> deviceIn,
 	windowWidth = inWindowWidth;
 	windowHeight = inWindowHeight;
 
+	if (inTexture == nullptr)
+	{
+		IsTransparent = true;
+	}
+
 	MaxTriangles = maxTriangles;
 	auto vertexCount = MaxTriangles * 3;
 	if (numIndices == 0)
