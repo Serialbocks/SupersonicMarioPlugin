@@ -458,8 +458,8 @@ void SupersonicMarioPlugin::renderMultiplayerTabHost()
                 ImGui::TextUnformatted(" Lobby Name:");
                 ImGui::InputText("##lobbyName", &lobbyName);
             }
-            ImGui::TextUnformatted(" Password (optional):");
-            ImGui::InputText("##pswd_host", &hostPswd, ImGuiInputTextFlags_Password);
+            //ImGui::TextUnformatted(" Password (optional):");
+            //ImGui::InputText("##pswd_host", &hostPswd, ImGuiInputTextFlags_Password);
 
             bool hostDisabled = isPublicMatch && lobbyName.length() == 0;
             if (hostDisabled)
@@ -724,8 +724,8 @@ void SupersonicMarioPlugin::renderMultiplayerTabHostMutatorSettings()
 void SupersonicMarioPlugin::renderMultiplayerTabHostAdvancedSettings()
 {
     if (ImGui::CollapsingHeader("Advanced Settings")) {
-        ImGui::TextUnformatted(" Password: (optional)");
-        ImGui::InputText("##pswd_host", &hostPswd, ImGuiInputTextFlags_Password);
+        //ImGui::TextUnformatted(" Password: (optional)");
+        //ImGui::InputText("##pswd_host", &hostPswd, ImGuiInputTextFlags_Password);
         ImGui::TextUnformatted(fmt::format(" Internal host port: (default is {:d})", DEFAULT_PORT).c_str());
         // TODO, Allow changing the internal host port.
         ImGui::BeginDisabled();
@@ -1098,8 +1098,8 @@ void SupersonicMarioPlugin::renderMultiplayerTabJoin()
         else {
             ImGui::InputScalar("##sm64_port_join", ImGuiDataType_U16, sm64JoinPort.get());
         }
-        ImGui::TextUnformatted(" Password: (optional)");
-        ImGui::InputText("##pswd_join", pswdBuf, 64, ImGuiInputTextFlags_Password);
+        //ImGui::TextUnformatted(" Password: (optional)");
+        //ImGui::InputText("##pswd_join", pswdBuf, 64, ImGuiInputTextFlags_Password);
         ImGui::Separator();
 
         ImGui::Unindent(5);
