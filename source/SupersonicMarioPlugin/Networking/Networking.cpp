@@ -18,6 +18,13 @@
 
 constexpr timeval NETWORK_TIMEOUT = { 3, 0 };
 
+const std::string supersonicMarioServer = "https://serialbocks.com";
+const std::string supersonicMarioServerBackup = "http://136.32.164.93:3000";
+
+httplib::Client http(supersonicMarioServerBackup);
+httplib::Client https(supersonicMarioServer);
+httplib::Client* httpClient = nullptr;
+
 
 /// <summary>Get the type of address that is given.</summary>
 /// <param name="addr">address to get the type of</param>

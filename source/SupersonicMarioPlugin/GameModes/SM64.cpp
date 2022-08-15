@@ -47,6 +47,7 @@ SM64::SM64(std::shared_ptr<GameWrapper> gw, std::shared_ptr<CVarManagerWrapper> 
 	gameWrapper->HookEventPost("Function TAGame.EngineShare_TA.EventPostPhysicsStep", bind(&SM64::moveCarToMario, this, _1));
 	gameWrapper->HookEventPost("Function TAGame.NetworkInputBuffer_TA.ClientAckFrame", bind(&SM64::moveCarToMario, this, _1));
 	gameWrapper->HookEventPost("Function GameEvent_Soccar_TA.PostGoalScored.Tick", bind(&SM64::onGoalScored, this, _1));
+	gameWrapper->HookEventPost("Function TAGame.GameEvent_Soccar_TA.EventMatchWinnerSet", bind(&SM64::onMatchWinnerSet, this, _1));
 
 	attackBoostDamage = ATTACK_BOOST_DAMAGE;
 
@@ -355,6 +356,22 @@ void SM64::onGoalScored(std::string eventName)
 	if (inSm64Game)
 	{
 		OnGameLeft(false);
+	}
+}
+
+void SM64::onMatchWinnerSet(std::string eventName)
+{
+	if (isHost)
+	{
+		SetTimeout([this](GameWrapper*) {
+			matchSettingsSema.acquire();
+			bool inSm64Game = matchSettings.isInSm64Game;
+			matchSettingsSema.release();
+			if (inSm64Game)
+			{
+				SupersonicMarioPluginModule::Outer()->NextGameInMatch();
+			}
+		}, 15.0f);
 	}
 }
 
