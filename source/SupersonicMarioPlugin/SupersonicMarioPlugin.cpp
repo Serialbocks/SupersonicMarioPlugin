@@ -718,6 +718,19 @@ Model* SupersonicMarioPlugin::loadMapModel(const std::string& inArena)
  *  Host/Join Match
  */
 
+void SupersonicMarioPlugin::NextGameInMatch()
+{
+    Execute([this](GameWrapper*) {
+        ForceJoin();
+        });
+    Execute([this](GameWrapper*) {
+        bool previousPublicMatchVal = isPublicMatch;
+        isPublicMatch = false;
+        HostGame();
+        isPublicMatch = previousPublicMatchVal;
+        });
+}
+
 
 /// <summary>Hosts a local game with the preconfigured settings.</summary>
 /// <param name="arena">Arena to host the local game in, if empty the selected map is used</param>

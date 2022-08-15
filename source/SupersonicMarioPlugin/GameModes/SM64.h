@@ -127,6 +127,7 @@ private:
     void sendSettingsIfHost(ServerWrapper server);
     void moveCarToMario(std::string eventName);
     void onGoalScored(std::string eventName);
+    void onMatchWinnerSet(std::string eventName);
     void menuPushed(ServerWrapper server);
     void menuPopped(ServerWrapper server);
     Model* getModelFromPool();

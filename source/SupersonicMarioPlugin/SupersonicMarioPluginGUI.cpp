@@ -315,15 +315,7 @@ void SupersonicMarioPlugin::renderShortMultiplayerTab()
         }
 
         if (ImGui::Button("Next Match")) {
-            Execute([this](GameWrapper*) {
-                ForceJoin();
-            });
-            Execute([this](GameWrapper*) {
-                bool previousPublicMatchVal = isPublicMatch;
-                isPublicMatch = false;
-                HostGame();
-                isPublicMatch = previousPublicMatchVal;
-            });
+            NextGameInMatch();
         }
         ImGui::EndTabItem();
     }

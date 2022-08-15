@@ -119,6 +119,7 @@ private:
 public:
     ServerWrapper GetGame(bool allowOnlineGame = false) const;
     bool IsInGame(bool allowOnlineGame = false) const;
+    void NextGameInMatch();
 
 private:
 
