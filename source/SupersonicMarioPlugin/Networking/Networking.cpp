@@ -18,7 +18,7 @@
 
 constexpr timeval NETWORK_TIMEOUT = { 3, 0 };
 
-const std::string supersonicMarioServer = "http://127.0.0.1:3000";
+const std::string supersonicMarioServer = "https://serialbocks.com";
 const std::string supersonicMarioServerBackup = "http://136.32.164.93:3000";
 
 httplib::Client http(supersonicMarioServerBackup);
