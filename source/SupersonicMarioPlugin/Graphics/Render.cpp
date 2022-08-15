@@ -105,11 +105,14 @@ void Renderer::InitBuffers()
 	D3D11_RASTERIZER_DESC rsDesc;
 	ZeroMemory(&rsDesc, sizeof(D3D11_RASTERIZER_DESC));
 	rsDesc.FillMode = D3D11_FILL_SOLID;
-	rsDesc.CullMode = D3D11_CULL_NONE;
+	rsDesc.CullMode = D3D11_CULL_FRONT;
 	rsDesc.FrontCounterClockwise = FALSE;
 	rsDesc.DepthClipEnable = TRUE;
 
 	device->CreateRasterizerState(&rsDesc, rasterizerState.GetAddressOf());
+
+	rsDesc.CullMode = D3D11_CULL_NONE;
+	device->CreateRasterizerState(&rsDesc, rasterizerStateNoCull.GetAddressOf());
 
 	// Create depth stencil state
 	D3D11_DEPTH_STENCIL_DESC dsDesc;
@@ -298,6 +301,11 @@ void Renderer::DrawModels()
 			auto frame = (*frames)[m];
 			model->SetFrame(&frame);
 
+			if (model->NoCull)
+			{
+				context->RSSetState(rasterizerStateNoCull.Get());
+			}
+
 			for (auto i = 0; i < model->Meshes.size(); i++)
 			{
 				auto mesh = model->Meshes[i];
@@ -368,6 +376,10 @@ void Renderer::DrawModels()
 			}
 		}
 
+		if (model->NoCull)
+		{
+			context->RSSetState(rasterizerState.Get());
+		}
 		model->Frames.clear();
 
 

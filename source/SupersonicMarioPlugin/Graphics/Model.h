@@ -33,13 +33,15 @@ public:
 	} Frame;
 
 	Model(std::string path, bool inRenderAlways = false);
+	Model(std::vector<std::string> meshPaths, bool inRenderAlways = false);
 	Model(size_t inMaxTriangles,
 		uint8_t* inTexture,
 		uint8_t* inAltTexture,
 		size_t inTexSize,
 		uint16_t inTexWidth,
 		uint16_t inTexHeight,
-		bool inRenderAlways = false);
+		bool inRenderAlways = false,
+		bool noCull = false);
 	bool NeedsInitialized();
 	bool ShouldRender();
 	void InitMeshes(Microsoft::WRL::ComPtr<ID3D11Device> device, int windowWidth, int windowHeight);
@@ -74,6 +76,7 @@ public:
 	bool backgroundDataLoaded = false;
 	std::vector<Frame> Frames;
 	bool Disabled = false;
+	bool NoCull = false;
 private:
 	bool meshesInitialized = false;
 	std::string modelPath;

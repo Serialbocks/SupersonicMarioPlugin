@@ -11,12 +11,14 @@
 #include <shlwapi.h>
 #include <stdlib.h>
 #include <math.h>
+#include <libloaderapi.h>
 
 #include "shlobj.h"
 
 #include "../Graphics/Renderer.h"
 #include "../Graphics/GraphicsTypes.h"
 #include "../Graphics/Model.h"
+#include "../Graphics/surface_terrains.h"
 #include "../Modules/Utils.h"
 #include "../Modules/MarioAudio.h"
 #include "../Modules/MarioConfig.h"
@@ -113,6 +115,8 @@ public:
     void MarioMessageReceived(char* buf, int len);
     void SendJoinCommandToClients();
 
+    void LoadStaticSurfaces(Model* model = nullptr);
+
 private:
     void onCharacterSpawn(ServerWrapper server);
     void onCountdownEnd(ServerWrapper server);
@@ -125,7 +129,6 @@ private:
     void onGoalScored(std::string eventName);
     void menuPushed(ServerWrapper server);
     void menuPopped(ServerWrapper server);
-    uint8_t* utilsReadFileAlloc(std::string path, size_t* fileLength);
     Model* getModelFromPool();
     void addModelToPool(Model*);
     int getColorIndexFromPool(int teamIndex);
@@ -166,6 +169,9 @@ public:
     Model* octaneModel = nullptr;
     Model* dominusModel = nullptr;
     Model* fennecModel = nullptr;
+    Model* mapModel = nullptr;
+    std::vector<Vertex> mapVertices;
+    bool mapInitialized = false;
 
 private:
     /* SM64 Members */

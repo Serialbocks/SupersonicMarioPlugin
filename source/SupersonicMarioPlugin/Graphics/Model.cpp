@@ -18,13 +18,26 @@ Model::Model(std::string path, bool inRenderAlways)
 	Renderer::getInstance().AddModel(this);
 }
 
+Model::Model(std::vector<std::string> meshPaths, bool inRenderAlways)
+{
+	renderAlways = inRenderAlways;
+	for(int i = 0; i < meshPaths.size(); i++)
+	{
+		modelPath = meshPaths[i];
+		LoadModel();
+	}
+	backgroundDataLoaded = true;
+	Renderer::getInstance().AddModel(this);
+}
+
 Model::Model(size_t inMaxTriangles,
 	uint8_t* inTexture,
 	uint8_t* inAltTexture,
 	size_t inTexSize,
 	uint16_t inTexWidth,
 	uint16_t inTexHeight,
-	bool inRenderAlways)
+	bool inRenderAlways,
+	bool noCull)
 {
 	maxTriangles = inMaxTriangles;
 	texture = inTexture;
@@ -33,6 +46,7 @@ Model::Model(size_t inMaxTriangles,
 	texHeight = inTexHeight;
 	renderAlways = inRenderAlways;
 	backgroundDataLoaded = true;
+	NoCull = noCull;
 	Renderer::getInstance().AddModel(this);
 }
 

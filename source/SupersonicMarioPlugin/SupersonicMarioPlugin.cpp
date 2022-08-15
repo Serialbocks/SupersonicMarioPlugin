@@ -4,6 +4,7 @@
 // Modified by:     Serialbocks
 #include "SMPConfig.h"
 #include "SupersonicMarioPlugin.h"
+#include "Graphics/Model.h"
 
 // Game modes
 #include "GameModes/SM64.h"
@@ -649,6 +650,69 @@ std::vector<std::string> SupersonicMarioPlugin::complete(const std::vector<std::
     return suggestions;
 }
 
+typedef struct supported_maps_type_t
+{
+    XXH128_hash_t hash;
+    std::string fbx;
+} supported_maps_type;
+
+const supported_maps_type supported_maps[] = {
+    { { 0x5073cdbb305dc3e5, 0x388fab8b69718b78 }, "LethSM64.fbx" },
+    //{ { 0xe9708ff5ad55b6e1, 0x7165ef3aff368c3 }, "LethBlockFort.fbx" },
+    //{ { 17947140482627331743, 11142468266187614088 }, "LethParkourEgypt.fbx" },
+    //{ { 0xfd9d4ae1ff8facd5, 0xb38fe29c8455095f }, "LethFallGuys.fbx" },
+};
+const uint32_t supported_maps_count = sizeof(supported_maps) / sizeof(supported_maps[0]);
+
+Model* SupersonicMarioPlugin::loadMapModel(const std::string& inArena)
+{
+    std::string arena = "";
+    if (file_exists(inArena))
+    {
+        arena = inArena;
+    }
+    else
+    {
+        std::filesystem::path mapPath(Utils::GetMapFolderPath());
+        mapPath.append(inArena + ".upk");
+        arena = mapPath.string();
+        if (!file_exists(arena))
+        {
+            BM_ERROR_LOG("Could not find map file for extraction.");
+            return nullptr;
+        }
+    }
+    std::filesystem::path arenaPath(arena);
+
+    std::string bakkesmodFolderPath = Utils::GetBakkesmodFolderPath();
+    std::string assetsPath = bakkesmodFolderPath + "data\\assets\\";
+
+    size_t fileLength;
+    uint8_t* mapData = Utils::readFileAlloc(arena, &fileLength);
+    const auto mapHash = XXH3_128bits(mapData, fileLength);
+    free(mapData);
+
+    int mapIndex = -1;
+    for (int i = 0; i < supported_maps_count; i++)
+    {
+        if (XXH128_isEqual(mapHash, supported_maps[i].hash))
+        {
+            mapIndex = i;
+            break;
+        }
+    }
+
+    if (mapIndex < 0)
+    {
+        return nullptr; // map not found
+    }
+
+    std::string fbxPath = assetsPath + supported_maps[mapIndex].fbx;
+    std::vector<std::string> fbxList;
+    fbxList.push_back(fbxPath);
+    return new Model(fbxList);
+}
+
 
 /*
  *  Host/Join Match
@@ -692,6 +756,7 @@ void SupersonicMarioPlugin::HostGame(std::string arena)
     /* Cos we as windows want our baguettes the left way. */
     std::ranges::replace(arena, '/', '\\');
 #endif
+
     const std::string gameMode = gameModes.GetSelected();
     std::string gameTags = getGameTags();
     // Available PlayerCounts are 2, 4, 6 and 8.
@@ -733,6 +798,9 @@ void SupersonicMarioPlugin::HostGame(std::string arena)
         gameWrapper->ExecuteUnrealCommand(command);
     }, 0.1f);
 
+    Model* m = loadMapModel(arena);
+    sm64->LoadStaticSurfaces(m);
+
     TcpServer::getInstance().StartServer(*sm64HostPort);
     if (isPublicMatch) {
         ServerBrowser::getInstance().HostNewMatch(lobbyName, numConnections, (int)hostPortExternal, *sm64HostPort);
@@ -771,6 +839,14 @@ void SupersonicMarioPlugin::JoinGame(const char* pswd)
             PushError("Error Loading Map\ncheck the console for more details(F6)");
         }
     }
+
+    Model* m = nullptr;
+    if (joinCustomMap)
+    {
+        m = loadMapModel(currentJoinMap.string());
+    }
+
+    sm64->LoadStaticSurfaces(m);
 
     TcpClient::getInstance().ConnectToServer(*joinIP, *sm64HostPort);
     gameWrapper->ExecuteUnrealCommand(fmt::format("start {:s}:{:d}/?Lan?Password={:s}", *joinIP, *joinPort, pswd));
