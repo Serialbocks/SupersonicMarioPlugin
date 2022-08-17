@@ -20,7 +20,7 @@ namespace SupersonicMarioInstaller
 {
     public partial class uxInstallerForm : Form
     {
-        private const string VERSION = "V1.1.0";
+        private const string VERSION = "V1.1.1";
 
         private const string NEXT_BUTTON_TEXT = "Next >";
         private const string AGREE_BUTTON_TEXT = "I Agree";
